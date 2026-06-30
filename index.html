@@ -912,7 +912,12 @@ function currentRecord(){
 }
 /* ============ GOOGLE SHEET (Web App URL) ============ */
 const SHEET_URL_KEY="weelab_sheet_url";
-function getSheetUrl(){ return localStorage.getItem(SHEET_URL_KEY)||""; }
+// URL Apps Script mặc định gắn sẵn — để mọi máy/iPad mở app đều có sẵn cấu hình,
+// không phải dán lại mỗi khi Safari xoá localStorage (Private mode, ITP, đóng app lâu ngày...).
+// Nếu sau này deploy lại Apps Script ra URL mới, đổi giá trị này rồi cập nhật lại file là đủ,
+// không cần yêu cầu nhân sự cấu hình lại trên từng máy.
+const DEFAULT_SHEET_URL="https://script.google.com/macros/s/AKfycbwXAz_MPUTgkLZsbkU3kdZHacRv920Xr306Ubbx5_xRRR8CdWFWxLPqfNTvlPf-o2AX/exec";
+function getSheetUrl(){ return localStorage.getItem(SHEET_URL_KEY)||DEFAULT_SHEET_URL; }
 function toggleSheetUrlBox(){
   const box=document.getElementById("sheetUrlBox");
   const show = box.style.display==="none";
