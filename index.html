@@ -60,6 +60,8 @@
   }
   input:focus,textarea:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);}
   textarea{resize:vertical;min-height:64px;}
+  input.fld-bad{border-color:#e08a3c;box-shadow:0 0 0 3px rgba(224,138,60,.12);}
+  .fldwarn{color:#b5651d;font-size:12px;margin-top:5px;line-height:1.4;}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   @media(max-width:560px){.row2{grid-template-columns:1fr;}}
   .returning{background:var(--green-soft);border:1px solid #cfe3d7;border-radius:10px;padding:10px 12px;font-size:13px;margin-top:8px;display:none;}
@@ -176,10 +178,12 @@
         <div>
           <label class="fld" id="t_lblPhone"></label>
           <input type="tel" id="cPhone" placeholder="VD: 0901234567">
+          <div class="fldwarn" id="cPhoneWarn" style="display:none"></div>
         </div>
       </div>
       <label class="fld" id="t_lblEmail"></label>
       <input type="email" id="cEmail" placeholder="VD: a@gmail.com">
+      <div class="fldwarn" id="cEmailWarn" style="display:none"></div>
 
       <label class="fld" id="t_lblCtype"></label>
       <div class="ctypes">
@@ -303,6 +307,8 @@ const I18N = {
     confirmContra:(name,skins)=>`⚠ CHỐNG CHỈ ĐỊNH\n\n"${name}" chống chỉ định với: ${skins}.\n\nKTV xác nhận vẫn muốn thêm món này?`,
     alertNoPhone:"Vui lòng nhập số điện thoại khách để lưu.",
     alertNoItems:"Chưa chọn món nào.",
+    warnPhoneBad:"Số điện thoại chưa đúng — vui lòng nhập đúng định dạng 0xxxxxxxxx (10 số).",
+    warnEmailBad:"Email chưa đúng định dạng — vui lòng kiểm tra lại để nhận được câu trả lời.",
     alertNoUrl:"Chưa cấu hình Google Sheet.\nBấm '⚙️ Cấu hình Google Sheet' để dán Web App URL trước.",
     alertUrlBad:"URL chưa đúng. Phải là link Web App dạng https://script.google.com/macros/s/.../exec",
     alertUrlOk:"Đã lưu URL Google Sheet ✓",
@@ -373,6 +379,8 @@ const I18N = {
     confirmContra:(name,skins)=>`⚠ CONTRAINDICATION\n\n"${name}" is contraindicated for: ${skins}.\n\nTechnician confirms adding this treatment anyway?`,
     alertNoPhone:"Please enter the customer's phone number to save.",
     alertNoItems:"No treatments selected yet.",
+    warnPhoneBad:"Invalid phone number — please use the format 0xxxxxxxxx (10 digits).",
+    warnEmailBad:"Invalid email format — please double-check so the customer can receive replies.",
     alertNoUrl:"Google Sheet not configured yet.\nClick '⚙️ Configure Google Sheet' to paste the Web App URL first.",
     alertUrlBad:"Invalid URL. Must be a Web App link like https://script.google.com/macros/s/.../exec",
     alertUrlOk:"Google Sheet URL saved ✓",
@@ -562,6 +570,7 @@ function setLang(l){
   document.documentElement.lang = l;
   applyStaticText();
   renderSkins(); renderBuffetPacks(); renderMenu(); checkReturning(); renderBill();
+  validatePhone(); validateEmail();
 }
 function applyStaticText(){
   const T=I18N[LANG];
@@ -887,6 +896,32 @@ async function checkReturning(){
   }
 }
 
+/* ============ VALIDATE SĐT / EMAIL ============ */
+const PHONE_RE=/^0\d{9}$/;
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function validatePhone(showIfEmpty){
+  const el=document.getElementById("cPhone");
+  const warn=document.getElementById("cPhoneWarn");
+  const v=el.value.trim();
+  if(!v){ el.classList.remove("fld-bad"); warn.style.display="none"; return true; }
+  const ok=PHONE_RE.test(v);
+  el.classList.toggle("fld-bad", !ok);
+  warn.style.display = ok ? "none" : "block";
+  warn.textContent = ok ? "" : tr("warnPhoneBad");
+  return ok;
+}
+function validateEmail(){
+  const el=document.getElementById("cEmail");
+  const warn=document.getElementById("cEmailWarn");
+  const v=el.value.trim();
+  if(!v){ el.classList.remove("fld-bad"); warn.style.display="none"; return true; }
+  const ok=EMAIL_RE.test(v);
+  el.classList.toggle("fld-bad", !ok);
+  warn.style.display = ok ? "none" : "block";
+  warn.textContent = ok ? "" : tr("warnEmailBad");
+  return ok;
+}
+
 /* ============ LƯU + XUẤT ============ */
 function currentRecord(){
   const items=billItems();
@@ -938,6 +973,10 @@ function saveSheetUrl(){
 function saveAndExport(){
   const r=currentRecord();
   if(!r.phone){ alert(tr("alertNoPhone")); return; }
+  const phoneOk=validatePhone(true);
+  const emailOk=validateEmail();
+  if(!phoneOk){ document.getElementById("cPhone").focus(); return; }
+  if(!emailOk){ document.getElementById("cEmail").focus(); return; }
   if(r.items.length===0 && r.mode==="alc"){ alert(tr("alertNoItems")); return; }
 
   const url=getSheetUrl();
@@ -978,6 +1017,9 @@ function saveAndExport(){
 function resetAll(){
   if(!confirm(tr("confirmReset"))) return;
   ["cName","cPhone","cEmail","cNote"].forEach(id=>document.getElementById(id).value="");
+  ["cPhone","cEmail"].forEach(id=>document.getElementById(id).classList.remove("fld-bad"));
+  document.getElementById("cPhoneWarn").style.display="none";
+  document.getElementById("cEmailWarn").style.display="none";
   state={mode:"alc",buffet:null,skins:[],selected:new Set(),customerType:"retail"};
   document.getElementById("returningBox").style.display="none";
   document.getElementById("ctypeRetail").classList.add("on");
@@ -987,6 +1029,8 @@ function resetAll(){
 
 /* ============ INIT ============ */
 document.getElementById("cPhone").addEventListener("input",checkReturning);
+document.getElementById("cPhone").addEventListener("blur",()=>validatePhone());
+document.getElementById("cEmail").addEventListener("blur",validateEmail);
 document.getElementById("cName").addEventListener("input",renderBill);
 setLang("vi");
 setMode("alc");
