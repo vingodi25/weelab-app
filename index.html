@@ -450,11 +450,11 @@ const GROUPS = [
 /* Buffet: gói → nhóm món được phép */
 const BUFFET = [
   {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:999000,  groups:["CB","CS"],
-     inc:"Cơ bản + Nâng cao", inc_en:"Basic + Advanced", target:"Da ít vấn đề, làm sạch & cấp ẩm", target_en:"Low-issue skin, cleansing & hydration"},
+     inc:"Khai vị & Món chính", inc_en:"Starter & Main Course", target:"Da ít vấn đề, làm sạch & cấp ẩm", target_en:"Low-issue skin, cleansing & hydration"},
   {id:"trongtreo",  name:"Trong trẻo",  name_en:"Clarity", price:1299000, groups:["CB","CS","TLCB"],
-     inc:"+ Trị liệu cơ bản", inc_en:"+ Basic treatment", target:"Da thiếu sức sống, vấn đề bề mặt", target_en:"Dull skin, surface-level issues"},
+     inc:"Khai vị, Món chính, Đặc sản", inc_en:"Starter, Main Course, Wee's Specialties", target:"Da thiếu sức sống, vấn đề bề mặt", target_en:"Dull skin, surface-level issues"},
   {id:"muotmong",   name:"Mướt mọng",   name_en:"Radiance", price:1999000, groups:["CB","CS","TLCB","TLNC","TLCS"],
-     inc:"Toàn menu", inc_en:"Full menu", target:"Da nhiều tín hiệu báo động, tổng hợp", target_en:"Skin with multiple combined concerns"},
+     inc:"Toàn bộ thực đơn", inc_en:"Full Menu", target:"Da nhiều tín hiệu báo động, tổng hợp", target_en:"Skin with multiple combined concerns"},
 ];
 
 /* Mapping tình trạng da → mã món gợi ý (từ sheet "Gợi ý món") — key tiếng Việt giữ làm key chính (liên kết với CONTRA_MAP) */
@@ -539,7 +539,7 @@ let state = {
   mode:"alc",            // 'alc' | 'buf'
   buffet:null,           // buffet id khi mode=buf
   skins:[],              // tình trạng da đã chọn (key luôn tiếng Việt gốc)
-  selected:new Set(),    // id món đã tick
+  selected:new Set(["CB"]),  // CB auto-chọn mặc định để tránh bỏ sót
   customerType:"retail", // 'retail' | 'member'
 };
 const fmt = n => tr("fmtCurrency")(n);
@@ -1021,7 +1021,7 @@ function resetAll(){
   ["cPhone","cEmail"].forEach(id=>document.getElementById(id).classList.remove("fld-bad"));
   document.getElementById("cPhoneWarn").style.display="none";
   document.getElementById("cEmailWarn").style.display="none";
-  state={mode:"alc",buffet:null,skins:[],selected:new Set(),customerType:"retail"};
+  state={mode:"alc",buffet:null,skins:[],selected:new Set(["CB"]),customerType:"retail"};
   document.getElementById("returningBox").style.display="none";
   document.getElementById("ctypeRetail").classList.add("on");
   document.getElementById("ctypeMember").classList.remove("on");
