@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -415,9 +416,10 @@ const MENU = [
   {id:"CS1", group:"CS", name:"Massage khai thông hệ bạch huyết", name_en:"Lymphatic drainage massage", list:50000,  member:30000,  time:15, desc:"Massage ngực, cổ, mặt, tay, đầu · 15p", desc_en:"Chest, neck, face, hand & head massage · 15 min"},
   {id:"CS2", group:"CS", name:"Chiếu đèn quang động học (PDT)", name_en:"Photodynamic therapy (PDT) light", list:100000, member:80000,  time:15, desc:"Xanh: trị mụn/kiềm dầu · Đỏ: collagen/sáng · Vàng: phục hồi · IR: giảm đau · 15p", desc_en:"Blue: acne/oil control · Red: collagen/brightening · Yellow: repair · IR: pain relief · 15 min"},
   {id:"CS3", group:"CS", name:"Sebum Soak (loãng dầu)", name_en:"Sebum Soak (oil dissolving)", list:120000, member:100000, time:5,  desc:"Khai thông lỗ chân lông, giảm tiết dầu · 5p", desc_en:"Unclogs pores, reduces oil secretion · 5 min"},
-  {id:"CS4", group:"CS", name:"Hydra Peel AHA/BHA/HA+Vit C", name_en:"Hydra Peel AHA/BHA/HA+Vit C", list:200000, member:150000, time:5,  desc:"Hút sạch sâu + cấp dưỡng chất · 5p", desc_en:"Deep extraction + nutrient infusion · 5 min"},
-  {id:"CS5", group:"CS", name:"Giải cơ cổ vai gáy (EMS, RF)", name_en:"Neck & shoulder muscle release (EMS, RF)", list:300000, member:250000, time:15, desc:"15p", desc_en:"15 min"},
-  {id:"CS6", group:"CS", name:"Nâng cơ mặt (EMS, RF)", name_en:"Facial muscle lifting (EMS, RF)", list:300000, member:250000, time:10, desc:"10p", desc_en:"10 min"},
+  {id:"CS4", group:"CS", name:"Hydra Peel AHA/BHA", name_en:"Hydra Peel AHA/BHA", list:200000, member:150000, time:5,  desc:"Hút sạch sâu + xử lý da chết · 5p", desc_en:"Deep extraction + dead skin removal · 5 min"},
+  {id:"CS5", group:"CS", name:"Hydra Peel HA+Vitamin C", name_en:"Hydra Peel HA+Vitamin C", list:200000, member:150000, time:5,  desc:"Cấp ẩm sâu, căng bóng · 5p", desc_en:"Deep hydration, plumping & brightening · 5 min"},
+  {id:"CS6", group:"CS", name:"Giải cơ cổ vai gáy (EMS, RF)", name_en:"Neck & shoulder muscle release (EMS, RF)", list:300000, member:250000, time:15, desc:"15p", desc_en:"15 min"},
+  {id:"CS7", group:"CS", name:"Nâng cơ mặt (EMS, RF)", name_en:"Facial muscle lifting (EMS, RF)", list:300000, member:250000, time:10, desc:"10p", desc_en:"10 min"},
 
   {id:"TLCB1", group:"TLCB", name:"Phục hồi da yếu, mẩn đỏ, kích ứng", name_en:"Repair for weak, red, irritated skin", list:300000, member:250000, time:10, desc:"Argilac · 10p", desc_en:"Argilac · 10 min"},
   {id:"TLCB2", group:"TLCB", name:"Peel xử lý dày sừng, mờ thâm", name_en:"Peel for keratosis & dark spot fading", list:300000, member:260000, time:5,  desc:"Prozyme; Proalpha 1-2; Inno peel · 5p", desc_en:"Prozyme; Proalpha 1-2; Inno peel · 5 min"},
@@ -438,12 +440,12 @@ const MENU = [
 ];
 
 const GROUPS = [
-  {key:"CB",   title:"CHĂM SÓC CƠ BẢN", title_en:"BASIC CARE", note:"", note_en:""},
-  {key:"CS",   title:"CHĂM SÓC NÂNG CAO", title_en:"ADVANCED CARE", note:"", note_en:""},
-  {key:"TLCB", title:"TRỊ LIỆU CƠ BẢN", title_en:"BASIC TREATMENT", note:"chọn 1 trị liệu", note_en:"choose 1 treatment"},
-  {key:"TLNC", title:"TRỊ LIỆU NÂNG CAO", title_en:"ADVANCED TREATMENT", note:"chọn 1 hoặc 2", note_en:"choose 1 or 2"},
-  {key:"TLCS", title:"TRỊ LIỆU CHUYÊN SÂU", title_en:"INTENSIVE TREATMENT", note:"", note_en:""},
-  {key:"PT",   title:"PHỤ THU", title_en:"SURCHARGE", note:"không nằm trong buffet", note_en:"not included in buffet"},
+  {key:"CB",   title:"KHAI VỊ", title_en:"STARTER", note:"", note_en:""},
+  {key:"CS",   title:"MÓN CHÍNH", title_en:"MAIN COURSE", note:"", note_en:""},
+  {key:"TLCB", title:"ĐẶC SẢN NHÀ WEE", title_en:"WEE'S SPECIALTIES", note:"chọn 1 trị liệu", note_en:"choose 1 treatment"},
+  {key:"TLNC", title:"CAO LƯƠNG MỸ VỊ", title_en:"PREMIUM DELICACIES", note:"chọn 1 hoặc 2", note_en:"choose 1 or 2"},
+  {key:"TLCS", title:"BÍ TRUYỀN", title_en:"SECRET RECIPE", note:"", note_en:""},
+  {key:"PT",   title:"GỌI THÊM", title_en:"ADD-ONS", note:"không nằm trong buffet", note_en:"not included in buffet"},
 ];
 
 /* Buffet: gói → nhóm món được phép */
@@ -458,26 +460,26 @@ const BUFFET = [
 
 /* Mapping tình trạng da → mã món gợi ý (từ sheet "Gợi ý món") — key tiếng Việt giữ làm key chính (liên kết với CONTRA_MAP) */
 const SKIN_MAP = {
-  "Da khô":["CB","CS1","CS4","CS5","TLCB1","TLCB4","TLCS"],
-  "Da nhạy cảm":["CB","CS1","CS2","CS4","CS5","TLCB1","TLCB4","TLCS"],
-  "Da mẩn đỏ":["CB","CS1","CS2","CS5","TLCB1","TLCB4","TLCS"],
-  "Da kích ứng":["CB","CS1","CS2","CS4","CS5","TLCB1","TLCB4","TLCS"],
-  "Da tiết nhiều dầu":["CB","CS1","CS2","CS3","CS4","CS5","TLCB2","TLNC2"],
-  "Da bùng mụn":["CB","CS2","CS3","CS4","CS5","TLCB1","TLNC3","TLNC4","TLCS"],
-  "Da mụn tổng hợp":["CB","CS2","CS3","CS4","CS5","TLCB1","TLNC3","TLNC4","TLCS"],
-  "Mụn nội tiết":["CB","CS2","CS3","CS4","CS5","TLCB3","TLNC3","TLCS"],
-  "Mụn ẩn":["CB","CS1","CS2","CS3","CS4","CS5","TLCB2","TLNC2"],
-  "Mụn đầu đen":["CB","CS1","CS2","CS3","CS4","CS5","TLCB2","TLNC2"],
-  "Mụn đầu đen và sợi bã nhờn":["CB","CS1","CS2","CS3","CS4","CS5","TLCB2","TLNC2"],
-  "Thâm mụn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB5","TLCB2","TLNC1","TLNC2","TLCS"],
-  "Sẹo sau mụn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC3","TLNC4","TLCS"],
-  "Da lão hoá":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC1","TLNC2","TLCS"],
-  "Da xanh xao":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB5","TLNC1","TLNC2","TLCS"],
-  "Da không đều màu":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB5","TLNC1","TLNC2","TLCS"],
-  "Da sạm đen":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB5","TLNC1","TLNC2","TLCS"],
-  "Da chảy xệ":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLNC1","TLNC2","TLCS"],
-  "Da giãn mao mạch":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB3","TLNC1","TLNC2","TLCS"],
-  "Mất cân bằng hệ vi sinh":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
+  "Da khô":["CB","CS1","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
+  "Da nhạy cảm":["CB","CS1","CS2","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
+  "Da mẩn đỏ":["CB","CS1","CS2","CS5","CS6","TLCB1","TLCB4","TLCS"],
+  "Da kích ứng":["CB","CS1","CS2","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
+  "Da tiết nhiều dầu":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
+  "Da bùng mụn":["CB","CS2","CS3","CS4","CS5","CS6","TLCB1","TLNC3","TLNC4","TLCS"],
+  "Da mụn tổng hợp":["CB","CS2","CS3","CS4","CS5","CS6","TLCB1","TLNC3","TLNC4","TLCS"],
+  "Mụn nội tiết":["CB","CS2","CS3","CS4","CS5","CS6","TLCB3","TLNC3","TLCS"],
+  "Mụn ẩn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
+  "Mụn đầu đen":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
+  "Mụn đầu đen và sợi bã nhờn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
+  "Thâm mụn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLCB2","TLNC1","TLNC2","TLCS"],
+  "Sẹo sau mụn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB2","TLNC3","TLNC4","TLCS"],
+  "Da lão hoá":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB2","TLNC1","TLNC2","TLCS"],
+  "Da xanh xao":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLNC1","TLNC2","TLCS"],
+  "Da không đều màu":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLNC1","TLNC2","TLCS"],
+  "Da sạm đen":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLNC1","TLNC2","TLCS"],
+  "Da chảy xệ":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLNC1","TLNC2","TLCS"],
+  "Da giãn mao mạch":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB3","TLNC1","TLNC2","TLCS"],
+  "Mất cân bằng hệ vi sinh":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB1","TLCB4","TLCS"],
   "Khác...":[],
 };
 
