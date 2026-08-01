@@ -408,30 +408,30 @@ function tr(key){ return I18N[LANG][key]; }
 /* ============ DỮ LIỆU MENU (từ Google Sheet WeeLAB) ============ */
 // group keys: CB, CS, TLCB, TLNC, TLCS, PT
 const MENU = [
-  {id:"CB",  group:"CB",   name:"Chăm sóc cơ bản (trọn 60p)", name_en:"Basic facial care (full 60 min)", list:600000, member:550000, time:60, labor:35000,
+  {id:"CB",  group:"CB",   name:"Chăm sóc cơ bản (trọn 60p)", name_en:"Basic facial care (full 60 min)", list:679000, member:629000, time:60, labor:35000,
      desc:"Tẩy trang · rửa mặt-xông hơi · TDC enzyme · Hydra Peel · nặn mụn · mặt nạ · điện di lạnh · oxy tươi · dưỡng",
      desc_en:"Makeup removal · cleansing & steam · enzyme peel · Hydra Peel · extraction · mask · cold ion infusion · oxygen · moisturizer"},
 
-  {id:"CS1", group:"CS", name:"Massage khai thông hệ bạch huyết", name_en:"Lymphatic drainage massage", list:50000,  member:30000,  time:15, labor:5000,  desc:"Massage ngực, cổ, mặt, tay, đầu · 15p", desc_en:"Chest, neck, face, hand & head massage · 15 min"},
+  {id:"CS1", group:"CS", name:"Massage khai thông hệ bạch huyết", name_en:"Lymphatic drainage massage", list:60000,  member:50000,  time:15, labor:5000,  desc:"Massage ngực, cổ, mặt, tay, đầu · 15p", desc_en:"Chest, neck, face, hand & head massage · 15 min"},
   {id:"CS2", group:"CS", name:"Chiếu đèn quang động học (PDT)", name_en:"Photodynamic therapy (PDT) light", list:100000, member:80000,  time:15, labor:2000,  desc:"Xanh: trị mụn/kiềm dầu · Đỏ: collagen/sáng · Vàng: phục hồi · IR: giảm đau · 15p", desc_en:"Blue: acne/oil control · Red: collagen/brightening · Yellow: repair · IR: pain relief · 15 min"},
   {id:"CS3", group:"CS", name:"Sebum Soak (loãng dầu)", name_en:"Sebum Soak (oil dissolving)", list:120000, member:100000, time:5,  labor:3000,  desc:"Khai thông lỗ chân lông, giảm tiết dầu · 5p", desc_en:"Unclogs pores, reduces oil secretion · 5 min"},
-  {id:"CS4", group:"CS", name:"Hydra Peel AHA/BHA", name_en:"Hydra Peel AHA/BHA", list:200000, member:150000, time:5,  labor:5000,  desc:"Hút sạch sâu + xử lý da chết · 5p", desc_en:"Deep extraction + dead skin removal · 5 min"},
-  {id:"CS5", group:"CS", name:"Hydra Peel HA+Vitamin C", name_en:"Hydra Peel HA+Vitamin C", list:200000, member:150000, time:5,  labor:5000,  desc:"Cấp ẩm sâu, căng bóng · 5p", desc_en:"Deep hydration, plumping & brightening · 5 min"},
-  {id:"CS6", group:"CS", name:"Giải cơ cổ vai gáy (EMS, RF)", name_en:"Neck & shoulder muscle release (EMS, RF)", list:300000, member:250000, time:15, labor:3000,  desc:"15p", desc_en:"15 min"},
-  {id:"CS7", group:"CS", name:"Nâng cơ mặt (EMS, RF)", name_en:"Facial muscle lifting (EMS, RF)", list:300000, member:250000, time:10, labor:2000,  desc:"10p", desc_en:"10 min"},
+  {id:"CS4", group:"CS", name:"Hydra Peel AHA/BHA", name_en:"Hydra Peel AHA/BHA", list:200000, member:160000, time:5,  labor:5000,  desc:"Hút sạch sâu + xử lý da chết · 5p", desc_en:"Deep extraction + dead skin removal · 5 min"},
+  {id:"CS5", group:"CS", name:"Hydra Peel HA+Vitamin C", name_en:"Hydra Peel HA+Vitamin C", list:200000, member:160000, time:5,  labor:5000,  desc:"Cấp ẩm sâu, căng bóng · 5p", desc_en:"Deep hydration, plumping & brightening · 5 min"},
+  {id:"CS6", group:"CS", name:"Giải cơ cổ vai gáy (EMS, RF)", name_en:"Neck & shoulder muscle release (EMS, RF)", list:150000, member:120000, time:15, labor:3000,  desc:"15p", desc_en:"15 min"},
+  {id:"CS7", group:"CS", name:"Nâng cơ mặt (EMS, RF)", name_en:"Facial muscle lifting (EMS, RF)", list:150000, member:120000, time:10, labor:2000,  desc:"10p", desc_en:"10 min"},
 
   {id:"TLCB1", group:"TLCB", name:"Phục hồi da yếu, mẩn đỏ, kích ứng", name_en:"Repair for weak, red, irritated skin", list:300000, member:250000, time:10, labor:5000, desc:"Argilac · 10p", desc_en:"Argilac · 10 min"},
-  {id:"TLCB2", group:"TLCB", name:"Peel xử lý dày sừng, mờ thâm", name_en:"Peel for keratosis & dark spot fading", list:300000, member:260000, time:5,  labor:5000, desc:"Prozyme; Proalpha 1-2; Inno peel · 5p", desc_en:"Prozyme; Proalpha 1-2; Inno peel · 5 min"},
-  {id:"TLCB3", group:"TLCB", name:"Peel xử lý mụn viêm, thâm đỏ, giãn mao mạch", name_en:"Peel for inflamed acne, redness, capillaries", list:350000, member:300000, time:5,  labor:5000, desc:"Azelaico; Sama; Comodex; Red Vein · 5p", desc_en:"Azelaico; Sama; Comodex; Red Vein · 5 min"},
-  {id:"TLCB4", group:"TLCB", name:"Phục hồi HRBV, cân bằng HVS", name_en:"HRBV repair, microbiome balance", list:380000, member:320000, time:10, labor:5000, desc:"Unstress Christina · 10p", desc_en:"Unstress Christina · 10 min"},
+  {id:"TLCB2", group:"TLCB", name:"Peel xử lý dày sừng, mờ thâm", name_en:"Peel for keratosis & dark spot fading", list:360000, member:310000, time:5,  labor:5000, desc:"Prozyme; Proalpha 1-2; Inno peel · 5p", desc_en:"Prozyme; Proalpha 1-2; Inno peel · 5 min"},
+  {id:"TLCB3", group:"TLCB", name:"Peel xử lý mụn viêm, thâm đỏ, giãn mao mạch", name_en:"Peel for inflamed acne, redness, capillaries", list:360000, member:310000, time:5,  labor:5000, desc:"Azelaico; Sama; Comodex; Red Vein · 5p", desc_en:"Azelaico; Sama; Comodex; Red Vein · 5 min"},
+  {id:"TLCB4", group:"TLCB", name:"Phục hồi HRBV, cân bằng HVS", name_en:"HRBV repair, microbiome balance", list:380000, member:330000, time:10, labor:5000, desc:"Unstress Christina · 10p", desc_en:"Unstress Christina · 10 min"},
   {id:"TLCB5", group:"TLCB", name:"Peel xử lý thâm mụn, đều màu da", name_en:"Peel for acne marks & even skin tone", list:380000, member:330000, time:5,  labor:5000, desc:"Lightening peel; Super bright · 5p", desc_en:"Lightening peel; Super bright · 5 min"},
 
   {id:"TLNC1", group:"TLNC", name:"Peel nóng kích thích lưu thông", name_en:"Warm peel for circulation boost", list:400000, member:350000, time:5, labor:5000,  desc:"Quick Peel · da hồng hào · 5p", desc_en:"Quick Peel · rosy skin · 5 min"},
   {id:"TLNC2", group:"TLNC", name:"Peel lạnh săn chắc, sáng da", name_en:"Cold peel for firming & brightening", list:400000, member:350000, time:7, labor:5000,  desc:"Cryo Pro-X · kiềm dầu · 7p", desc_en:"Cryo Pro-X · oil control · 7 min"},
   {id:"TLNC3", group:"TLNC", name:"Peel kiềm mụn/sẹo/thâm (theo điểm)", name_en:"Alkaline peel for acne/scar/dark spots (spot)", list:200000, member:150000, time:5, labor:5000,  desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
-  {id:"TLNC4", group:"TLNC", name:"Peel kiềm mụn/sẹo/thâm (toàn mặt)", name_en:"Alkaline peel for acne/scar/dark spots (full face)", list:500000, member:400000, time:5, labor:10000, desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
+  {id:"TLNC4", group:"TLNC", name:"Peel kiềm mụn/sẹo/thâm (toàn mặt)", name_en:"Alkaline peel for acne/scar/dark spots (full face)", list:680000, member:630000, time:5, labor:10000, desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
 
-  {id:"TLCS", group:"TLCS", name:"Enzyme mask phục hồi, thải độc", name_en:"Enzyme mask for repair & detox", list:850000, member:750000, time:45, labor:15000, desc:"Enzyme Masque #1 · 45p", desc_en:"Enzyme Masque #1 · 45 min"},
+  {id:"TLCS", group:"TLCS", name:"Enzyme mask phục hồi, thải độc", name_en:"Enzyme mask for repair & detox", list:890000, member:800000, time:45, labor:15000, desc:"Enzyme Masque #1 · 45p", desc_en:"Enzyme Masque #1 · 45 min"},
 
   {id:"PT1", group:"PT", name:"Nặn mụn thêm 30 phút", name_en:"Extra acne extraction +30 min", list:100000, member:null, time:30, labor:5000,  desc:"Phụ thu", desc_en:"Surcharge"},
   {id:"PT2", group:"PT", name:"Chiếu đèn thêm 20 phút", name_en:"Extra light therapy +20 min", list:50000, member:null, time:20, labor:0,     desc:"Phụ thu", desc_en:"Surcharge"},
@@ -449,11 +449,11 @@ const GROUPS = [
 
 /* Buffet: gói → nhóm món được phép */
 const BUFFET = [
-  {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:999000,  groups:["CB","CS"],
+  {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:1099000,  groups:["CB","CS"],
      inc:"Khai vị & Món chính", inc_en:"Starter & Main Course", target:"Da ít vấn đề, làm sạch & cấp ẩm", target_en:"Low-issue skin, cleansing & hydration"},
   {id:"trongtreo",  name:"Trong trẻo",  name_en:"Clarity", price:1299000, groups:["CB","CS","TLCB"],
      inc:"Khai vị, Món chính, Đặc sản", inc_en:"Starter, Main Course, Wee's Specialties", target:"Da thiếu sức sống, vấn đề bề mặt", target_en:"Dull skin, surface-level issues"},
-  {id:"muotmong",   name:"Mướt mọng",   name_en:"Radiance", price:1999000, groups:["CB","CS","TLCB","TLNC","TLCS"],
+  {id:"muotmong",   name:"Mướt mọng",   name_en:"Radiance", price:2050000, groups:["CB","CS","TLCB","TLNC","TLCS"],
      inc:"Toàn bộ thực đơn", inc_en:"Full Menu", target:"Da nhiều tín hiệu báo động, tổng hợp", target_en:"Skin with multiple combined concerns"},
 ];
 
