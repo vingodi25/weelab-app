@@ -71,6 +71,12 @@
   .ctypes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0 0;}
   .ctype{border:2px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;text-align:center;transition:.12s;background:#fcfaf7;font-size:13px;font-weight:600;}
   .ctype.on{border-color:var(--danger);background:var(--danger-soft);color:var(--danger);}
+  /* Khách lẻ: dùng màu brand xanh */
+  #ctypeRetail.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark);}
+  /* Member: giữ màu đỏ/danger */
+  #ctypeMember.on{border-color:var(--danger);background:var(--danger-soft);color:var(--danger);}
+  /* VIP: màu vàng gold */
+  #ctypeVip.on{border-color:#bfa15a;background:#faf4e3;color:#7a5c0a;}
 
   /* skin tags */
   .skintags{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;}
@@ -146,6 +152,72 @@
     body{background:#fff;}
     .card{box-shadow:none;border:none;}
   }
+
+  /* 3-cột loại khách */
+  .ctypes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0 0;}
+  .ctype.vip.on{border-color:#bfa15a;background:#faf4e3;color:#7a5c0a;}
+
+  /* Birthday banner */
+  .birthday-box{background:linear-gradient(135deg,#8b1a3b 0%,#c4385a 50%,#8b1a3b 100%);color:#fff;border-radius:12px;padding:14px 18px;margin:10px 0;text-align:center;font-size:15px;letter-spacing:.3px;animation:bdpulse 2s ease-in-out infinite;}
+  @keyframes bdpulse{0%,100%{box-shadow:0 0 0 0 rgba(196,56,90,.4)}50%{box-shadow:0 0 0 8px rgba(196,56,90,0)}}
+
+  /* Nút đăng ký */
+  .reg-buttons{display:flex;gap:10px;margin:14px 0 0;flex-wrap:wrap;}
+  .regbtn{flex:1;min-width:140px;border:none;border-radius:10px;padding:11px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--brand-dark);color:#fff;transition:.15s;}
+  .regbtn:hover{background:var(--brand);}
+  .regbtn.vip-btn{background:linear-gradient(135deg,#7a5c0a,#bfa15a);color:#fff;}
+  .regbtn.vip-btn:hover{background:linear-gradient(135deg,#9a7320,#d4a84a);}
+  /* Active state — hiển thị rõ trên iPad (không có hover) */
+  .regbtn.active-reg{background:#3d7a5c;color:#fff;border:2px solid #2a5c42;}
+  .regbtn.vip-btn.active-reg{background:linear-gradient(135deg,#9a7320,#d4a84a);color:#fff;border:2px solid #bfa15a;box-shadow:0 0 0 3px rgba(191,161,90,.25);}
+
+  /* Popup overlay */
+  .popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .popup-box{background:#fff;border-radius:18px;padding:24px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.25);}
+  .popup-box h3{margin:0 0 4px;font-size:18px;}
+  .popup-sub{color:var(--muted);font-size:12.5px;margin:0 0 18px;}
+  .popup-actions{margin-top:18px;display:flex;gap:10px;justify-content:flex-end;}
+  .popup-actions button{border:1px solid var(--line);border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--ink);}
+
+  /* Membership plans */
+  .member-plans{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+  @media(max-width:480px){.member-plans{grid-template-columns:1fr;}}
+  .mplan{border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:.12s;background:#fcfaf7;}
+  .mplan:hover{border-color:var(--brand);}
+  .mplan.on{border-color:var(--danger);background:var(--danger-soft);}
+  .mplan-months{font-weight:700;font-size:15px;margin-bottom:4px;}
+  .mplan-price{font-size:18px;font-weight:800;color:var(--danger);}
+  .mplan-rate{color:var(--muted);font-size:12px;margin-top:3px;}
+  .mplan-save{color:var(--green);font-size:11.5px;margin-top:5px;font-weight:600;}
+
+  /* VIP tiers */
+  .vip-tiers{display:flex;flex-direction:column;gap:10px;}
+  .vtier{border:2px solid var(--line);border-radius:12px;padding:14px;cursor:pointer;transition:.12s;background:#fcfaf7;}
+  .vtier:hover{border-color:#bfa15a;}
+  .vtier.on{border-color:#bfa15a;background:#faf4e3;}
+  .vtier-name{font-weight:800;font-size:16px;letter-spacing:.5px;margin-bottom:4px;}
+  .vtier-price{font-size:18px;font-weight:700;color:var(--ink);}
+  .vtier-cashback{color:var(--green);font-weight:600;font-size:13px;margin-top:4px;}
+  .vtier-balance{color:var(--brand-dark);font-size:13px;margin-top:2px;}
+  .vtier-note{color:var(--muted);font-size:12px;margin-top:4px;}
+
+  /* VIP balance note */
+  .vip-balance-note{background:#faf4e3;border:1px solid #e0c870;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;color:#7a5c0a;margin-top:6px;}
+
+
+  .pricetbl{display:flex;gap:4px;align-items:stretch;}
+  .pricecol{min-width:66px;text-align:center;}
+  .pricecol.single{min-width:66px;text-align:center;}
+
+
+  /* Birthday popup */
+  .bd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .bd-box{background:linear-gradient(135deg,#8b1a3b 0%,#c4385a 50%,#8b1a3b 100%);color:#fff;border-radius:18px;padding:28px 24px;max-width:380px;width:100%;text-align:center;position:relative;box-shadow:0 8px 40px rgba(139,26,59,.4);}
+  .bd-box .bd-close{position:absolute;top:12px;right:14px;background:rgba(255,255,255,.25);border:none;color:#fff;font-size:18px;width:30px;height:30px;border-radius:50%;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .bd-box .bd-icon{font-size:48px;margin-bottom:10px;display:block;}
+  .bd-box .bd-msg{font-size:16px;font-weight:700;letter-spacing:.3px;line-height:1.5;}
+  .bd-box .bd-btn{margin-top:18px;background:#fff;color:#8b1a3b;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+
 </style>
 </head>
 <body>
@@ -185,13 +257,23 @@
       <input type="email" id="cEmail" placeholder="VD: a@gmail.com">
       <div class="fldwarn" id="cEmailWarn" style="display:none"></div>
 
+      <label class="fld" id="t_lblDob">Ngày sinh</label>
+      <input type="text" id="cDob" placeholder="dd/mm/yyyy" maxlength="10" oninput="formatDobInput(this)" autocomplete="off">
+
       <label class="fld" id="t_lblCtype"></label>
       <div class="ctypes">
         <div class="ctype on" id="ctypeRetail" onclick="setCustomerType('retail')">🧍 <span id="t_retail"></span></div>
         <div class="ctype" id="ctypeMember" onclick="setCustomerType('member')">⭐ <span id="t_member"></span></div>
+        <div class="ctype vip" id="ctypeVip" onclick="setCustomerType('vip')">💎 <span id="t_vip">VIP</span></div>
       </div>
 
       <div class="returning" id="returningBox"></div>
+      <!-- Birthday popup moved to bottom of body -->
+
+      <div class="reg-buttons">
+        <button class="regbtn" id="btnMembership" onclick="openMembershipPopup()">✦ Đăng ký Membership</button>
+        <button class="regbtn vip-btn" id="btnVip" onclick="openVipPopup()">💎 Đăng ký Wee.LUX VIP</button>
+      </div>
     </div>
 
     <!-- STEP 2: TÌNH TRẠNG DA -->
@@ -237,6 +319,7 @@
       <div class="saving" id="savingNote"></div>
       <div class="warn" id="buffetWarn"></div>
       <div class="warn" id="contraWarn"></div>
+      <div class="vip-balance-note" id="vipBalanceNote" style="display:none"></div>
       <div class="no-print" id="sheetUrlBox" style="display:none;margin-top:10px;">
         <label class="fld"><span id="t_sheetUrlLbl"></span> <span style="font-weight:400;color:var(--muted);" id="t_sheetUrlHint"></span></label>
         <input type="text" id="sheetUrl" placeholder="https://script.google.com/macros/s/XXXXX/exec">
@@ -271,7 +354,7 @@ const I18N = {
     retail:"Khách lẻ",
     member:"Member",
     step2Title:"Tình trạng da",
-    step2SubHtml:"Chọn 1 hoặc nhiều tình trạng. App sẽ <b>gợi ý món phù hợp</b> bên dưới.",
+    step2SubHtml:"Chọn 1 hoặc nhiều tình trạng da. WeeLAB sẽ <b>gợi ý món phù hợp</b> bên dưới. Cẩn trọng với các món <b>chống chỉ định</b>.",
     lblNote:"Ghi chú chi tiết cho Kỹ thuật viên",
     step3Title:"Hình thức & chọn món",
     step3SubHtml:'Chọn Gọi món lẻ hoặc Buffet. Món được <span class="pill">gợi ý</span> theo tình trạng da sẽ tô xanh.',
@@ -343,7 +426,7 @@ const I18N = {
     retail:"Walk-in",
     member:"Member",
     step2Title:"Skin condition",
-    step2SubHtml:"Select one or more conditions. The app will <b>suggest suitable treatments</b> below.",
+    step2SubHtml:"Select one or more skin conditions. WeeLAB will <b>suggest suitable treatments</b> below. Watch for <b>contraindicated</b> items.",
     lblNote:"Detailed notes for the technician",
     step3Title:"Format & treatment selection",
     step3SubHtml:'Choose À la carte or Buffet. Treatments <span class="pill">suggested</span> for the skin condition are highlighted green.',
@@ -408,39 +491,105 @@ function tr(key){ return I18N[LANG][key]; }
 /* ============ DỮ LIỆU MENU (từ Google Sheet WeeLAB) ============ */
 // group keys: CB, CS, TLCB, TLNC, TLCS, PT
 const MENU = [
-  {id:"CB",  group:"CB",   name:"Chăm sóc cơ bản (trọn 60p)", name_en:"Basic facial care (full 60 min)", list:679000, member:629000, time:60, labor:35000,
-     desc:"Tẩy trang · rửa mặt-xông hơi · TDC enzyme · Hydra Peel · nặn mụn · mặt nạ · điện di lạnh · oxy tươi · dưỡng",
-     desc_en:"Makeup removal · cleansing & steam · enzyme peel · Hydra Peel · extraction · mask · cold ion infusion · oxygen · moisturizer"},
+  // CB - Chăm sóc cơ bản
+  {id:"CB", group:"CB", name:"Chăm sóc cơ bản (trọn 60p)", name_en:"Basic facial care (full 60 min)",
+   list:799000, member:679000, vip:629000, time:60, labor:38000,
+   desc:"Tẩy trang · rửa mặt-xông hơi · TDC enzyme · Hydra Peel · nặn mụn · mặt nạ · điện di lạnh · oxy tươi · dưỡng",
+   desc_en:"Makeup removal · cleansing & steam · enzyme peel · Hydra Peel · extraction · mask · cold ion infusion · oxygen · moisturizer"},
 
-  {id:"CS1", group:"CS", name:"Massage khai thông hệ bạch huyết", name_en:"Lymphatic drainage massage", list:60000,  member:50000,  time:15, labor:5000,  desc:"Massage ngực, cổ, mặt, tay, đầu · 15p", desc_en:"Chest, neck, face, hand & head massage · 15 min"},
-  {id:"CS2", group:"CS", name:"Chiếu đèn quang động học (PDT)", name_en:"Photodynamic therapy (PDT) light", list:100000, member:80000,  time:15, labor:2000,  desc:"Xanh: trị mụn/kiềm dầu · Đỏ: collagen/sáng · Vàng: phục hồi · IR: giảm đau · 15p", desc_en:"Blue: acne/oil control · Red: collagen/brightening · Yellow: repair · IR: pain relief · 15 min"},
-  {id:"CS3", group:"CS", name:"Sebum Soak (loãng dầu)", name_en:"Sebum Soak (oil dissolving)", list:120000, member:100000, time:5,  labor:3000,  desc:"Khai thông lỗ chân lông, giảm tiết dầu · 5p", desc_en:"Unclogs pores, reduces oil secretion · 5 min"},
-  {id:"CS4", group:"CS", name:"Hydra Peel AHA/BHA", name_en:"Hydra Peel AHA/BHA", list:200000, member:160000, time:5,  labor:5000,  desc:"Hút sạch sâu + xử lý da chết · 5p", desc_en:"Deep extraction + dead skin removal · 5 min"},
-  {id:"CS5", group:"CS", name:"Hydra Peel HA+Vitamin C", name_en:"Hydra Peel HA+Vitamin C", list:200000, member:160000, time:5,  labor:5000,  desc:"Cấp ẩm sâu, căng bóng · 5p", desc_en:"Deep hydration, plumping & brightening · 5 min"},
-  {id:"CS6", group:"CS", name:"Giải cơ cổ vai gáy (EMS, RF)", name_en:"Neck & shoulder muscle release (EMS, RF)", list:150000, member:120000, time:15, labor:3000,  desc:"15p", desc_en:"15 min"},
-  {id:"CS7", group:"CS", name:"Nâng cơ mặt (EMS, RF)", name_en:"Facial muscle lifting (EMS, RF)", list:150000, member:120000, time:10, labor:2000,  desc:"10p", desc_en:"10 min"},
+  // NC - Chăm sóc nâng cao
+  {id:"NC1", group:"NC", name:"Massage khai thông hệ bạch huyết", name_en:"Lymphatic drainage massage",
+   list:70000, member:60000, vip:50000, time:15, labor:5000,
+   desc:"Massage ngực, cổ, mặt, tay, đầu · 15p", desc_en:"Chest, neck, face, hand & head massage · 15 min"},
+  {id:"NC2", group:"NC", name:"Cấp nước biểu bì cho da khô", name_en:"Epidermal hydration for dry skin",
+   list:70000, member:60000, vip:50000, time:5, labor:2000,
+   desc:"Gel cấp nước Histolab · 5p", desc_en:"Histolab hydration gel · 5 min"},
+  {id:"NC3", group:"NC", name:"Chiếu đèn quang động học (PDT)", name_en:"Photodynamic therapy (PDT) light",
+   list:120000, member:100000, vip:80000, time:15, labor:2000,
+   desc:"Xanh: trị mụn/kiềm dầu · Đỏ: collagen/sáng · Vàng: phục hồi · IR: giảm đau · 15p",
+   desc_en:"Blue: acne/oil control · Red: collagen/brightening · Yellow: repair · IR: pain relief · 15 min"},
+  {id:"NC4", group:"NC", name:"Sebum Soak (loãng dầu)", name_en:"Sebum Soak (oil dissolving)",
+   list:150000, member:120000, vip:100000, time:5, labor:3000,
+   desc:"Khai thông lỗ chân lông, giảm tiết dầu · 5p", desc_en:"Unclogs pores, reduces oil secretion · 5 min"},
+  {id:"NC5", group:"NC", name:"Hydra Peel AHA/BHA", name_en:"Hydra Peel AHA/BHA",
+   list:220000, member:200000, vip:160000, time:5, labor:5000,
+   desc:"Hút sạch sâu + xử lý da chết · 5p", desc_en:"Deep extraction + dead skin removal · 5 min"},
+  {id:"NC6", group:"NC", name:"Hydra Peel HA+Vitamin C", name_en:"Hydra Peel HA+Vitamin C",
+   list:220000, member:200000, vip:160000, time:5, labor:5000,
+   desc:"Cấp ẩm sâu, căng bóng · 5p", desc_en:"Deep hydration, plumping & brightening · 5 min"},
+  {id:"NC7", group:"NC", name:"Giải cơ cổ vai gáy (EMS, RF)", name_en:"Neck & shoulder muscle release (EMS, RF)",
+   list:180000, member:150000, vip:120000, time:15, labor:5000,
+   desc:"15p", desc_en:"15 min"},
+  {id:"NC8", group:"NC", name:"Nâng cơ mặt (EMS, RF)", name_en:"Facial muscle lifting (EMS, RF)",
+   list:180000, member:150000, vip:120000, time:10, labor:5000,
+   desc:"10p", desc_en:"10 min"},
 
-  {id:"TLCB1", group:"TLCB", name:"Phục hồi da yếu, mẩn đỏ, kích ứng", name_en:"Repair for weak, red, irritated skin", list:300000, member:250000, time:10, labor:5000, desc:"Argilac · 10p", desc_en:"Argilac · 10 min"},
-  {id:"TLCB2", group:"TLCB", name:"Peel xử lý dày sừng, mờ thâm", name_en:"Peel for keratosis & dark spot fading", list:360000, member:310000, time:5,  labor:5000, desc:"Prozyme; Proalpha 1-2; Inno peel · 5p", desc_en:"Prozyme; Proalpha 1-2; Inno peel · 5 min"},
-  {id:"TLCB3", group:"TLCB", name:"Peel xử lý mụn viêm, thâm đỏ, giãn mao mạch", name_en:"Peel for inflamed acne, redness, capillaries", list:360000, member:310000, time:5,  labor:5000, desc:"Azelaico; Sama; Comodex; Red Vein · 5p", desc_en:"Azelaico; Sama; Comodex; Red Vein · 5 min"},
-  {id:"TLCB4", group:"TLCB", name:"Phục hồi HRBV, cân bằng HVS", name_en:"HRBV repair, microbiome balance", list:380000, member:330000, time:10, labor:5000, desc:"Unstress Christina · 10p", desc_en:"Unstress Christina · 10 min"},
-  {id:"TLCB5", group:"TLCB", name:"Peel xử lý thâm mụn, đều màu da", name_en:"Peel for acne marks & even skin tone", list:380000, member:330000, time:5,  labor:5000, desc:"Lightening peel; Super bright · 5p", desc_en:"Lightening peel; Super bright · 5 min"},
+  // TLCB - Đặc sản nhà Wee (chọn 1)
+  {id:"P1", group:"TLCB", name:"Phục hồi da yếu, mẩn đỏ, kích ứng", name_en:"Repair for weak, red, irritated skin",
+   list:350000, member:300000, vip:250000, time:10, labor:5000,
+   desc:"Argilac · 10p", desc_en:"Argilac · 10 min"},
+  {id:"P2", group:"TLCB", name:"Peel làm mịn, tăng sinh tế bào (da nhạy cảm)", name_en:"Peel for cell renewal (sensitive skin)",
+   list:400000, member:360000, vip:310000, time:5, labor:5000,
+   desc:"Desquamate · 5p", desc_en:"Desquamate · 5 min"},
+  {id:"P3", group:"TLCB", name:"Peel kiểm soát dầu, mụn ẩn (an toàn da nhạy)", name_en:"Peel for oil control & hidden acne (sensitive-safe)",
+   list:400000, member:360000, vip:310000, time:5, labor:5000,
+   desc:"Prozyme · 5p", desc_en:"Prozyme · 5 min"},
+  {id:"P4", group:"TLCB", name:"Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)", name_en:"Peel for smoothing & hydration (dry skin)",
+   list:400000, member:360000, vip:310000, time:5, labor:5000,
+   desc:"Pro Alpha 1 · 5p", desc_en:"Pro Alpha 1 · 5 min"},
+  {id:"P5", group:"TLCB", name:"Peel xử lý dày sừng, nhiều dầu", name_en:"Peel for keratosis & excess oil",
+   list:400000, member:360000, vip:310000, time:5, labor:5000,
+   desc:"Pro Alpha 2; Inno peel · 5p", desc_en:"Pro Alpha 2; Inno peel · 5 min"},
+  {id:"P6", group:"TLCB", name:"Peel kiểm soát dầu & mụn tổng hợp", name_en:"Peel for oil control & combination acne",
+   list:400000, member:360000, vip:310000, time:5, labor:5000,
+   desc:"Comodex Christina · 5p", desc_en:"Comodex Christina · 5 min"},
+  {id:"P7", group:"TLCB", name:"Peel xử lý mụn viêm", name_en:"Peel for inflamed acne",
+   list:400000, member:360000, vip:310000, time:5, labor:5000,
+   desc:"Azelaico peel; Red Vein · 5p", desc_en:"Azelaico peel; Red Vein · 5 min"},
+  {id:"P8", group:"TLCB", name:"Phục hồi HRBV, cân bằng hệ vi sinh", name_en:"HRBV repair, microbiome balance",
+   list:420000, member:380000, vip:330000, time:10, labor:5000,
+   desc:"Unstress Christina · 10p", desc_en:"Unstress Christina · 10 min"},
+  {id:"P9", group:"TLCB", name:"Peel xử lý thâm mụn, nám, tàn nhang", name_en:"Peel for acne marks, melasma & freckles",
+   list:420000, member:380000, vip:330000, time:5, labor:5000,
+   desc:"Lightening peel; Super bright; Pro Alpha 2 · 5p", desc_en:"Lightening peel; Super bright; Pro Alpha 2 · 5 min"},
 
-  {id:"TLNC1", group:"TLNC", name:"Peel nóng kích thích lưu thông", name_en:"Warm peel for circulation boost", list:400000, member:350000, time:5, labor:5000,  desc:"Quick Peel · da hồng hào · 5p", desc_en:"Quick Peel · rosy skin · 5 min"},
-  {id:"TLNC2", group:"TLNC", name:"Peel lạnh săn chắc, sáng da", name_en:"Cold peel for firming & brightening", list:400000, member:350000, time:7, labor:5000,  desc:"Cryo Pro-X · kiềm dầu · 7p", desc_en:"Cryo Pro-X · oil control · 7 min"},
-  {id:"TLNC3", group:"TLNC", name:"Peel kiềm mụn/sẹo/thâm (theo điểm)", name_en:"Alkaline peel for acne/scar/dark spots (spot)", list:200000, member:150000, time:5, labor:5000,  desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
-  {id:"TLNC4", group:"TLNC", name:"Peel kiềm mụn/sẹo/thâm (toàn mặt)", name_en:"Alkaline peel for acne/scar/dark spots (full face)", list:680000, member:630000, time:5, labor:10000, desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
+  // TLNC - Cao lương mỹ vị (chọn 1-2)
+  {id:"P10", group:"TLNC", name:"Peel xử lý sần vỏ cam, kiểm soát dầu", name_en:"Peel for orange-peel texture & oil control",
+   list:450000, member:400000, vip:350000, time:5, labor:5000,
+   desc:"Pro Alpha 1 mix Pro Alpha 2 · 5p", desc_en:"Pro Alpha 1 mix Pro Alpha 2 · 5 min"},
+  {id:"P11", group:"TLNC", name:"Peel làm trắng, đều màu da, xử lý thâm nám", name_en:"Peel for brightening, even tone & melasma",
+   list:450000, member:400000, vip:350000, time:5, labor:5000,
+   desc:"Pro Alpha 1 mix Super bright · 5p", desc_en:"Pro Alpha 1 mix Super bright · 5 min"},
+  {id:"P12", group:"TLNC", name:"Peel nóng kích thích lưu thông, da sáng hồng", name_en:"Warm peel for circulation & rosy skin",
+   list:450000, member:400000, vip:350000, time:5, labor:5000,
+   desc:"Quick Peel · da hồng hào · 5p", desc_en:"Quick Peel · rosy skin · 5 min"},
+  {id:"P13", group:"TLNC", name:"Peel lạnh nhả nắng, hạ nhiệt, săn chắc da", name_en:"Cold peel for cooling & firming",
+   list:450000, member:400000, vip:350000, time:7, labor:5000,
+   desc:"Cryo Pro-X · kiềm dầu · 7p", desc_en:"Cryo Pro-X · oil control · 7 min"},
+  {id:"P14", group:"TLNC", name:"Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)", name_en:"Alkaline peel for acne/scar/dark spots (spot)",
+   list:250000, member:200000, vip:150000, time:5, labor:5000,
+   desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
+  {id:"P15", group:"TLNC", name:"Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)", name_en:"Alkaline peel for acne/scar/dark spots (full face)",
+   list:730000, member:680000, vip:630000, time:5, labor:10000,
+   desc:"Alkaline Wash · 5p", desc_en:"Alkaline Wash · 5 min"},
 
-  {id:"TLCS", group:"TLCS", name:"Enzyme mask phục hồi, thải độc", name_en:"Enzyme mask for repair & detox", list:890000, member:800000, time:45, labor:15000, desc:"Enzyme Masque #1 · 45p", desc_en:"Enzyme Masque #1 · 45 min"},
+  // TLCS - Bí truyền
+  {id:"E1", group:"TLCS", name:"Enzyme mask phục hồi, thải độc", name_en:"Enzyme mask for repair & detox",
+   list:980000, member:890000, vip:800000, time:45, labor:20000,
+   desc:"Enzyme Masque #1 · 45p", desc_en:"Enzyme Masque #1 · 45 min"},
 
-  {id:"PT1", group:"PT", name:"Nặn mụn thêm 30 phút", name_en:"Extra acne extraction +30 min", list:100000, member:null, time:30, labor:5000,  desc:"Phụ thu", desc_en:"Surcharge"},
-  {id:"PT2", group:"PT", name:"Chiếu đèn thêm 20 phút", name_en:"Extra light therapy +20 min", list:50000, member:null, time:20, labor:0,     desc:"Phụ thu", desc_en:"Surcharge"},
-  {id:"PT3", group:"PT", name:"Gội đầu + Massage cơ bản", name_en:"Hair wash + basic massage", list:70000, member:50000, time:45, labor:10000, desc:"Phụ thu · 45p", desc_en:"Surcharge · 45 min"},
+  // PT - Gọi thêm
+  {id:"PT1", group:"PT", name:"Nặn mụn thêm 30 phút", name_en:"Extra acne extraction +30 min",
+   list:100000, member:0, vip:0, time:30, labor:5000, desc:"Phụ thu", desc_en:"Surcharge"},
+  {id:"PT2", group:"PT", name:"Chiếu đèn thêm 20 phút", name_en:"Extra light therapy +20 min",
+   list:50000, member:30000, vip:0, time:20, labor:0, desc:"Phụ thu", desc_en:"Surcharge"},
+  {id:"PT3", group:"PT", name:"Gội đầu + Massage cơ bản", name_en:"Hair wash + basic massage",
+   list:70000, member:50000, vip:50000, time:45, labor:10000, desc:"Phụ thu · 45p", desc_en:"Surcharge · 45 min"},
 ];
 
 const GROUPS = [
   {key:"CB",   title:"KHAI VỊ", title_en:"STARTER", note:"", note_en:""},
-  {key:"CS",   title:"MÓN CHÍNH", title_en:"MAIN COURSE", note:"", note_en:""},
+  {key:"NC",   title:"MÓN CHÍNH", title_en:"MAIN COURSE", note:"", note_en:""},
   {key:"TLCB", title:"ĐẶC SẢN NHÀ WEE", title_en:"WEE'S SPECIALTIES", note:"chọn 1 trị liệu", note_en:"choose 1 treatment"},
   {key:"TLNC", title:"CAO LƯƠNG MỸ VỊ", title_en:"PREMIUM DELICACIES", note:"chọn 1 hoặc 2", note_en:"choose 1 or 2"},
   {key:"TLCS", title:"BÍ TRUYỀN", title_en:"SECRET RECIPE", note:"", note_en:""},
@@ -449,36 +598,41 @@ const GROUPS = [
 
 /* Buffet: gói → nhóm món được phép */
 const BUFFET = [
-  {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:1099000,  groups:["CB","CS"],
-     inc:"Khai vị & Món chính", inc_en:"Starter & Main Course", target:"Da ít vấn đề, làm sạch & cấp ẩm", target_en:"Low-issue skin, cleansing & hydration"},
-  {id:"trongtreo",  name:"Trong trẻo",  name_en:"Clarity", price:1299000, groups:["CB","CS","TLCB"],
-     inc:"Khai vị, Món chính, Đặc sản", inc_en:"Starter, Main Course, Wee's Specialties", target:"Da thiếu sức sống, vấn đề bề mặt", target_en:"Dull skin, surface-level issues"},
-  {id:"muotmong",   name:"Mướt mọng",   name_en:"Radiance", price:2050000, groups:["CB","CS","TLCB","TLNC","TLCS"],
-     inc:"Toàn bộ thực đơn", inc_en:"Full Menu", target:"Da nhiều tín hiệu báo động, tổng hợp", target_en:"Skin with multiple combined concerns"},
+  {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:1099000, groups:["CB","NC"],
+   inc:"Khai vị & Món chính", inc_en:"Starter & Main Course",
+   target:"Da ít vấn đề, làm sạch & cấp ẩm", target_en:"Low-issue skin, cleansing & hydration"},
+  {id:"trongtreo", name:"Trong trẻo", name_en:"Clarity", price:1299000, groups:["CB","NC","TLCB"],
+   inc:"Khai vị, Món chính, Đặc sản", inc_en:"Starter, Main Course, Wee's Specialties",
+   target:"Da thiếu sức sống, vấn đề bề mặt", target_en:"Dull skin, surface-level issues"},
+  {id:"muotmong", name:"Mướt mọng", name_en:"Radiance", price:2050000, groups:["CB","NC","TLCB","TLNC","TLCS"],
+   inc:"Toàn bộ thực đơn", inc_en:"Full Menu",
+   target:"Da nhiều tín hiệu báo động, tổng hợp", target_en:"Skin with multiple combined concerns"},
 ];
 
 /* Mapping tình trạng da → mã món gợi ý (từ sheet "Gợi ý món") — key tiếng Việt giữ làm key chính (liên kết với CONTRA_MAP) */
 const SKIN_MAP = {
-  "Da khô":["CB","CS1","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
-  "Da nhạy cảm":["CB","CS1","CS2","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
-  "Da mẩn đỏ":["CB","CS1","CS2","CS5","CS6","TLCB1","TLCB4","TLCS"],
-  "Da kích ứng":["CB","CS1","CS2","CS4","CS5","CS6","TLCB1","TLCB4","TLCS"],
-  "Da tiết nhiều dầu":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
-  "Da bùng mụn":["CB","CS2","CS3","CS4","CS5","CS6","TLCB1","TLNC3","TLNC4","TLCS"],
-  "Da mụn tổng hợp":["CB","CS2","CS3","CS4","CS5","CS6","TLCB1","TLNC3","TLNC4","TLCS"],
-  "Mụn nội tiết":["CB","CS2","CS3","CS4","CS5","CS6","TLCB3","TLNC3","TLCS"],
-  "Mụn ẩn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
-  "Mụn đầu đen":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
-  "Mụn đầu đen và sợi bã nhờn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","TLCB2","TLNC2"],
-  "Thâm mụn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLCB2","TLNC1","TLNC2","TLCS"],
-  "Sẹo sau mụn":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB2","TLNC3","TLNC4","TLCS"],
-  "Da lão hoá":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB2","TLNC1","TLNC2","TLCS"],
-  "Da xanh xao":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLNC1","TLNC2","TLCS"],
-  "Da không đều màu":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLNC1","TLNC2","TLCS"],
-  "Da sạm đen":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB5","TLNC1","TLNC2","TLCS"],
-  "Da chảy xệ":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLNC1","TLNC2","TLCS"],
-  "Da giãn mao mạch":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB3","TLNC1","TLNC2","TLCS"],
-  "Mất cân bằng hệ vi sinh":["CB","CS1","CS2","CS3","CS4","CS5","CS6","CS7","TLCB1","TLCB4","TLCS"],
+  "Da khô":["CB","NC1","NC2","NC3","NC4","NC5","NC6","NC7","NC8","P1","P2","P4","P8","E1"],
+  "Da nhạy cảm":["CB","NC1","NC2","NC3","NC4","NC7","P1","P2","P8","E1"],
+  "Da mẩn đỏ":["CB","NC1","NC2","NC3","NC4","NC7","P1","P2","P8","E1"],
+  "Da kích ứng":["CB","NC1","NC2","NC3","NC4","NC7","P1","P2","P8","E1"],
+  "Da tiết nhiều dầu":["CB","NC1","NC3","NC4","NC5","P3","P5","P6","P10","E1"],
+  "Da bùng mụn":["CB","NC3","NC4","P3","P6","E1"],
+  "Da mụn tổng hợp":["CB","NC3","NC4","NC5","P3","P5","P6","P7","P10","P13","P14","P15","E1"],
+  "Mụn nội tiết":["CB","NC3","NC4","NC5","P3","P7","P13","P14","E1"],
+  "Mụn ẩn":["CB","NC3","NC4","NC5","P3","P5","P6","E1"],
+  "Mụn đầu đen":["CB","NC3","NC4","NC5","P3","P6","E1"],
+  "Mụn đầu đen và sợi bã nhờn":["CB","NC3","NC4","NC5","P3","P6","E1"],
+  "Thâm mụn":["CB","NC1","NC3","NC4","NC5","NC6","P2","P9","P11","E1"],
+  "Nám, tàn nhang":["CB","NC1","NC3","NC4","NC5","NC6","P2","P9","P11","E1"],
+  "Sẹo sau mụn":["P14","P15"],
+  "Nếp nhăn li ti":["P4","P10"],
+  "Da xanh xao":["P11","P12","P13","E1"],
+  "Da không đều màu":["P2","P4","P9","P11","E1"],
+  "Da sạm đen":["NC3","P9","P10","P11","P12","E1"],
+  "Da cháy nắng":["NC3","P1","P2","P13","E1"],
+  "Da chảy xệ":["NC1","NC8","P12","P13","E1"],
+  "Da giãn mao mạch":["P9","P11","E1"],
+  "Mất cân bằng hệ vi sinh":["P1","P8"],
   "Khác...":[],
 };
 
@@ -496,11 +650,13 @@ const SKIN_LABEL_EN = {
   "Mụn đầu đen":"Blackheads",
   "Mụn đầu đen và sợi bã nhờn":"Blackheads & sebaceous filaments",
   "Thâm mụn":"Post-acne dark spots",
+  "Nám, tàn nhang":"Melasma & freckles",
   "Sẹo sau mụn":"Acne scars",
-  "Da lão hoá":"Aging skin",
+  "Nếp nhăn li ti":"Fine lines",
   "Da xanh xao":"Dull/pale skin",
   "Da không đều màu":"Uneven skin tone",
   "Da sạm đen":"Hyperpigmentation",
+  "Da cháy nắng":"Sunburned skin",
   "Da chảy xệ":"Sagging skin",
   "Da giãn mao mạch":"Visible capillaries",
   "Mất cân bằng hệ vi sinh":"Microbiome imbalance",
@@ -511,36 +667,41 @@ function skinLabel(s){ return LANG==="en" ? (SKIN_LABEL_EN[s]||s) : s; }
 /* Chống chỉ định theo tình trạng da (từ cột "Chống chỉ định" của sheet)
    Chuẩn hoá: TLNC5/TLNC6 (không tồn tại) → TLNC4. Khi 1 mã vừa gợi ý vừa chống chỉ định → ưu tiên chống chỉ định. */
 const CONTRA_MAP = {
-  "Da khô":["TLNC3","TLNC4"],
-  "Da nhạy cảm":["TLCB2","TLCB3","TLCB5","TLNC3","TLNC4"],
-  "Da mẩn đỏ":["TLCB2","TLCB3","TLCB5","TLNC3","TLNC4"],
-  "Da kích ứng":["CS4","TLCB2","TLCB3","TLCB5","TLNC3","TLNC4"],
+  "Da khô":[],
+  "Da nhạy cảm":["NC5","NC6","NC8","P10","P14","P15"],
+  "Da mẩn đỏ":["NC5","NC6","NC8","P10","P14","P15"],
+  "Da kích ứng":["NC5","NC6","NC8","P10","P14","P15"],
   "Da tiết nhiều dầu":[],
-  "Da bùng mụn":["CS4"],
+  "Da bùng mụn":["NC1","NC8","P11"],
   "Da mụn tổng hợp":[],
   "Mụn nội tiết":[],
   "Mụn ẩn":[],
   "Mụn đầu đen":[],
   "Mụn đầu đen và sợi bã nhờn":[],
   "Thâm mụn":[],
+  "Nám, tàn nhang":[],
   "Sẹo sau mụn":[],
-  "Da lão hoá":[],
+  "Nếp nhăn li ti":[],
   "Da xanh xao":[],
   "Da không đều màu":[],
   "Da sạm đen":[],
+  "Da cháy nắng":["P5","P9","P10","P11","P12","P14","P15"],
   "Da chảy xệ":[],
   "Da giãn mao mạch":[],
-  "Mất cân bằng hệ vi sinh":["TLNC3","TLNC4"],
+  "Mất cân bằng hệ vi sinh":[],
   "Khác...":[],
 };
 
 /* ============ STATE ============ */
 let state = {
   mode:"alc",            // 'alc' | 'buf'
-  buffet:null,           // buffet id khi mode=buf
-  skins:[],              // tình trạng da đã chọn (key luôn tiếng Việt gốc)
-  selected:new Set(["CB"]),  // CB auto-chọn mặc định để tránh bỏ sót
-  customerType:"retail", // 'retail' | 'member'
+  buffet:null,
+  skins:[],
+  selected:new Set(["CB"]),
+  customerType:"retail", // 'retail' | 'member' | 'vip'
+  dob:"",                // ngày sinh dd/mm/yyyy
+  membership:null,       // {months, fee, startDate, expiryDate}
+  vipCard:null,          // {tier, name, price, cashback, balance, registeredDate, expiryDate, newReg}
 };
 const fmt = n => tr("fmtCurrency")(n);
 const byId = id => MENU.find(m=>m.id===id);
@@ -550,16 +711,20 @@ const gTitle = g => LANG==="en" ? (g.title_en||g.title) : g.title;
 const gNote = g => LANG==="en" ? (g.note_en||g.note) : g.note;
 const bName = b => LANG==="en" ? (b.name_en||b.name) : b.name;
 const bInc = b => LANG==="en" ? (b.inc_en||b.inc) : b.inc;
-// Giá áp dụng theo loại khách: member dùng giá member (fallback giá list nếu món không có giá member, vd PT1/PT2); retail luôn dùng giá list.
 function priceFor(m){
+  if(state.customerType==="vip") return m.vip!=null ? m.vip : (m.member!=null ? m.member : m.list);
   if(state.customerType==="member") return m.member!=null ? m.member : m.list;
   return m.list;
 }
 function fmtTime(mins){ return tr("fmtTime")(mins); }
+function canUseBuffet(){ return state.customerType==="member"||state.customerType==="vip"; }
 function setCustomerType(t){
   state.customerType=t;
   document.getElementById("ctypeRetail").classList.toggle("on",t==="retail");
   document.getElementById("ctypeMember").classList.toggle("on",t==="member");
+  document.getElementById("ctypeVip").classList.toggle("on",t==="vip");
+  // Khi chuyển về Lẻ mà đang ở buffet → thoát buffet
+  if(t==="retail" && state.mode==="buf"){ setMode("alc"); return; }
   renderMenu(); renderBill();
 }
 
@@ -586,6 +751,7 @@ function applyStaticText(){
   document.getElementById("t_lblCtype").textContent=T.lblCtype;
   document.getElementById("t_retail").textContent=T.retail;
   document.getElementById("t_member").textContent=T.member;
+  // t_vip is hardcoded "VIP" — no translation needed
   document.getElementById("t_step2Title").textContent=T.step2Title;
   document.getElementById("t_step2Sub").innerHTML=T.step2SubHtml;
   document.getElementById("t_lblNote").textContent=T.lblNote;
@@ -641,6 +807,10 @@ function recommendedIds(){
 
 /* ============ MODE ============ */
 function setMode(m){
+  if(m==="buf" && !canUseBuffet()){
+    alert("Gói buffet chỉ dành cho khách Membership và VIP 💎");
+    return;
+  }
   state.mode=m;
   document.getElementById("modeALC").classList.toggle("on",m==="alc");
   document.getElementById("modeBUF").classList.toggle("on",m==="buf");
@@ -696,14 +866,15 @@ function renderMenu(){
       let badge="";
       if(isContra&&!groupLocked) badge=`<span class="contrabadge">${tr("contraBadge")}</span>`;
       else if(isRec&&!groupLocked) badge=`<span class="recbadge">${tr("recBadge")}</span>`;
-      const samePrice = m.member==null || m.member===m.list; // PT1/PT2 (member null→fallback list) hoặc giá lẻ=member → gộp 1 ô
+      const samePrice = m.member==null && m.vip==null;
       const priceBlock = showStrike
         ? `<span class="strike">${fmt(priceFor(m))}</span>${tr("inBundle")}`
         : samePrice
-          ? `<div class="pricetbl"><div class="pricecol single"><span class="ptag">${tr("pricetag_both")}</span><span class="pval">${fmt(m.list)}</span></div></div>`
+          ? `<div class="pricetbl"><div class="pricecol single"><span class="ptag">Lẻ</span><span class="pval">${fmt(m.list)}</span></div></div>`
           : `<div class="pricetbl">
-               <div class="pricecol${state.customerType==="retail"?" active":""}"><span class="ptag">${tr("pricetag_retail")}</span><span class="pval">${fmt(m.list)}</span></div>
-               <div class="pricecol${state.customerType==="member"?" active":""}"><span class="ptag">${tr("pricetag_member")}</span><span class="pval">${fmt(m.member)}</span></div>
+               <div class="pricecol${state.customerType==="retail"?" active":""}"><span class="ptag">Lẻ</span><span class="pval">${fmt(m.list)}</span></div>
+               ${m.member!=null?`<div class="pricecol${state.customerType==="member"?" active":""}"><span class="ptag">Member</span><span class="pval">${fmt(m.member)}</span></div>`:""}
+               ${m.vip!=null?`<div class="pricecol${state.customerType==="vip"?" active":""}"><span class="ptag">VIP</span><span class="pval">${fmt(m.vip)}</span></div>`:""}
              </div>`;
       it.innerHTML=`
         <input type="checkbox" ${checked?"checked":""} ${groupLocked?"disabled":""} data-id="${m.id}">
@@ -743,7 +914,8 @@ function renderBill(){
   // khách
   const name=document.getElementById("cName").value.trim();
   const phone=document.getElementById("cPhone").value.trim();
-  const typeLabel = (state.customerType==="member" ? "⭐ " : "🧍 ") + tr(state.customerType==="member"?"member":"retail");
+  const typeLabel = state.customerType==="vip" ? "💎 VIP" :
+    (state.customerType==="member" ? "⭐ " + tr("member") : "🧍 " + tr("retail"));
   document.getElementById("billCustomer").textContent =
     (name||phone) ? `${name||tr("noName")}${phone?" · "+phone:""} · ${typeLabel}` : `${tr("noCustomer")} · ${typeLabel}`;
 
@@ -790,11 +962,36 @@ function renderBill(){
   }else{
     grand=alcTotal();
   }
+  // Membership fee
+  if(state.membership){
+    html+=`<div class="billline"><span class="bn">✦ Membership ${state.membership.months} tháng</span><span class="bp">${fmt(state.membership.fee)}</span></div>`;
+    grand += state.membership.fee;
+  }
+
+  // VIP card fee (chỉ khi vừa đăng ký buổi này)
+  if(state.vipCard && state.vipCard.newReg){
+    html+=`<div class="billline"><span class="bn">💎 Nạp thẻ VIP ${state.vipCard.name}</span><span class="bp">${fmt(state.vipCard.price)}</span></div>`;
+    grand += state.vipCard.price;
+  }
+
   lines.innerHTML=html;
   document.getElementById("grandTotal").textContent=fmt(grand);
   document.getElementById("savingNote").textContent=saving;
   const w=document.getElementById("buffetWarn");
   if(warn){ w.textContent=warn; w.style.display="block"; } else { w.style.display="none"; }
+
+  // VIP balance note
+  const vipNote=document.getElementById("vipBalanceNote");
+  if(vipNote){
+    if(state.vipCard && state.customerType==="vip"){
+      const svcCost = isBuf ? buf.price : alcTotal();
+      const remaining = state.vipCard.balance - svcCost;
+      vipNote.textContent = `💎 Số dư thẻ sau buổi: ${remaining.toLocaleString("vi-VN")}đ`;
+      vipNote.style.display="block";
+    } else {
+      vipNote.style.display="none";
+    }
+  }
 
   // cảnh báo chống chỉ định cho các món đã chọn
   const contra=contraIds();
@@ -816,6 +1013,7 @@ function renderReturningBox(rec){
   if(!rec){ box.style.display="none"; return; }
   document.getElementById("cName").value = document.getElementById("cName").value || rec.name||"";
   document.getElementById("cEmail").value = document.getElementById("cEmail").value || rec.email||"";
+  if(rec.dob && !document.getElementById("cDob").value){ document.getElementById("cDob").value=rec.dob; state.dob=rec.dob; checkBirthday(); }
   const last=rec.visits&&rec.visits.length?rec.visits[rec.visits.length-1]:null;
   let h=`<b>${tr("returningTitle")}</b> — ${tr("returningVisits")(rec.visits?rec.visits.length:0)}`;
   if(last){
@@ -929,10 +1127,15 @@ function currentRecord(){
   const isBuf=state.mode==="buf"&&state.buffet;
   const buf=isBuf?BUFFET.find(b=>b.id===state.buffet):null;
   const total=isBuf?buf.price:alcTotal();
+  const svcTotal = isBuf ? buf.price : alcTotal();
+  const memberFee = state.membership ? state.membership.fee : 0;
+  const vipFee = (state.vipCard && state.vipCard.newReg) ? state.vipCard.price : 0;
+  const grandTotal = svcTotal + memberFee + vipFee;
   return {
     name:document.getElementById("cName").value.trim(),
     phone:document.getElementById("cPhone").value.trim(),
     email:document.getElementById("cEmail").value.trim(),
+    dob:document.getElementById("cDob").value.trim(),
     customerType:state.customerType,
     skins:[...state.skins],
     note:document.getElementById("cNote").value.trim(),
@@ -943,7 +1146,11 @@ function currentRecord(){
     alcTotal:alcTotal(),
     totalTimeMins:totalTimeMins(),
     totalLabor:items.reduce((s,m)=>s+(m.labor||0),0),
-    total,
+    membershipMonths:state.membership?state.membership.months:0,
+    membershipFee:memberFee,
+    vipTier:state.vipCard?state.vipCard.tier:"",
+    vipCardPrice:vipFee,
+    total:grandTotal,
     date:new Date().toLocaleString("vi-VN"),
   };
 }
@@ -1022,21 +1229,216 @@ function resetAll(){
   ["cPhone","cEmail"].forEach(id=>document.getElementById(id).classList.remove("fld-bad"));
   document.getElementById("cPhoneWarn").style.display="none";
   document.getElementById("cEmailWarn").style.display="none";
-  state={mode:"alc",buffet:null,skins:[],selected:new Set(["CB"]),customerType:"retail"};
+  state={mode:"alc",buffet:null,skins:[],selected:new Set(["CB"]),customerType:"retail",
+    dob:"",membership:null,vipCard:null};
+  document.getElementById("cDob").value="";
   document.getElementById("returningBox").style.display="none";
+  document.getElementById("birthdayOverlay").style.display="none";
   document.getElementById("ctypeRetail").classList.add("on");
   document.getElementById("ctypeMember").classList.remove("on");
+  document.getElementById("ctypeVip").classList.remove("on");
+  document.getElementById("btnMembership").textContent="✦ Đăng ký Membership";
+  document.getElementById("btnMembership").classList.remove("active-reg");
+  document.getElementById("btnVip").textContent="💎 Đăng ký Wee.LUX VIP";
+  document.getElementById("btnVip").classList.remove("active-reg");
   setMode("alc"); renderSkins(); renderBill();
+}
+
+
+/* ============ VIP TIER DATA ============ */
+const VIP_TIERS = {
+  glow:     {name:"GLOW",     price:5000000,  cashback:500000,  balance:5500000,  expDays:45},
+  radiant:  {name:"RADIANT",  price:10000000, cashback:1000000, balance:11000000, expDays:null},
+  luminous: {name:"LUMINOUS", price:20000000, cashback:2500000, balance:22500000, expDays:null},
+};
+
+/* ============ DOB + BIRTHDAY ============ */
+function formatDobInput(el){
+  let v = el.value.replace(/\D/g,"");
+  if(v.length>2) v=v.substring(0,2)+"/"+v.substring(2);
+  if(v.length>5) v=v.substring(0,5)+"/"+v.substring(5,9);
+  el.value=v;
+  state.dob=v;
+  checkBirthday();
+}
+function checkBirthday(){
+  const dob = document.getElementById("cDob").value.trim();
+  if(!dob||dob.length<5) return;
+  const parts=dob.split("/");
+  if(parts.length<2) return;
+  const dobMonth=parseInt(parts[1]);
+  const today=new Date();
+  if(!isNaN(dobMonth) && dobMonth===today.getMonth()+1){
+    const name=document.getElementById("cName").value.trim()||"bạn";
+    document.getElementById("birthdayMsg").innerHTML=
+      `🎉 CHÚC <b>${name.toUpperCase()}</b> MỘT SINH NHẬT VUI VẺ<br>DA KHOẺ · MÃI TRẺ · XINH ĐẸP! 🎂`;
+    document.getElementById("birthdayOverlay").style.display="flex";
+  }
+}
+function closeBirthday(){
+  document.getElementById("birthdayOverlay").style.display="none";
+}
+
+/* ============ MEMBERSHIP POPUP ============ */
+function openMembershipPopup(){
+  // Nếu đã có membership → click nút lần nữa = huỷ đăng ký
+  if(state.membership){
+    if(confirm("Huỷ đăng ký Membership?")){
+      state.membership=null;
+      document.getElementById("btnMembership").textContent="✦ Đăng ký Membership";
+      document.getElementById("btnMembership").classList.remove("active-reg");
+      setCustomerType("retail");
+      renderBill();
+    }
+    return;
+  }
+  document.getElementById("membershipPopup").style.display="flex";
+  document.querySelectorAll(".mplan").forEach(el=>el.classList.remove("on"));
+}
+function closeMembershipPopup(){ document.getElementById("membershipPopup").style.display="none"; }
+function selectMemberPlan(months,fee,el){
+  const today=new Date();
+  const p2=n=>String(n).padStart(2,"0");
+  const startDate=p2(today.getDate())+"/"+p2(today.getMonth()+1)+"/"+today.getFullYear();
+  const exp=new Date(today); exp.setMonth(exp.getMonth()+months);
+  const expiryDate=p2(exp.getDate())+"/"+p2(exp.getMonth()+1)+"/"+exp.getFullYear();
+  state.membership={months,fee,startDate,expiryDate};
+  setCustomerType("member");
+  document.querySelectorAll(".mplan").forEach(e=>e.classList.remove("on"));
+  el.classList.add("on");
+  document.getElementById("btnMembership").textContent=`✦ Membership ${months}T · ${fee.toLocaleString("vi-VN")}đ ✓`;
+  document.getElementById("btnMembership").classList.add("active-reg");
+  renderBill();
+  setTimeout(closeMembershipPopup,600);
+}
+
+/* ============ VIP POPUP ============ */
+function openVipPopup(){
+  // Nếu đã có VIP → click nút lần nữa = huỷ
+  if(state.vipCard){
+    if(confirm("Huỷ đăng ký thẻ VIP?")){
+      state.vipCard=null;
+      document.getElementById("btnVip").textContent="💎 Đăng ký Wee.LUX VIP";
+      document.getElementById("btnVip").classList.remove("active-reg");
+      setCustomerType("retail");
+      renderBill();
+    }
+    return;
+  }
+  document.getElementById("vipPopup").style.display="flex";
+}
+function closeVipPopup(){ document.getElementById("vipPopup").style.display="none"; }
+function selectVipTier(tier,el){
+  const t=VIP_TIERS[tier];
+  const today=new Date();
+  const p2=n=>String(n).padStart(2,"0");
+  const todayStr=p2(today.getDate())+"/"+p2(today.getMonth()+1)+"/"+today.getFullYear();
+  let expiryDate=null;
+  if(t.expDays){
+    const exp=new Date(today); exp.setDate(exp.getDate()+t.expDays);
+    expiryDate=p2(exp.getDate())+"/"+p2(exp.getMonth()+1)+"/"+exp.getFullYear();
+  }
+  state.vipCard={tier,name:t.name,price:t.price,cashback:t.cashback,balance:t.balance,
+    registeredDate:todayStr,expiryDate,newReg:true};
+  setCustomerType("vip");
+  document.querySelectorAll(".vtier").forEach(e=>e.classList.remove("on"));
+  if(el) el.classList.add("on");
+  document.getElementById("btnVip").textContent=`💎 VIP ${t.name} · ${t.price.toLocaleString("vi-VN")}đ ✓`;
+  document.getElementById("btnVip").classList.add("active-reg");
+  renderBill();
+  closeVipPopup();
 }
 
 /* ============ INIT ============ */
 document.getElementById("cPhone").addEventListener("input",checkReturning);
 document.getElementById("cPhone").addEventListener("blur",()=>validatePhone());
 document.getElementById("cEmail").addEventListener("blur",validateEmail);
-document.getElementById("cName").addEventListener("input",renderBill);
+document.getElementById("cName").addEventListener("input",()=>{ renderBill(); checkBirthday(); });
 setLang("vi");
 setMode("alc");
 renderBill();
 </script>
+
+
+<!-- ============ BIRTHDAY POPUP ============ -->
+<div id="birthdayOverlay" class="bd-overlay" style="display:none" onclick="if(event.target===this)closeBirthday()">
+  <div class="bd-box">
+    <button class="bd-close" onclick="closeBirthday()">✕</button>
+    <span class="bd-icon">🎂</span>
+    <div class="bd-msg" id="birthdayMsg">CHÚC MỪNG SINH NHẬT!</div>
+    <button class="bd-btn" onclick="closeBirthday()">Cảm ơn WeeLAB 💖</button>
+  </div>
+</div>
+
+<!-- ============ MEMBERSHIP POPUP ============ -->
+<div id="membershipPopup" class="popup-overlay" style="display:none" onclick="if(event.target===this)closeMembershipPopup()">
+  <div class="popup-box">
+    <h3>✦ Đăng ký Membership</h3>
+    <p class="popup-sub">Phí membership được cộng vào tổng bill buổi hôm nay</p>
+    <div class="member-plans">
+      <div class="mplan" id="mplan1" onclick="selectMemberPlan(1,169000,this)">
+        <div class="mplan-months">1 tháng</div>
+        <div class="mplan-price">169.000đ</div>
+        <div class="mplan-rate">169.000đ/tháng</div>
+      </div>
+      <div class="mplan" id="mplan3" onclick="selectMemberPlan(3,477000,this)">
+        <div class="mplan-months">3 tháng</div>
+        <div class="mplan-price">477.000đ</div>
+        <div class="mplan-rate">159.000đ/tháng</div>
+        <div class="mplan-save">Tiết kiệm 30.000đ so với gói lẻ</div>
+      </div>
+      <div class="mplan" id="mplan6" onclick="selectMemberPlan(6,834000,this)">
+        <div class="mplan-months">6 tháng</div>
+        <div class="mplan-price">834.000đ</div>
+        <div class="mplan-rate">139.000đ/tháng</div>
+        <div class="mplan-save">Tiết kiệm 180.000đ so với gói lẻ</div>
+      </div>
+      <div class="mplan" id="mplan12" onclick="selectMemberPlan(12,1188000,this)">
+        <div class="mplan-months">12 tháng</div>
+        <div class="mplan-price">1.188.000đ</div>
+        <div class="mplan-rate">99.000đ/tháng</div>
+        <div class="mplan-save">Tiết kiệm 840.000đ so với gói lẻ</div>
+      </div>
+    </div>
+    <div class="popup-actions">
+      <button onclick="closeMembershipPopup()">Huỷ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIP POPUP ============ -->
+<div id="vipPopup" class="popup-overlay" style="display:none" onclick="if(event.target===this)closeVipPopup()">
+  <div class="popup-box">
+    <h3>💎 Đăng ký Wee.LUX VIP</h3>
+    <p class="popup-sub">Phí nạp thẻ được cộng vào tổng bill buổi hôm nay · Cashback hoàn ngay vào thẻ</p>
+    <div class="vip-tiers">
+      <div class="vtier" onclick="selectVipTier('glow',this)">
+        <div class="vtier-name">✦ GLOW</div>
+        <div class="vtier-price">5.000.000đ</div>
+        <div class="vtier-cashback">+ Hoàn 500.000đ vào thẻ</div>
+        <div class="vtier-balance">Số dư thẻ: 5.500.000đ</div>
+        <div class="vtier-note">⏱ Hiệu lực 45 ngày</div>
+      </div>
+      <div class="vtier" onclick="selectVipTier('radiant',this)">
+        <div class="vtier-name">✦✦ RADIANT</div>
+        <div class="vtier-price">10.000.000đ</div>
+        <div class="vtier-cashback">+ Hoàn 1.000.000đ vào thẻ</div>
+        <div class="vtier-balance">Số dư thẻ: 11.000.000đ</div>
+        <div class="vtier-note">Không giới hạn thời gian</div>
+      </div>
+      <div class="vtier" onclick="selectVipTier('luminous',this)">
+        <div class="vtier-name">✦✦✦ LUMINOUS</div>
+        <div class="vtier-price">20.000.000đ</div>
+        <div class="vtier-cashback">+ Hoàn 2.500.000đ vào thẻ</div>
+        <div class="vtier-balance">Số dư thẻ: 22.500.000đ</div>
+        <div class="vtier-note">Không giới hạn thời gian</div>
+      </div>
+    </div>
+    <div class="popup-actions">
+      <button onclick="closeVipPopup()">Huỷ</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
