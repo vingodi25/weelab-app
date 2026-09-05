@@ -969,9 +969,10 @@ function renderBill(){
   }
 
   // VIP card fee (chỉ khi vừa đăng ký buổi này)
+  // Dịch vụ trong buổi được TRỪ từ thẻ — khách chỉ thanh toán tiền nạp thẻ
   if(state.vipCard && state.vipCard.newReg){
     html+=`<div class="billline"><span class="bn">💎 Nạp thẻ VIP ${state.vipCard.name}</span><span class="bp">${fmt(state.vipCard.price)}</span></div>`;
-    grand += state.vipCard.price;
+    grand = state.vipCard.price + (state.membership ? state.membership.fee : 0);
   }
 
   lines.innerHTML=html;
@@ -1126,11 +1127,14 @@ function currentRecord(){
   const items=billItems();
   const isBuf=state.mode==="buf"&&state.buffet;
   const buf=isBuf?BUFFET.find(b=>b.id===state.buffet):null;
-  const total=isBuf?buf.price:alcTotal();
   const svcTotal = isBuf ? buf.price : alcTotal();
   const memberFee = state.membership ? state.membership.fee : 0;
   const vipFee = (state.vipCard && state.vipCard.newReg) ? state.vipCard.price : 0;
-  const grandTotal = svcTotal + memberFee + vipFee;
+  const isNewVip = !!(state.vipCard && state.vipCard.newReg);
+  // Nếu vừa đăng ký VIP: khách chỉ trả tiền thẻ, dịch vụ trừ từ thẻ
+  const grandTotal = isNewVip ? vipFee + memberFee : svcTotal + memberFee;
+  // Số dư thẻ sau buổi = số dư ban đầu (có cashback) - chi phí dịch vụ buổi này
+  const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
   return {
     name:document.getElementById("cName").value.trim(),
     phone:document.getElementById("cPhone").value.trim(),
@@ -1150,6 +1154,7 @@ function currentRecord(){
     membershipFee:memberFee,
     vipTier:state.vipCard?state.vipCard.tier:"",
     vipCardPrice:vipFee,
+    vipBalanceAfter:vipBalanceAfter,
     total:grandTotal,
     date:new Date().toLocaleString("vi-VN"),
   };
