@@ -968,11 +968,16 @@ function renderBill(){
     grand += state.membership.fee;
   }
 
-  // VIP card fee (chỉ khi vừa đăng ký buổi này)
-  // Dịch vụ trong buổi được TRỪ từ thẻ — khách chỉ thanh toán tiền nạp thẻ
+  // VIP — dịch vụ trừ từ thẻ, khách không trả thêm tiền mặt
   if(state.vipCard && state.vipCard.newReg){
+    // Đăng ký thẻ mới: khách trả tiền thẻ, dịch vụ buổi này trừ vào thẻ
     html+=`<div class="billline"><span class="bn">💎 Nạp thẻ VIP ${state.vipCard.name}</span><span class="bp">${fmt(state.vipCard.price)}</span></div>`;
     grand = state.vipCard.price + (state.membership ? state.membership.fee : 0);
+  } else if(state.vipCard && !state.vipCard.newReg){
+    // Khách VIP cũ: dịch vụ trừ từ thẻ, không thu tiền mặt
+    const svcDeduct = isBuf ? (buf ? buf.price : 0) : alcTotal();
+    html+=`<div class="billline" style="color:var(--gold)"><span class="bn">💎 Thanh toán từ thẻ VIP ${state.vipCard.name}</span><span class="bp">-${fmt(svcDeduct)}</span></div>`;
+    grand = 0 + (state.membership ? state.membership.fee : 0);
   }
 
   lines.innerHTML=html;
@@ -1082,11 +1087,28 @@ async function checkReturning(){
     const data=await jsonpRequest(url, {phone:phone});
     if(mySeq!==_checkReturningSeq) return; // người dùng đã gõ số khác, bỏ kết quả cũ
     if(data && data.ok && data.found){
-      const remoteRec={name:data.name||"", email:data.email||"", visits:data.visits||[]};
-      // đồng bộ ngược lại vào localStorage làm cache cho máy này
+      const remoteRec={name:data.name||"", email:data.email||"", dob:data.dob||"", visits:data.visits||[]};
       db[phone]=remoteRec;
       saveDB(db);
       renderReturningBox(remoteRec);
+
+      // Nếu khách có thẻ VIP → tự động set loại khách + số dư thẻ
+      if(data.currentVipTier && data.currentVipBalance > 0){
+        const tierMap = {
+          GLOW:     {tier:"glow",     name:"GLOW",     price:5000000},
+          RADIANT:  {tier:"radiant",  name:"RADIANT",  price:10000000},
+          LUMINOUS: {tier:"luminous", name:"LUMINOUS", price:20000000},
+        };
+        const t = tierMap[data.currentVipTier.toUpperCase()] || {tier:data.currentVipTier, name:data.currentVipTier, price:0};
+        state.vipCard = {
+          tier: t.tier,
+          name: t.name,
+          price: t.price,
+          balance: data.currentVipBalance,
+          newReg: false   // khách cũ, không đăng ký mới
+        };
+        setCustomerType("vip");
+      }
     } else if(data && data.ok && !data.found && !localRec){
       box.style.display="none";
     }
@@ -1131,9 +1153,12 @@ function currentRecord(){
   const memberFee = state.membership ? state.membership.fee : 0;
   const vipFee = (state.vipCard && state.vipCard.newReg) ? state.vipCard.price : 0;
   const isNewVip = !!(state.vipCard && state.vipCard.newReg);
-  // Nếu vừa đăng ký VIP: khách chỉ trả tiền thẻ, dịch vụ trừ từ thẻ
-  const grandTotal = isNewVip ? vipFee + memberFee : svcTotal + memberFee;
-  // Số dư thẻ sau buổi = số dư ban đầu (có cashback) - chi phí dịch vụ buổi này
+  const isReturningVip = !!(state.vipCard && !state.vipCard.newReg);
+  // VIP mới: trả tiền thẻ; VIP cũ: trả 0 (từ thẻ); thường: trả dịch vụ
+  const grandTotal = isNewVip ? vipFee + memberFee
+                   : isReturningVip ? memberFee
+                   : svcTotal + memberFee;
+  // Số dư thẻ sau buổi = số dư hiện tại - chi phí dịch vụ buổi này
   const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
   return {
     name:document.getElementById("cName").value.trim(),
