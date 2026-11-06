@@ -731,6 +731,64 @@ let state = {
 const fmt = n => tr("fmtCurrency")(n);
 const byId = id => MENU.find(m=>m.id===id);
 const mName = m => LANG==="en" ? (m.name_en||m.name) : m.name;
+
+// ── Date helpers ───────────────────────────────────────────────
+// Parse mọi định dạng ngày → Date object (local date, không bị lệch múi giờ)
+// Hỗ trợ:
+//   ISO       "2026-12-14T17:00:00.000Z"
+//   vi-VN     "14:08:07 6/11/2026"
+//   DD/MM/YY  "15/12/26"  (giả định 2000s)
+//   DD/MM/YYYY"15/12/2026"
+//   Date.toString() "Sat Sep 19 2026 00:00:00 GMT+0700 (Giờ Đông Dương)"
+function parseDateToObj(str) {
+  if (!str) return null;
+  if (str instanceof Date) {
+    // Dùng UTC components để tránh lệch ngày do timezone
+    return new Date(str.getUTCFullYear(), str.getUTCMonth(), str.getUTCDate());
+  }
+  const s = String(str).trim();
+  // ISO "YYYY-MM-DDTHH:MM:SS.mmmZ"
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const utc = new Date(s);
+    return new Date(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate());
+  }
+  // Có "DD/MM/YYYY" hoặc "D/M/YYYY" ở bất kỳ đâu (vd vi-VN có giờ đằng trước)
+  const mFull = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (mFull) return new Date(parseInt(mFull[3]), parseInt(mFull[2])-1, parseInt(mFull[1]));
+  // "DD/MM/YY" (2-số năm) → thêm 2000
+  const mShort = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2})$/);
+  if (mShort) return new Date(2000+parseInt(mShort[3]), parseInt(mShort[2])-1, parseInt(mShort[1]));
+  // Fallback: Date.toString() kiểu "Sat Sep 19 2026 00:00:00 GMT+0700..."
+  const fb = new Date(s);
+  if (!isNaN(fb.getTime())) return new Date(fb.getUTCFullYear(), fb.getUTCMonth(), fb.getUTCDate());
+  return null;
+}
+// Kiểm tra chuỗi có phải date string sai định dạng không (ISO hoặc Date.toString)
+function isDateString(s) {
+  if (!s) return false;
+  return /^\d{4}-\d{2}-\d{2}T/.test(s) || /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s/.test(s);
+}
+// "DD/MM/YY"  (2-chữ số năm)
+function fmtDateShort(str) {
+  const d = parseDateToObj(str);
+  if (!d || isNaN(d)) return "";  // trả "" nếu không parse được (không hiển thị loạn)
+  return String(d.getDate()).padStart(2,"0") + "/" +
+         String(d.getMonth()+1).padStart(2,"0") + "/" +
+         String(d.getFullYear()).slice(-2);
+}
+// "DD/MM/YYYY" (đầy đủ)
+function fmtDateFull(str) {
+  const d = parseDateToObj(str);
+  if (!d || isNaN(d)) return "";
+  return String(d.getDate()).padStart(2,"0") + "/" +
+         String(d.getMonth()+1).padStart(2,"0") + "/" +
+         d.getFullYear();
+}
+// Chuyển itemsStr "• Tên món\n• Tên món" → "Tên món, Tên món"
+function parseItemsStr(itemsStr) {
+  if (!itemsStr) return "";
+  return String(itemsStr).split(/\n/).map(l=>l.replace(/^[•\-\s]+/,"").trim()).filter(Boolean).join(", ");
+}
 const mDesc = m => LANG==="en" ? (m.desc_en||m.desc) : m.desc;
 const gTitle = g => LANG==="en" ? (g.title_en||g.title) : g.title;
 const gNote = g => LANG==="en" ? (g.note_en||g.note) : g.note;
@@ -1061,28 +1119,39 @@ function renderReturningBox(rec){
   if(!rec){ box.style.display="none"; return; }
   document.getElementById("cName").value = document.getElementById("cName").value || rec.name||"";
   document.getElementById("cEmail").value = document.getElementById("cEmail").value || rec.email||"";
-  if(rec.dob && !document.getElementById("cDob").value){ document.getElementById("cDob").value=rec.dob; state.dob=rec.dob; }
+  if(rec.dob && !document.getElementById("cDob").value){
+    // Normalize DOB — đổi ISO sang DD/MM/YYYY trước khi điền vào ô
+    const dobNorm = fmtDateFull(rec.dob) || rec.dob;
+    document.getElementById("cDob").value = dobNorm;
+    state.dob = dobNorm;
+  }
   const last=rec.visits&&rec.visits.length?rec.visits[rec.visits.length-1]:null;
   const visitCount=rec.visits?rec.visits.length:0;
 
   let statusLine="";
   if(state.vipCard && state.customerType==="vip"){
-    // Khách VIP
-    const bal=(state.vipCard.balance||0).toLocaleString("vi-VN");
-    let vipExpiryInfo = "";
+    // Khách VIP — format: 💎 Khách VIP hạng thẻ [Tên] · Số tiền trong thẻ: [X]
+    // Bảo vệ tên hạng thẻ: nếu name là date string sai thì dùng tier
+    const _rawName = state.vipCard.name || "";
+    const _rawTier = state.vipCard.tier || "";
+    const tierName = isDateString(_rawName) || /^\d/.test(_rawName)
+      ? (isDateString(_rawTier) || /^\d/.test(_rawTier) ? "VIP" : _rawTier.toUpperCase())
+      : _rawName.toUpperCase();
+    const bal = (state.vipCard.balance||0).toLocaleString("vi-VN");
+    let vipExpiryLine = "";
     if(state.vipCard.expiry){
-      const ep=state.vipCard.expiry.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if(ep){
-        const expDate=new Date(parseInt(ep[3]),parseInt(ep[2])-1,parseInt(ep[1]));
+      const expDate = parseDateToObj(state.vipCard.expiry);
+      if(expDate && !isNaN(expDate)){
         const today=new Date(); today.setHours(0,0,0,0);
         const daysLeft=Math.ceil((expDate-today)/(1000*60*60*24));
-        const daysTag=daysLeft>0
-          ?`<span style="color:${daysLeft<=7?"var(--red,#c0392b)":"var(--green,#27ae60)"}"> (còn ${daysLeft} ngày)</span>`
-          :`<span style="color:var(--red,#c0392b)"> ⚠️ đã hết hạn</span>`;
-        vipExpiryInfo=`<br><small style="color:var(--muted)">📅 Hết hạn GLOW: <b style="color:var(--ink)">${state.vipCard.expiry}</b>${daysTag}</small>`;
+        const daysTag = daysLeft>0
+          ? `<span style="color:${daysLeft<=7?"var(--red,#c0392b)":"var(--green,#27ae60)"}"> (còn ${daysLeft} ngày)</span>`
+          : `<span style="color:var(--red,#c0392b)"> ⚠️ đã hết hạn</span>`;
+        const expShort = fmtDateShort(state.vipCard.expiry);
+        vipExpiryLine = `<br><small style="color:var(--muted)">📅 Ngày hết hạn thẻ: <b style="color:var(--ink)">${expShort}</b>${daysTag}</small>`;
       }
     }
-    statusLine=`💎 <b>Khách VIP ${state.vipCard.name}</b> · còn <b>${bal}đ</b> trong thẻ${vipExpiryInfo}`;
+    statusLine=`💎 <b>Khách VIP hạng thẻ ${tierName}</b> · Số tiền trong thẻ: <b>${bal}đ</b>${vipExpiryLine}`;
   } else if(state.customerType==="member" && state.membership){
     // Khách Member mới đăng ký trong buổi này
     statusLine=`⭐ <b>Đã đăng ký Membership ${state.membership.months} tháng</b>`;
@@ -1122,9 +1191,13 @@ function renderReturningBox(rec){
   }
   window._memberExpShown=false;
   if(last){
-    const modeStr = last.mode==="buf" ? tr("buf")(last.buffetName) : tr("alc");
     const skinsStr = (last.skins||[]).map(skinLabel).join(", ")||"—";
-    h+=`<br><small style="color:var(--muted)">Lần gần nhất (${last.date}): da [${skinsStr}]; ${modeStr} · ${fmt(last.total)}</small>`;
+    // Parse items: itemsStr = "• Tên món\n• Tên món" hoặc buffetName
+    const itemsList = last.mode==="buf"
+      ? (last.buffetName || "")
+      : parseItemsStr(last.itemsStr);
+    const dateStr = fmtDateShort(last.date);
+    h+=`<br><small style="color:var(--muted)">Lần gần nhất <b>${dateStr}</b>. Tình trạng da [${skinsStr}]${itemsList?`; Các món đã chọn: ${itemsList}`:""}</small>`;
     if(last.note) h+=`<br><small style="color:var(--muted)">${tr("returningNote")(last.note)}</small>`;
   }
   box.innerHTML=h; box.style.display="block";
@@ -1190,19 +1263,30 @@ async function checkReturning(){
       db[phone]=remoteRec;
       saveDB(db);
       // Nếu khách có thẻ VIP → set state TRƯỚC khi render để box hiển thị đúng
-      if(data.currentVipTier && data.currentVipBalance > 0){
+      // Sanitize tier: bỏ qua nếu là ISO date / Date.toString() (đọc nhầm cột)
+      let rawTier = String(data.currentVipTier || "").trim();
+      if (isDateString(rawTier)) rawTier = ""; // Date object từ cột sai → bỏ
+      // Cũng lọc các giá trị rõ ràng không phải tier (chuỗi dài, có chữ số đầu, v.v.)
+      if (/^\d/.test(rawTier) || rawTier.length > 30) rawTier = "";
+
+      if(rawTier && data.currentVipBalance > 0){
         const tierMap = {
           GLOW:     {tier:"glow",     name:"GLOW",     price:5000000},
           RADIANT:  {tier:"radiant",  name:"RADIANT",  price:10000000},
           LUMINOUS: {tier:"luminous", name:"LUMINOUS", price:20000000},
         };
-        const t = tierMap[data.currentVipTier.toUpperCase()] || {tier:data.currentVipTier, name:data.currentVipTier, price:0};
+        // Tên hạng thẻ trong VIP_KH có thể là "GLOW 5TR", "Glow 5tr" → extract phần tên
+        const tierKey = rawTier.toUpperCase().split(/[\s_-]/)[0]; // "GLOW 5TR" → "GLOW"
+        const t = tierMap[tierKey] || tierMap[rawTier.toUpperCase()] || {tier:rawTier.toLowerCase(), name:rawTier.toUpperCase(), price:0};
+        // Normalize expiry: đổi Date.toString / ISO → DD/MM/YYYY
+        const rawExpiry = String(data.currentVipExpiry || "").trim();
+        const expiryNorm = isDateString(rawExpiry) ? fmtDateFull(rawExpiry) : rawExpiry;
         state.vipCard = {
           tier: t.tier,
           name: t.name,
           price: t.price,
           balance: data.currentVipBalance,
-          expiry: data.currentVipExpiry || "",
+          expiry: expiryNorm,
           newReg: false
         };
         setCustomerType("vip");
