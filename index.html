@@ -1159,20 +1159,20 @@ function renderReturningBox(rec){
     // Khách từng có membership — tính hạn dựa trên lần cuối đăng ký
     const lastMemberVisit=[...rec.visits].reverse().find(v=>v.membershipMonths>0);
     if(lastMemberVisit && lastMemberVisit.membershipMonths && lastMemberVisit.date){
-      // Date từ toLocaleString("vi-VN") có thể là "14:08:07 6/11/2026" hoặc "6/11/2026, 14:08:07"
-      // Dùng regex để lấy đúng phần ngày DD/MM/YYYY
-      const dateMatch=lastMemberVisit.date.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-      if(dateMatch){
-        const d=new Date(parseInt(dateMatch[3]),parseInt(dateMatch[2])-1,parseInt(dateMatch[1]));
-        d.setMonth(d.getMonth()+lastMemberVisit.membershipMonths);
-        const exp=d.toLocaleDateString("vi-VN");
+      const startDate = parseDateToObj(lastMemberVisit.date);
+      if(startDate){
+        const expDate = new Date(startDate);
+        expDate.setMonth(expDate.getMonth() + lastMemberVisit.membershipMonths);
+        // Format thủ công để tránh lệch timezone khi pass Date → fmtDateShort
+        const exp = String(expDate.getDate()).padStart(2,"0") + "/" +
+                    String(expDate.getMonth()+1).padStart(2,"0") + "/" +
+                    String(expDate.getFullYear()).slice(-2);
         const today=new Date(); today.setHours(0,0,0,0);
-        const daysLeft=Math.ceil((d-today)/(1000*60*60*24));
+        const daysLeft=Math.ceil((expDate-today)/(1000*60*60*24));
         const daysTag = daysLeft>0
           ? `<span style="color:${daysLeft<=7?"var(--red,#c0392b)":"var(--green,#27ae60)"}"> (còn ${daysLeft} ngày)</span>`
           : `<span style="color:var(--red,#c0392b)"> ⚠️ đã hết hạn</span>`;
         statusLine=`⭐ <b>Khách Member</b> — đã đến ${visitCount} lần<br><small style="color:var(--muted)">📅 Hết hạn Member: <b style="color:var(--ink)">${exp}</b>${daysTag}</small>`;
-        // Đã embed visitCount vào statusLine → đánh dấu để không append lại
         (window._memberExpShown=true);
       } else {
         statusLine=`⭐ <b>Khách Member</b> — ${lastMemberVisit.membershipMonths} tháng`;
@@ -1180,9 +1180,15 @@ function renderReturningBox(rec){
     } else {
       statusLine=`⭐ <b>Khách Member</b>`;
     }
+  } else if(last && String(last.customerType||"").toLowerCase() === "vip"){
+    // VIP từ lịch sử — state.vipCard chưa set (balance = 0 hoặc đang chờ load)
+    // Làm sạch tên tier: "GLOW 5TR" → "GLOW", "PREMIUM 10TR" → "PREMIUM"
+    const histTierRaw = String(last.vipTier||"").replace(/\s*\d+TR\s*/i,"").trim().toUpperCase();
+    const histTier = histTierRaw && !isDateString(histTierRaw) ? histTierRaw : "";
+    statusLine = `💎 <b>Khách VIP${histTier ? " " + histTier : ""}</b>`;
   } else {
-    // Khách lẻ — không embed visitCount vào đây, block dưới sẽ thêm 1 lần duy nhất
-    statusLine=`★ <b>Khách quen</b>`;
+    // Khách lẻ — hiển thị "Khách lẻ" thay vì "Khách quen"
+    statusLine=`★ <b>Khách lẻ</b>`;
   }
 
   let h=statusLine;
