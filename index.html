@@ -1181,11 +1181,13 @@ function renderReturningBox(rec){
       statusLine=`⭐ <b>Khách Member</b>`;
     }
   } else {
-    // Khách lẻ
-    statusLine=`★ <b>Khách quen</b> — đã đến ${visitCount} lần`;
+    // Khách lẻ — không embed visitCount vào đây, block dưới sẽ thêm 1 lần duy nhất
+    statusLine=`★ <b>Khách quen</b>`;
   }
 
   let h=statusLine;
+  // Thêm visit count 1 lần duy nhất cho các loại chưa embed sẵn trong statusLine
+  // (VIP đã có bal trong statusLine nên skip; member có expiry dùng _memberExpShown)
   if(visitCount>0 && !(state.vipCard && state.customerType==="vip") && !window._memberExpShown){
     h+=` — đã đến ${visitCount} lần`;
   }
@@ -1265,9 +1267,16 @@ async function checkReturning(){
       // Nếu khách có thẻ VIP → set state TRƯỚC khi render để box hiển thị đúng
       // Sanitize tier: bỏ qua nếu là ISO date / Date.toString() (đọc nhầm cột)
       let rawTier = String(data.currentVipTier || "").trim();
-      if (isDateString(rawTier)) rawTier = ""; // Date object từ cột sai → bỏ
-      // Cũng lọc các giá trị rõ ràng không phải tier (chuỗi dài, có chữ số đầu, v.v.)
+      let detectedExpiryFromTier = ""; // tier column thực ra chứa expiry → dùng lại
+      if (isDateString(rawTier)) {
+        // Apps Script cũ đọc nhầm cột Q (Ngày hết hạn) → ISO date
+        // Giá trị đó THỰC RA là expiry date → dùng làm expiry nếu chưa có
+        detectedExpiryFromTier = fmtDateFull(rawTier);
+        rawTier = "";
+      }
       if (/^\d/.test(rawTier) || rawTier.length > 30) rawTier = "";
+      // Fallback: nếu có số dư > 0 nhưng tier bị filter → khách vẫn là VIP, default GLOW
+      if (!rawTier && data.currentVipBalance > 0) rawTier = "GLOW";
 
       if(rawTier && data.currentVipBalance > 0){
         const tierMap = {
@@ -1279,8 +1288,11 @@ async function checkReturning(){
         const tierKey = rawTier.toUpperCase().split(/[\s_-]/)[0]; // "GLOW 5TR" → "GLOW"
         const t = tierMap[tierKey] || tierMap[rawTier.toUpperCase()] || {tier:rawTier.toLowerCase(), name:rawTier.toUpperCase(), price:0};
         // Normalize expiry: đổi Date.toString / ISO → DD/MM/YYYY
+        // Ưu tiên: currentVipExpiry → detectedExpiryFromTier (đọc nhầm cột Q = expiry)
         const rawExpiry = String(data.currentVipExpiry || "").trim();
-        const expiryNorm = isDateString(rawExpiry) ? fmtDateFull(rawExpiry) : rawExpiry;
+        const expiryNorm = rawExpiry
+          ? (isDateString(rawExpiry) ? fmtDateFull(rawExpiry) : rawExpiry)
+          : detectedExpiryFromTier;
         state.vipCard = {
           tier: t.tier,
           name: t.name,
