@@ -319,6 +319,10 @@
       <div class="sub" id="billCustomer">—</div>
       <div id="billLines"><div class="empty" id="t_billEmpty"></div></div>
       <div class="timeline" id="timeLine" style="display:none;"><span>⏱ <span id="t_totalTimeLbl"></span></span><span class="tv" id="totalTime">0</span></div>
+      <div class="discount-row no-print" id="discountRow" style="display:flex;justify-content:space-between;align-items:center;padding:8px 0 4px;border-top:1px dashed var(--line,#ddd);margin-top:8px;">
+        <span style="font-size:13px;color:var(--muted,#888);font-weight:600;">🏷️ Ưu đãi / Voucher</span>
+        <input type="number" id="discountInput" placeholder="0" min="0" step="1000" oninput="renderBill()" style="width:130px;text-align:right;border:1.5px solid var(--line,#ddd);border-radius:8px;padding:5px 10px;font-size:14px;font-family:inherit;color:var(--red,#c0392b);font-weight:700;">
+      </div>
       <div class="total"><span id="t_grandTotalLbl"></span><span class="amt" id="grandTotal">0 đ</span></div>
       <div class="saving" id="savingNote"></div>
       <div class="warn" id="buffetWarn"></div>
@@ -1014,6 +1018,11 @@ function renderBill(){
   }
 
   lines.innerHTML=html;
+  // Trừ ưu đãi/voucher nếu có
+  const discountVal=parseInt(document.getElementById("discountInput")?.value)||0;
+  if(discountVal>0){
+    grand=Math.max(0,grand-discountVal);
+  }
   document.getElementById("grandTotal").textContent=fmt(grand);
   document.getElementById("savingNote").textContent=saving;
   const w=document.getElementById("buffetWarn");
@@ -1060,7 +1069,20 @@ function renderReturningBox(rec){
   if(state.vipCard && state.customerType==="vip"){
     // Khách VIP
     const bal=(state.vipCard.balance||0).toLocaleString("vi-VN");
-    statusLine=`💎 <b>Khách VIP ${state.vipCard.name}</b> · còn <b>${bal}đ</b> trong thẻ`;
+    let vipExpiryInfo = "";
+    if(state.vipCard.expiry){
+      const ep=state.vipCard.expiry.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(ep){
+        const expDate=new Date(parseInt(ep[3]),parseInt(ep[2])-1,parseInt(ep[1]));
+        const today=new Date(); today.setHours(0,0,0,0);
+        const daysLeft=Math.ceil((expDate-today)/(1000*60*60*24));
+        const daysTag=daysLeft>0
+          ?`<span style="color:${daysLeft<=7?"var(--red,#c0392b)":"var(--green,#27ae60)"}"> (còn ${daysLeft} ngày)</span>`
+          :`<span style="color:var(--red,#c0392b)"> ⚠️ đã hết hạn</span>`;
+        vipExpiryInfo=`<br><small style="color:var(--muted)">📅 Hết hạn GLOW: <b style="color:var(--ink)">${state.vipCard.expiry}</b>${daysTag}</small>`;
+      }
+    }
+    statusLine=`💎 <b>Khách VIP ${state.vipCard.name}</b> · còn <b>${bal}đ</b> trong thẻ${vipExpiryInfo}`;
   } else if(state.customerType==="member" && state.membership){
     // Khách Member mới đăng ký trong buổi này
     statusLine=`⭐ <b>Đã đăng ký Membership ${state.membership.months} tháng</b>`;
@@ -1068,11 +1090,24 @@ function renderReturningBox(rec){
     // Khách từng có membership — tính hạn dựa trên lần cuối đăng ký
     const lastMemberVisit=[...rec.visits].reverse().find(v=>v.membershipMonths>0);
     if(lastMemberVisit && lastMemberVisit.membershipMonths && lastMemberVisit.date){
-      // Estimate expiry from visit date + months
-      const d=new Date(lastMemberVisit.date.split(" ")[0].split("/").reverse().join("-"));
-      d.setMonth(d.getMonth()+lastMemberVisit.membershipMonths);
-      const exp=d.toLocaleDateString("vi-VN");
-      statusLine=`⭐ <b>Đã đăng ký Membership</b>, có hiệu lực đến <b>${exp}</b>`;
+      // Date từ toLocaleString("vi-VN") có thể là "14:08:07 6/11/2026" hoặc "6/11/2026, 14:08:07"
+      // Dùng regex để lấy đúng phần ngày DD/MM/YYYY
+      const dateMatch=lastMemberVisit.date.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(dateMatch){
+        const d=new Date(parseInt(dateMatch[3]),parseInt(dateMatch[2])-1,parseInt(dateMatch[1]));
+        d.setMonth(d.getMonth()+lastMemberVisit.membershipMonths);
+        const exp=d.toLocaleDateString("vi-VN");
+        const today=new Date(); today.setHours(0,0,0,0);
+        const daysLeft=Math.ceil((d-today)/(1000*60*60*24));
+        const daysTag = daysLeft>0
+          ? `<span style="color:${daysLeft<=7?"var(--red,#c0392b)":"var(--green,#27ae60)"}"> (còn ${daysLeft} ngày)</span>`
+          : `<span style="color:var(--red,#c0392b)"> ⚠️ đã hết hạn</span>`;
+        statusLine=`⭐ <b>Khách Member</b> — đã đến ${visitCount} lần<br><small style="color:var(--muted)">📅 Hết hạn Member: <b style="color:var(--ink)">${exp}</b>${daysTag}</small>`;
+        // Đã embed visitCount vào statusLine → đánh dấu để không append lại
+        (window._memberExpShown=true);
+      } else {
+        statusLine=`⭐ <b>Khách Member</b> — ${lastMemberVisit.membershipMonths} tháng`;
+      }
     } else {
       statusLine=`⭐ <b>Khách Member</b>`;
     }
@@ -1082,9 +1117,10 @@ function renderReturningBox(rec){
   }
 
   let h=statusLine;
-  if(visitCount>0 && !(state.vipCard && state.customerType==="vip")){
+  if(visitCount>0 && !(state.vipCard && state.customerType==="vip") && !window._memberExpShown){
     h+=` — đã đến ${visitCount} lần`;
   }
+  window._memberExpShown=false;
   if(last){
     const modeStr = last.mode==="buf" ? tr("buf")(last.buffetName) : tr("alc");
     const skinsStr = (last.skins||[]).map(skinLabel).join(", ")||"—";
@@ -1166,6 +1202,7 @@ async function checkReturning(){
           name: t.name,
           price: t.price,
           balance: data.currentVipBalance,
+          expiry: data.currentVipExpiry || "",
           newReg: false
         };
         setCustomerType("vip");
@@ -1217,9 +1254,11 @@ function currentRecord(){
   const isNewVip = !!(state.vipCard && state.vipCard.newReg);
   const isReturningVip = !!(state.vipCard && !state.vipCard.newReg);
   // VIP mới: trả tiền thẻ; VIP cũ: trả 0 (từ thẻ); thường: trả dịch vụ
-  const grandTotal = isNewVip ? vipFee + memberFee
-                   : isReturningVip ? memberFee
-                   : svcTotal + memberFee;
+  const discountAmt = parseInt(document.getElementById("discountInput")?.value)||0;
+  const grandTotal = Math.max(0,
+    (isNewVip ? vipFee + memberFee
+    : isReturningVip ? memberFee
+    : svcTotal + memberFee) - discountAmt);
   // Số dư thẻ sau buổi = số dư hiện tại - chi phí dịch vụ buổi này
   const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
   return {
@@ -1242,6 +1281,7 @@ function currentRecord(){
     vipTier:state.vipCard?state.vipCard.tier:"",
     vipCardPrice:vipFee,
     vipBalanceAfter:vipBalanceAfter,
+    discount:discountAmt,
     total:grandTotal,
     date:new Date().toLocaleString("vi-VN"),
   };
