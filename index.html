@@ -1069,10 +1069,25 @@ function renderBill(){
     html+=`<div class="billline"><span class="bn">💎 Nạp thẻ VIP ${state.vipCard.name}</span><span class="bp">${fmt(state.vipCard.price)}</span></div>`;
     grand = state.vipCard.price + (state.membership ? state.membership.fee : 0);
   } else if(state.vipCard && !state.vipCard.newReg){
-    // Khách VIP cũ: dịch vụ trừ từ thẻ, không thu tiền mặt
+    // Khách VIP cũ: trừ từ thẻ, xử lý 3 trường hợp
     const svcDeduct = isBuf ? (buf ? buf.price : 0) : alcTotal();
-    html+=`<div class="billline" style="color:var(--gold)"><span class="bn">💎 Thanh toán từ thẻ VIP ${state.vipCard.name}</span><span class="bp">-${fmt(svcDeduct)}</span></div>`;
-    grand = 0 + (state.membership ? state.membership.fee : 0);
+    const cardBal = state.vipCard.balance || 0;
+    const memberFeeLocal = state.membership ? state.membership.fee : 0;
+    if(cardBal === 0){
+      // Thẻ hết tiền — thu full tiền dịch vụ
+      html+=`<div class="billline" style="color:var(--danger,#a31420)"><span class="bn">⚠️ Thẻ hết tiền, vui lòng nạp thêm</span><span class="bp">${fmt(svcDeduct)}</span></div>`;
+      grand = svcDeduct + memberFeeLocal;
+    } else if(cardBal >= svcDeduct){
+      // Thẻ đủ tiền — không thu tiền mặt
+      html+=`<div class="billline" style="color:var(--gold)"><span class="bn">💎 Thanh toán từ thẻ VIP ${state.vipCard.name}</span><span class="bp">-${fmt(svcDeduct)}</span></div>`;
+      grand = 0 + memberFeeLocal;
+    } else {
+      // Thẻ thiếu — trừ hết thẻ, thu thêm phần chênh lệch
+      const shortfall = svcDeduct - cardBal;
+      html+=`<div class="billline" style="color:var(--gold)"><span class="bn">💎 Trừ từ thẻ VIP ${state.vipCard.name}</span><span class="bp">-${fmt(cardBal)}</span></div>`;
+      html+=`<div class="billline" style="color:var(--danger,#a31420)"><span class="bn">⚠️ Thanh toán thêm phần thiếu</span><span class="bp">${fmt(shortfall)}</span></div>`;
+      grand = shortfall + memberFeeLocal;
+    }
   }
 
   lines.innerHTML=html;
@@ -1090,9 +1105,18 @@ function renderBill(){
   const vipNote=document.getElementById("vipBalanceNote");
   if(vipNote){
     if(state.vipCard && state.customerType==="vip"){
-      const svcCost = isBuf ? buf.price : alcTotal();
-      const remaining = state.vipCard.balance - svcCost;
-      vipNote.textContent = `💎 Số dư thẻ sau buổi: ${remaining.toLocaleString("vi-VN")}đ`;
+      const svcCost = isBuf ? (buf ? buf.price : 0) : alcTotal();
+      const cardBal = state.vipCard.balance || 0;
+      if(cardBal === 0){
+        vipNote.innerHTML = `⚠️ <b style="color:var(--danger,#a31420)">Thẻ hết tiền, vui lòng nạp thêm</b>`;
+      } else {
+        const remaining = cardBal - svcCost;
+        if(remaining >= 0){
+          vipNote.innerHTML = `💎 Số dư thẻ sau buổi: <b>${remaining.toLocaleString("vi-VN")}đ</b>`;
+        } else {
+          vipNote.innerHTML = `⚠️ <b style="color:var(--danger,#a31420)">Thẻ không đủ, cần thanh toán thêm: ${Math.abs(remaining).toLocaleString("vi-VN")}đ</b>`;
+        }
+      }
       vipNote.style.display="block";
     } else {
       vipNote.style.display="none";
@@ -1137,7 +1161,10 @@ function renderReturningBox(rec){
     const tierName = isDateString(_rawName) || /^\d/.test(_rawName)
       ? (isDateString(_rawTier) || /^\d/.test(_rawTier) ? "VIP" : _rawTier.toUpperCase())
       : _rawName.toUpperCase();
-    const bal = (state.vipCard.balance||0).toLocaleString("vi-VN");
+    const bal = state.vipCard.balance || 0;
+    const balStr = bal > 0
+      ? `Số tiền trong thẻ: <b>${bal.toLocaleString("vi-VN")}đ</b>`
+      : `<span style="color:var(--danger,#a31420)">⚠️ Thẻ hết tiền, vui lòng nạp thêm</span>`;
     let vipExpiryLine = "";
     if(state.vipCard.expiry){
       const expDate = parseDateToObj(state.vipCard.expiry);
@@ -1151,7 +1178,7 @@ function renderReturningBox(rec){
         vipExpiryLine = `<br><small style="color:var(--muted)">📅 Ngày hết hạn thẻ: <b style="color:var(--ink)">${expShort}</b>${daysTag}</small>`;
       }
     }
-    statusLine=`💎 <b>Khách VIP hạng thẻ ${tierName}</b> · Số tiền trong thẻ: <b>${bal}đ</b>${vipExpiryLine}`;
+    statusLine=`💎 <b>Khách VIP hạng thẻ ${tierName}</b> · ${balStr}${vipExpiryLine}`;
   } else if(state.customerType==="member" && state.membership){
     // Khách Member mới đăng ký trong buổi này
     statusLine=`⭐ <b>Đã đăng ký Membership ${state.membership.months} tháng</b>`;
@@ -1284,7 +1311,7 @@ async function checkReturning(){
       // Fallback: nếu có số dư > 0 nhưng tier bị filter → khách vẫn là VIP, default GLOW
       if (!rawTier && data.currentVipBalance > 0) rawTier = "GLOW";
 
-      if(rawTier && data.currentVipBalance > 0){
+      if(rawTier){
         const tierMap = {
           GLOW:     {tier:"glow",     name:"GLOW",     price:5000000},
           RADIANT:  {tier:"radiant",  name:"RADIANT",  price:10000000},
@@ -1357,10 +1384,21 @@ function currentRecord(){
   const isReturningVip = !!(state.vipCard && !state.vipCard.newReg);
   // VIP mới: trả tiền thẻ; VIP cũ: trả 0 (từ thẻ); thường: trả dịch vụ
   const discountAmt = parseInt(document.getElementById("discountInput")?.value)||0;
-  const grandTotal = Math.max(0,
-    (isNewVip ? vipFee + memberFee
-    : isReturningVip ? memberFee
-    : svcTotal + memberFee) - discountAmt);
+  let grandTotal;
+  if(isNewVip){
+    grandTotal = Math.max(0, vipFee + memberFee - discountAmt);
+  } else if(isReturningVip){
+    const cardBal = state.vipCard.balance || 0;
+    if(cardBal >= svcTotal){
+      // Thẻ đủ tiền
+      grandTotal = Math.max(0, memberFee - discountAmt);
+    } else {
+      // Thẻ thiếu hoặc hết: thu thêm phần chênh
+      grandTotal = Math.max(0, (svcTotal - cardBal) + memberFee - discountAmt);
+    }
+  } else {
+    grandTotal = Math.max(0, svcTotal + memberFee - discountAmt);
+  }
   // Số dư thẻ sau buổi = số dư hiện tại - chi phí dịch vụ buổi này
   const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
   return {
