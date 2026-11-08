@@ -129,6 +129,15 @@
   .item .pricecol.single .pval{color:var(--ink);}
   .item .pricecol.single .ptag{color:var(--muted);}
 
+  /* addon upsell item */
+  .item.addon{border:1.5px dashed #d48fb0;background:linear-gradient(135deg,#fff8fc 0%,#fff2f6 100%);border-radius:12px;}
+  .item.addon .nm{color:#8b1a3b;}
+  .item.addon .meta{color:#b06;}
+  .item.addon .addonbadge{display:inline-block;background:linear-gradient(135deg,#c4385a,#8b1a3b);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle;letter-spacing:.4px;text-transform:uppercase;}
+  .item.addon .addon-price{display:flex;flex-direction:column;align-items:flex-end;gap:0;}
+  .item.addon .addon-amt{font-size:20px;font-weight:800;color:#c4385a;line-height:1.1;}
+  .item.addon .addon-sub{font-size:9.5px;color:#b06;font-weight:600;text-transform:uppercase;letter-spacing:.3px;}
+
   /* summary */
   .sumcard{position:-webkit-sticky;position:sticky;top:18px;align-self:start;}
   .billline{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);gap:8px;}
@@ -500,10 +509,19 @@ function tr(key){ return I18N[LANG][key]; }
 // group keys: CB, CS, TLCB, TLNC, TLCS, PT
 const MENU = [
   // CB - Chăm sóc cơ bản
-  {id:"CB", group:"CB", name:"Chăm sóc cơ bản (trọn 60p)", name_en:"Basic facial care (full 60 min)",
+  {id:"TG", group:"CB", name:"Chăm sóc da thư giãn (45p)", name_en:"Relaxing facial care (45 min)",
+   list:450000, member:420000, vip:400000, time:45, labor:38000,
+   desc:"Tẩy trang · rửa mặt · xông hơi · Đầu làm sạch sóng ion · TDC enzyme · Massage mặt · Hydra Peel · mặt nạ bột + Massage đầu · Phun oxi · điện di lạnh · dưỡng",
+   desc_en:"Makeup removal · cleansing & steam · ion cleansing head · enzyme peel · face massage · Hydra Peel · powder mask + head massage · oxygen · cold ion infusion · moisturizer"},
+
+  {id:"CB", group:"CB", name:"Làm sạch chuyên sâu (60p)", name_en:"Deep cleansing facial (60 min)",
    list:799000, member:679000, vip:629000, time:60, labor:38000,
-   desc:"Tẩy trang · rửa mặt-xông hơi · TDC enzyme · Hydra Peel · nặn mụn · mặt nạ · điện di lạnh · oxy tươi · dưỡng",
-   desc_en:"Makeup removal · cleansing & steam · enzyme peel · Hydra Peel · extraction · mask · cold ion infusion · oxygen · moisturizer"},
+   desc:"Tẩy trang · rửa mặt · xông hơi · Đầu làm sạch sóng ion · TDC enzyme · Hydra Peel · Nặn mụn · Điện tím · mặt nạ giấy · Phun oxi · điện di lạnh · dưỡng",
+   desc_en:"Makeup removal · cleansing & steam · ion cleansing head · enzyme peel · Hydra Peel · extraction · violet ray · sheet mask · oxygen · cold ion infusion · moisturizer"},
+
+  {id:"TLM", group:"CB", name:"Triệt lông mặt", name_en:"Facial hair removal",
+   list:99000, member:99000, vip:99000, time:15, labor:0, addon:true,
+   desc:"Kèm theo khi làm mặt · ánh sáng IPL · 15p", desc_en:"Add-on with facial · IPL light · 15 min"},
 
   // NC - Chăm sóc nâng cao
   {id:"NC1", group:"NC", name:"Massage khai thông hệ bạch huyết", name_en:"Lymphatic drainage massage",
@@ -957,20 +975,24 @@ function renderMenu(){
       const checked=state.selected.has(m.id);
       const showStrike = state.mode==="buf" && state.buffet && !groupLocked; // buffet: gạch giá lẻ
       const it=document.createElement("div");
-      it.className="item"+(isRec&&!groupLocked?" rec":"")+(isContra&&!groupLocked?" contra":"")+(groupLocked?" disabled":"");
+      const isAddon = !!m.addon;
+      it.className="item"+(isAddon?" addon":"")+(isRec&&!groupLocked&&!isAddon?" rec":"")+(isContra&&!groupLocked?" contra":"")+(groupLocked?" disabled":"");
       let badge="";
-      if(isContra&&!groupLocked) badge=`<span class="contrabadge">${tr("contraBadge")}</span>`;
+      if(isAddon) badge=`<span class="addonbadge">GÓI KÈM</span>`;
+      else if(isContra&&!groupLocked) badge=`<span class="contrabadge">${tr("contraBadge")}</span>`;
       else if(isRec&&!groupLocked) badge=`<span class="recbadge">${tr("recBadge")}</span>`;
       const samePrice = m.member==null && m.vip==null;
-      const priceBlock = showStrike
-        ? `<span class="strike">${fmt(priceFor(m))}</span>${tr("inBundle")}`
-        : samePrice
-          ? `<div class="pricetbl"><div class="pricecol single"><span class="ptag">Lẻ</span><span class="pval">${fmt(m.list)}</span></div></div>`
-          : `<div class="pricetbl">
-               <div class="pricecol${state.customerType==="retail"?" active":""}"><span class="ptag">Lẻ</span><span class="pval">${fmt(m.list)}</span></div>
-               ${m.member!=null?`<div class="pricecol${state.customerType==="member"?" active":""}"><span class="ptag">Member</span><span class="pval">${fmt(m.member)}</span></div>`:""}
-               ${m.vip!=null?`<div class="pricecol${state.customerType==="vip"?" active":""}"><span class="ptag">VIP</span><span class="pval">${fmt(m.vip)}</span></div>`:""}
-             </div>`;
+      const priceBlock = isAddon && !showStrike
+        ? `<div class="addon-price"><span class="addon-amt">99k</span><span class="addon-sub">/ buổi</span></div>`
+        : showStrike
+          ? `<span class="strike">${fmt(priceFor(m))}</span>${tr("inBundle")}`
+          : samePrice
+            ? `<div class="pricetbl"><div class="pricecol single"><span class="ptag">Lẻ</span><span class="pval">${fmt(m.list)}</span></div></div>`
+            : `<div class="pricetbl">
+                 <div class="pricecol${state.customerType==="retail"?" active":""}"><span class="ptag">Lẻ</span><span class="pval">${fmt(m.list)}</span></div>
+                 ${m.member!=null?`<div class="pricecol${state.customerType==="member"?" active":""}"><span class="ptag">Member</span><span class="pval">${fmt(m.member)}</span></div>`:""}
+                 ${m.vip!=null?`<div class="pricecol${state.customerType==="vip"?" active":""}"><span class="ptag">VIP</span><span class="pval">${fmt(m.vip)}</span></div>`:""}
+               </div>`;
       it.innerHTML=`
         <input type="checkbox" ${checked?"checked":""} ${groupLocked?"disabled":""} data-id="${m.id}">
         <div class="body">
