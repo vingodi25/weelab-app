@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
     --bg:#f2f5f0;            /* Baby Powder */
@@ -158,13 +159,8 @@
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px 0;}
   .pill{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;background:var(--brand-soft);color:var(--brand-dark);font-weight:600;}
   .hint{font-size:11.5px;color:var(--muted);margin-top:4px;}
-  /* print */
-  @media print{
-    header.top,.no-print{display:none!important;}
-    .grid{grid-template-columns:1fr;}
-    body{background:#fff;}
-    .card{box-shadow:none;border:none;}
-  }
+  /* print — ẩn toàn bộ app, chỉ in hoá đơn qua cửa sổ riêng */
+  @media print{ body{display:none!important;} }
 
   /* 3-cột loại khách */
   .ctypes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0 0;}
@@ -222,6 +218,37 @@
   .pricecol{min-width:66px;text-align:center;}
   .pricecol.single{min-width:66px;text-align:center;}
 
+
+  /* ── Invoice overlay ── */
+  .inv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:1001;display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
+  .inv-wrap{background:#fff;border-radius:16px;max-width:440px;width:100%;margin:auto;box-shadow:0 12px 48px rgba(0,0,0,.35);}
+  .inv-actions{display:flex;gap:10px;padding:14px 18px;border-top:1px solid #eee;border-radius:0 0 16px 16px;background:#fff;}
+  .inv-actions button{flex:1;border:none;border-radius:9px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:.12s;}
+  .inv-dl{background:#1a6b4a;color:#fff;}
+  .inv-dl:hover{background:#155a3c;}
+  .inv-print{background:#2a5298;color:#fff;}
+  .inv-print:hover{background:#1e3d7a;}
+  .inv-close-btn{background:#f3efe9;color:#0d171c;border:1px solid #ddd!important;}
+  /* Receipt paper styling */
+  .invoice{font-family:'Courier New',Courier,monospace;font-size:12.5px;color:#111;padding:22px 22px 14px;line-height:1.6;background:#fff;}
+  .invoice .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;}
+  .invoice .inv-info{font-size:12px;color:#333;}
+  .invoice .inv-sep{border:none;border-top:1px dashed #aaa;margin:8px 0;}
+  .invoice .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;}
+  .invoice .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#444;}
+  .invoice .inv-cust p{margin:1px 0;font-size:12.5px;}
+  .invoice .inv-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
+  .invoice .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;}
+  .invoice .inv-tbl th:last-child,.invoice .inv-tbl td.r{text-align:right;}
+  .invoice .inv-tbl th:nth-child(2),.invoice .inv-tbl td.c{text-align:center;}
+  .invoice .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;}
+  .invoice .inv-tbl .item-name{padding-top:7px;font-weight:600;}
+  .invoice .inv-tbl .item-sep td{padding:0;line-height:.5;}
+  .invoice .inv-strike{text-decoration:line-through;color:#999;font-size:11px;margin-right:4px;}
+  .invoice .inv-summary{padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;}
+  .invoice .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;}
+  .invoice .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;}
+  .invoice .inv-footer{text-align:center;font-size:11px;color:#777;margin-top:14px;line-height:1.5;}
 
   /* Birthday popup */
   .bd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;}
@@ -344,7 +371,7 @@
       </div>
       <div class="no-print">
         <button class="btn primary" id="btnSaveSheet" onclick="saveAndExport()">💾 <span id="t_btnSave"></span></button>
-        <button class="btn ghost" onclick="window.print()">🖨️ <span id="t_btnPrint"></span></button>
+        <button class="btn ghost" onclick="printInvoice()">🖨️ <span id="t_btnPrint"></span></button>
         <button class="btn ghost" onclick="resetAll()">↺ <span id="t_btnReset"></span></button>
         <button class="btn ghost" onclick="toggleSheetUrlBox()" style="font-size:12px;">⚙️ <span id="t_btnCfg"></span></button>
       </div>
@@ -389,7 +416,7 @@ const I18N = {
     sheetUrlLbl:"Web App URL (Google Sheet)",
     sheetUrlHint:"— dán 1 lần, app tự nhớ",
     btnSaveUrl:"Lưu URL",
-    btnSave:"Lưu khách vào Google Sheet",
+    btnSave:"Tạo hoá đơn",
     btnPrint:"In bill",
     btnReset:"Khách mới",
     btnCfg:"Cấu hình Google Sheet",
@@ -461,7 +488,7 @@ const I18N = {
     sheetUrlLbl:"Web App URL (Google Sheet)",
     sheetUrlHint:"— paste once, the app remembers it",
     btnSaveUrl:"Save URL",
-    btnSave:"Save customer to Google Sheet",
+    btnSave:"Create invoice",
     btnPrint:"Print bill",
     btnReset:"New customer",
     btnCfg:"Configure Google Sheet",
@@ -1433,7 +1460,7 @@ function currentRecord(){
     note:document.getElementById("cNote").value.trim(),
     mode:isBuf?"buf":"alc",
     buffetName:buf?buf.name:"",
-    items:items.map(m=>({id:m.id,name:m.name,price:priceFor(m),contra:contraIds().has(m.id)})),
+    items:items.map(m=>({id:m.id,name:m.name,price:priceFor(m),listPrice:m.list,contra:contraIds().has(m.id)})),
     contraPicked:items.filter(m=>contraIds().has(m.id)).map(m=>m.name),
     alcTotal:alcTotal(),
     totalTimeMins:totalTimeMins(),
@@ -1497,26 +1524,160 @@ function saveAndExport(){
   db[r.phone].visits.push({date:r.date,skins:r.skins,note:r.note,mode:r.mode,buffetName:r.buffetName,total:r.total,items:r.items});
   saveDB(db);
 
-  const btn=document.getElementById("btnSaveSheet");
-  const oldLabel=btn.innerHTML;
-  btn.disabled=true; btn.textContent=tr("savingBtn");
+  // Hiện hoá đơn ngay (không chờ sheet)
+  showInvoice(r);
 
+  // Gửi vào Google Sheet ở nền
   fetch(url,{
     method:"POST",
-    mode:"no-cors", // Apps Script Web App không trả CORS header chuẩn, dùng no-cors để gửi đi
+    mode:"no-cors",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
     body:JSON.stringify(r)
-  })
-  .then(()=>{
-    alert(tr("alertSaved")(r.name||r.phone, fmt(r.total)));
-  })
-  .catch(err=>{
-    alert(tr("alertSaveErr")(err));
-  })
-  .finally(()=>{
-    btn.disabled=false; btn.innerHTML=oldLabel;
-  });
+  }).catch(()=>{}); // silent — no-cors không trả lỗi thực sự
 }
+/* ============ HOÁ ĐƠN ============ */
+const INV_CTR_KEY = "weelab_inv_ctr";
+function nextInvoiceNum(){
+  const n = (parseInt(localStorage.getItem(INV_CTR_KEY)||"1000")) + 1;
+  localStorage.setItem(INV_CTR_KEY, n);
+  return "HD" + String(n).padStart(6,"0");
+}
+
+function showInvoice(r){
+  const invNum = nextInvoiceNum();
+  const now = new Date();
+  const pad = x => String(x).padStart(2,"0");
+  const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  // Build item rows
+  let rows = "";
+  const isBuf = r.mode==="buf" && r.buffetName;
+  if(isBuf){
+    rows = `<tr><td class="inv-tbl item-name" colspan="3">${r.buffetName ? "Gói Buffet "+r.buffetName : "Dịch vụ"}</td></tr>
+            <tr><td class="inv-tbl">${fmt(r.alcTotal)}</td><td class="inv-tbl c">1</td><td class="inv-tbl r">${fmt(r.alcTotal)}</td></tr>
+            <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+  } else {
+    for(const item of r.items){
+      const hasDisc = item.listPrice && item.listPrice > item.price;
+      const priceCell = hasDisc
+        ? `<span class="inv-strike">${fmt(item.listPrice)}</span> ${fmt(item.price)}`
+        : fmt(item.price);
+      rows += `<tr><td class="item-name" colspan="3">${item.name}</td></tr>
+               <tr><td>${priceCell}</td><td class="c">1</td><td class="r">${fmt(item.price)}</td></tr>
+               <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    }
+  }
+
+  // VIP card note
+  let vipNote = "";
+  if(r.vipTier && !r.vipCardPrice){
+    const bal = r.vipBalanceAfter;
+    vipNote = `<div class="sumrow"><span>Thanh toán từ thẻ WeeLAB:</span><span>${fmt(r.alcTotal)}</span></div>
+               <div class="sumrow"><span>Số dư thẻ còn lại:</span><span>${fmt(Math.max(0,bal))}</span></div>`;
+  }
+
+  const subtotal = r.total + (r.discount||0);
+
+  document.getElementById("invoiceContent").innerHTML = `
+    <div class="inv-shop">Tên cửa hàng: WeeLAB</div>
+    <div class="inv-info">Chi nhánh: 17A Thuỵ Khuê, Tây Hồ, Hà Nội</div>
+    <div class="inv-info">Điện thoại: 0932016886</div>
+    <hr class="inv-sep">
+    <div>Liên số: Liên 1</div>
+    <div>Ngày bán: ${dateStr}</div>
+    <div class="inv-title">HOÁ ĐƠN BÁN HÀNG</div>
+    <div class="inv-hdnum">${invNum}</div>
+    <div class="inv-cust">
+      <p><strong>Khách hàng:</strong> ${r.name||"—"}</p>
+      <p><strong>Điện thoại:</strong> ${r.phone||"—"}</p>
+      ${r.skins&&r.skins.length>0?`<p><strong>Tình trạng da:</strong> ${r.skins.join(" · ")}</p>`:""}
+    </div>
+    <hr class="inv-sep">
+    <table class="inv-tbl">
+      <thead><tr>
+        <th style="text-align:left;width:52%;">Đơn giá</th>
+        <th style="width:14%;">SL</th>
+        <th style="width:34%;">Thành tiền</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="inv-summary">
+      <div class="sumrow"><span>Tổng tiền hàng:</span><span>${fmt(subtotal)}</span></div>
+      ${vipNote}
+      <div class="sumrow"><span>Chiết khấu:</span><span>${r.discount>0?fmt(r.discount):"0"}</span></div>
+      <div class="sumrow grand"><span>Tổng cộng:</span><span>${fmt(r.total)}</span></div>
+    </div>
+    <div class="inv-footer">Cảm ơn bạn đã tin tưởng WeeLAB.<br>Chúc bạn có làn da khoẻ mạnh!</div>
+  `;
+  const overlay = document.getElementById("invoiceOverlay");
+  overlay.style.display = "flex";
+  overlay._invNum = invNum;
+}
+
+function closeInvoice(){
+  document.getElementById("invoiceOverlay").style.display = "none";
+}
+
+function printInvoice(){
+  const overlay = document.getElementById("invoiceOverlay");
+  if(overlay.style.display === "none"){
+    alert("Vui lòng tạo hoá đơn trước khi in.");
+    return;
+  }
+  const content = document.getElementById("invoiceContent").innerHTML;
+  const css = `
+    body{margin:0;padding:12px;background:#fff;}
+    *{box-sizing:border-box;}
+    .invoice{font-family:'Courier New',Courier,monospace;font-size:12.5px;color:#111;line-height:1.6;}
+    .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;}
+    .inv-info{font-size:12px;color:#333;}
+    .inv-sep{border:none;border-top:1px dashed #aaa;margin:8px 0;}
+    .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;}
+    .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#444;}
+    .inv-cust p{margin:1px 0;font-size:12.5px;}
+    .inv-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
+    .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;}
+    .inv-tbl th:last-child,.r{text-align:right;}
+    .inv-tbl th:nth-child(2),.c{text-align:center;}
+    .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;}
+    .item-name{padding-top:7px;font-weight:600;}
+    .item-sep td{padding:0;line-height:.5;}
+    .inv-strike{text-decoration:line-through;color:#999;font-size:11px;margin-right:4px;}
+    .inv-summary{padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;}
+    .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;}
+    .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;}
+    .inv-footer{text-align:center;font-size:11px;color:#777;margin-top:14px;line-height:1.5;}
+    hr{border:none;border-top:1px dashed #aaa;margin:8px 0;}
+    @media print{@page{margin:8mm;size:80mm auto;}}
+  `;
+  const win = window.open("","_blank","width=360,height=640,menubar=no,toolbar=no,location=no");
+  if(!win){ alert("Trình duyệt chặn cửa sổ pop-up. Vui lòng cho phép pop-up cho trang này."); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoá đơn WeeLAB</title>
+    <style>${css}</style></head><body>
+    <div class="invoice">${content}</div>
+    <script>window.onload=function(){window.focus();window.print();}<\/script>
+    </body></html>`);
+  win.document.close();
+}
+
+async function downloadInvoice(){
+  const content = document.getElementById("invoiceContent");
+  const invNum = document.getElementById("invoiceOverlay")._invNum || "invoice";
+  const btn = document.querySelector(".inv-dl");
+  btn.textContent = "Đang tạo ảnh…"; btn.disabled = true;
+  try {
+    const canvas = await html2canvas(content, {scale:3, backgroundColor:"#ffffff", useCORS:true, logging:false});
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `HoaDon_${invNum}.png`;
+    a.click();
+  } catch(e) {
+    alert("Lỗi tạo ảnh: " + e.message);
+  } finally {
+    btn.textContent = "⬇ Tải ảnh hoá đơn"; btn.disabled = false;
+  }
+}
+
 function resetAll(){
   if(!confirm(tr("confirmReset"))) return;
   ["cName","cPhone","cEmail","cNote"].forEach(id=>document.getElementById(id).value="");
@@ -1738,6 +1899,18 @@ renderBill();
     </div>
     <div class="popup-actions">
       <button onclick="closeVipPopup()">Huỷ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ INVOICE OVERLAY ============ -->
+<div id="invoiceOverlay" class="inv-overlay" style="display:none;" onclick="if(event.target===this)closeInvoice()">
+  <div class="inv-wrap">
+    <div id="invoiceContent" class="invoice"></div>
+    <div class="inv-actions">
+      <button class="inv-dl" onclick="downloadInvoice()">⬇ Tải ảnh</button>
+      <button class="inv-print" onclick="printInvoice()">🖨️ In</button>
+      <button class="inv-close-btn" onclick="closeInvoice()">✕ Đóng</button>
     </div>
   </div>
 </div>
