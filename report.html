@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeeLAB · Báo cáo</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f2f5f0;--card:#fff;--ink:#0d171c;--muted:#6f8a8f;--line:#dde6e3;
+  --brand:#568791;--brand-dark:#2a4c5e;--brand-soft:#e3edec;
+  --green:#5b8a72;--green-soft:#e6f0ea;--gold:#bfa15a;
+  --danger:#a31420;--danger-soft:#f3dde0;--warn:#c97a00;--warn-soft:#fef3dc;
+  --shadow:0 2px 10px rgba(13,23,28,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Montserrat",-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;}
+.top{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;}
+.top h1{font-size:17px;font-weight:700;flex:1;}
+.top-back{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.top-back:hover{background:rgba(255,255,255,.28);}
+
+/* Sheets banner */
+.sheets-banner{background:#fff;border-bottom:1px solid var(--line);padding:11px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.sheets-status{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted);}
+.dot.ok{background:#4caf50;}
+.dot.err{background:var(--danger);}
+.dot.loading{background:var(--warn);animation:pulse .9s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sheets-url-input{flex:1;min-width:220px;border:1.5px solid var(--line);border-radius:8px;padding:6px 11px;font-size:12.5px;font-family:inherit;background:#fcfaf7;}
+.sheets-url-input:focus{outline:none;border-color:var(--brand);}
+.btn-sm{border:1.5px solid var(--brand);border-radius:8px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--brand-soft);color:var(--brand-dark);transition:.12s;white-space:nowrap;}
+.btn-sm:hover{background:var(--brand);color:#fff;}
+.sheets-info{font-size:12px;color:var(--muted);}
+
+/* Tabs */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--line);padding:0 20px;overflow-x:auto;}
+.tab{border:none;background:none;padding:11px 15px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:.12s;}
+.tab.on{color:var(--brand-dark);border-bottom-color:var(--brand);}
+.tab:hover{color:var(--brand-dark);}
+
+/* Period filter */
+.period-bar{display:flex;gap:7px;padding:12px 20px 0;flex-wrap:wrap;align-items:center;}
+.period-btn{border:1.5px solid var(--line);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--muted);transition:.12s;}
+.period-btn.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark);}
+.period-custom{display:none;gap:6px;align-items:center;flex-wrap:wrap;}
+.period-custom.show{display:flex;}
+.period-custom input{border:1.5px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;font-family:inherit;background:#fff;}
+
+.wrap{max-width:1200px;margin:0 auto;padding:16px 20px;}
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
+@media(max-width:900px){.stat-cards{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:480px){.stat-cards{grid-template-columns:1fr;}}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow);}
+.scard .sc-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+.scard .sc-val{font-size:21px;font-weight:800;color:var(--brand-dark);}
+.scard .sc-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.scard.green .sc-val{color:var(--green);}
+.scard.gold .sc-val{color:var(--gold);}
+.scard.red .sc-val{color:var(--danger);}
+.chart-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px;}
+.chart-card h3{font-size:13.5px;font-weight:700;color:var(--brand-dark);margin-bottom:12px;}
+.chart-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;}
+@media(max-width:760px){.chart-row{grid-template-columns:1fr;}}
+.tbl-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:16px;}
+.tbl-hdr{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:9px;}
+.tbl-hdr h3{font-size:13.5px;font-weight:700;color:var(--brand-dark);}
+.search-box{border:1.5px solid var(--line);border-radius:8px;padding:6px 11px;font-size:13px;font-family:inherit;background:#fcfaf7;min-width:190px;}
+.search-box:focus{outline:none;border-color:var(--brand);}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;color:var(--muted);padding:9px 13px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;background:#fafbf9;}
+td{font-size:12.5px;padding:8px 13px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbf9;}
+.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11.5px;font-weight:600;}
+.tag.green{background:var(--green-soft);color:var(--green);}
+.tag.gold{background:#faf4e3;color:#7a5c0a;}
+.tag.muted{background:#f3f4f6;color:var(--muted);}
+.tbl-scroll{overflow-x:auto;}
+.inv-tbl input[type=number]{width:95px;border:1.5px solid var(--line);border-radius:7px;padding:5px 7px;font-size:12.5px;font-family:inherit;text-align:right;}
+.inv-tbl input:focus{outline:none;border-color:var(--brand);}
+.stock-low{color:var(--danger);font-weight:700;}
+.stock-ok{color:var(--green);}
+.pl-row-profit td{background:var(--green-soft);font-weight:700;color:var(--green);}
+.pl-row-loss td{background:var(--danger-soft);font-weight:700;color:var(--danger);}
+.empty{text-align:center;padding:36px;color:var(--muted);}
+.tab-section{display:none;}
+.tab-section.show{display:block;}
+.badge-num{display:inline-block;background:var(--brand);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:12px;margin-left:5px;}
+
+/* Fixed costs */
+.fc-panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px;}
+.fc-panel h3{font-size:13.5px;font-weight:700;color:var(--brand-dark);margin-bottom:4px;}
+.fc-panel .fc-sub{font-size:12px;color:var(--muted);margin-bottom:14px;}
+.fc-month-sel{border:1.5px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;font-family:inherit;margin-bottom:14px;}
+.fc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+@media(max-width:700px){.fc-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:420px){.fc-grid{grid-template-columns:1fr;}}
+.fc-item label{font-size:11.5px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px;}
+.fc-item input{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fcfaf7;}
+.fc-item input:focus{outline:none;border-color:var(--brand);}
+.fc-total{margin-top:13px;padding:10px 14px;background:var(--brand-soft);border-radius:9px;font-size:13px;font-weight:700;color:var(--brand-dark);}
+.fc-note{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.6;}
+
+/* Top list items */
+.top-list-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px;}
+.top-list-row:last-child{border-bottom:none;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div style="font-size:11px;opacity:.8;font-weight:600;letter-spacing:.5px;">WEELAB</div>
+    <h1>📊 Báo cáo & Quản lý kho</h1>
+  </div>
+  <a href="index.html" class="top-back">← Về app chọn món</a>
+</header>
+
+<!-- SHEETS BANNER -->
+<div class="sheets-banner">
+  <div class="sheets-status">
+    <div class="dot" id="sheetsDot"></div>
+    <span id="sheetsStatusTxt">Chưa kết nối Google Sheets</span>
+  </div>
+  <input class="sheets-url-input" id="sheetsUrlInput" type="text"
+    placeholder="Dán URL Web App (Apps Script) vào đây…"
+    oninput="saveUrlDraft(this.value)">
+  <button class="btn-sm" onclick="connectSheets()">🔗 Kết nối & tải dữ liệu</button>
+  <span class="sheets-info" id="sheetsInfo"></span>
+</div>
+
+<!-- TAB BAR -->
+<div class="tabs">
+  <button class="tab on"  onclick="switchTab('overview')">🏠 Tổng quan</button>
+  <button class="tab"     onclick="switchTab('invoices')">📋 Hoá đơn</button>
+  <button class="tab"     onclick="switchTab('customers')">👤 Khách hàng</button>
+  <button class="tab"     onclick="switchTab('inventory')">📦 Sản phẩm & Kho</button>
+  <button class="tab"     onclick="switchTab('pl')">💰 Lãi lỗ</button>
+</div>
+
+<!-- PERIOD FILTER -->
+<div class="period-bar">
+  <button class="period-btn" onclick="setPeriod('today')">Hôm nay</button>
+  <button class="period-btn" onclick="setPeriod('week')">Tuần này</button>
+  <button class="period-btn on" onclick="setPeriod('month')">Tháng này</button>
+  <button class="period-btn" onclick="setPeriod('year')">Năm này</button>
+  <button class="period-btn" onclick="setPeriod('all')">Tất cả</button>
+  <button class="period-btn" onclick="setPeriod('custom')">📅 Tuỳ chọn</button>
+  <div class="period-custom" id="customRange">
+    Từ: <input type="date" id="dateFrom" onchange="applyCustomRange()">
+    Đến: <input type="date" id="dateTo" onchange="applyCustomRange()">
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="tab-section show" id="tab-overview">
+  <div class="stat-cards" id="statCards"></div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>📈 Doanh thu theo ngày (30 ngày gần nhất)</h3>
+      <canvas id="chartRevenue" height="80"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>🍽️ Top dịch vụ theo số lượt</h3>
+      <div id="topServices"></div>
+    </div>
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>💎 Top khách hàng (theo doanh thu)</h3>
+      <div id="topCustomers"></div>
+    </div>
+    <div class="chart-card">
+      <h3>🧴 Top sản phẩm bán chạy</h3>
+      <div id="topProducts"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INVOICES ═══ -->
+<div class="tab-section" id="tab-invoices">
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <h3>Danh sách hoá đơn <span class="badge-num" id="invCount">0</span></h3>
+      <input class="search-box" type="text" placeholder="🔍 Tìm tên, SĐT…" oninput="renderInvoices()" id="invSearch">
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Ngày giờ</th><th>Khách hàng</th><th>SĐT</th>
+          <th>Hình thức</th><th>Dịch vụ / sản phẩm</th>
+          <th>Công KTV</th><th>Tổng thu</th><th>Nguồn</th>
+        </tr></thead>
+        <tbody id="invBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CUSTOMERS ═══ -->
+<div class="tab-section" id="tab-customers">
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <h3>Danh sách khách hàng <span class="badge-num" id="custCount">0</span></h3>
+      <input class="search-box" type="text" placeholder="🔍 Tìm tên, SĐT…" oninput="renderCustomers()" id="custSearch">
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Tên khách</th><th>SĐT</th><th>Số lần đến</th>
+          <th>Tổng chi</th><th>Trung bình/lần</th><th>Lần cuối</th><th>Tình trạng da</th>
+        </tr></thead>
+        <tbody id="custBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INVENTORY ═══ -->
+<div class="tab-section" id="tab-inventory">
+  <div style="background:var(--warn-soft);border:1px solid #e0c870;border-radius:10px;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--warn);">
+    💡 <b>Nhập giá vốn & tồn ban đầu</b> cho từng sản phẩm. Dữ liệu tự lưu, app tự trừ theo bill bán. Tồn ≤ 5 → cảnh báo đỏ.
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <h3>📦 Tồn kho sản phẩm</h3>
+      <div style="font-size:12px;color:var(--muted);">Tự lưu khi nhập</div>
+    </div>
+    <div class="tbl-scroll">
+      <table class="inv-tbl">
+        <thead><tr>
+          <th>Sản phẩm</th><th>SKU</th><th>Giá bán</th>
+          <th>Giá vốn</th><th>Tồn ban đầu</th><th>Đã bán</th>
+          <th>Còn lại</th><th>GT tồn</th><th>Lãi gộp SP</th>
+        </tr></thead>
+        <tbody id="invBody2"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ P&L ═══ -->
+<div class="tab-section" id="tab-pl">
+  <div class="stat-cards" id="plCards"></div>
+
+  <!-- Chi phí cố định -->
+  <div class="fc-panel">
+    <h3>🗂️ Nhập chi phí cố định theo tháng</h3>
+    <p class="fc-sub">Nhập cho từng tháng — dữ liệu lưu tự động, dùng để tính lãi thực.</p>
+    <select class="fc-month-sel" id="fcMonthSel" onchange="renderFcFields()"></select>
+    <div class="fc-grid" id="fcGrid"></div>
+    <div class="fc-total" id="fcTotal">Tổng chi phí cố định tháng này: —</div>
+    <div class="fc-note">
+      📌 <b>Chi phí cần nhập để báo cáo chính xác:</b><br>
+      Mặt bằng (thuê nhà/mặt bằng) · Lương nhân viên (lễ tân, sale, kế toán, content — <i>không tính KTV vì đã có "Công KTV" trong bill</i>) · Điện nước · Chi phí nguyên liệu dịch vụ (hóa chất peel, serum, mặt nạ dùng trong liệu trình) · Marketing & quảng cáo (Facebook/TikTok ads, in ấn) · Vật tư tiêu hao (khăn, găng tay, cốc dùng 1 lần) · Khấu hao máy móc thiết bị · Phần mềm & công cụ · Thuế &amp; phí khác.
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <h3>📊 Doanh thu & Lãi gộp theo tháng</h3>
+    <canvas id="chartPL" height="65"></canvas>
+  </div>
+  <div class="tbl-card">
+    <div class="tbl-hdr"><h3>Báo cáo lãi lỗ theo tháng</h3></div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>Tháng</th><th>Doanh thu</th>
+          <th>Chi phí KTV</th><th>Giá vốn SP</th><th>Chi phí cố định</th>
+          <th>Tổng chi</th><th>Lợi nhuận</th><th>Tỷ lệ</th>
+        </tr></thead>
+        <tbody id="plBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ════════════════════════════════════════════════════
+   PRODUCTS
+════════════════════════════════════════════════════ */
+const PRODUCTS=[
+  {sku:"PVN384",brand:"Ivawhite",name:"Whitening Night Fluid 50ml",price:1339000},
+  {sku:"PVN383",brand:"Ivawhite",name:"Whitening Cream 50ml",price:1428000},
+  {sku:"PVN382",brand:"Ivawhite",name:"Intensive Whitening Serum 30ml",price:1518000},
+  {sku:"PVN381",brand:"Ivatherm",name:"Glycolic Acid Cleanser 150ml",price:820000},
+  {sku:"PVN380",brand:"CicaDerm",name:"Repairing Cream Mimosa",price:550000},
+  {sku:"PVN379",brand:"Christina",name:"Elastin Collagen Moisture Cream",price:1212000},
+  {sku:"PVN378",brand:"Mặt nạ",name:"Mặt nạ SRX (1 hộp)",price:420000},
+  {sku:"PVN377",brand:"Mặt nạ",name:"Mặt nạ thạch LA PÉC",price:480000},
+  {sku:"PVN376",brand:"DMK",name:"Enbioment Cleanser 150ml",price:1767000},
+  {sku:"PVN375",brand:"DMK",name:"Beta Gel Serum 30ml",price:2800000},
+  {sku:"PVN374",brand:"DMK",name:"Enbioment Serum 30ml",price:2553000},
+  {sku:"PVN373",brand:"DMK",name:"Beta Gel chiết 5ml",price:420000},
+  {sku:"PVN353",brand:"PAYOT",name:"Kem dưỡng lợi khuẩn",price:1800000},
+  {sku:"PVN351",brand:"PAYOT",name:"Neo Serum tái tạo",price:2900000},
+  {sku:"PVN334",brand:"PAYOT",name:"Nước Tẩy Trang 400ml",price:769000},
+  {sku:"PVN333",brand:"PAYOT",name:"Kem dưỡng Vitamin C3",price:1400000},
+  {sku:"PVN309",brand:"PAYOT",name:"Source Adaptogen Cream",price:1800000},
+  {sku:"PVN308",brand:"PAYOT",name:"Adaptogen Serum",price:1800000},
+  {sku:"PVN306",brand:"PAYOT",name:"Nước Dưỡng Sáng 15ml",price:98000},
+  {sku:"PVN305",brand:"PAYOT",name:"Serum Vitamin C3 30ml",price:1700000},
+  {sku:"PVN304",brand:"PAYOT",name:"Gel Dưỡng Vitamin 50ml",price:1319000},
+  {sku:"PVN301",brand:"PAYOT",name:"Pate Grise Kem Dưỡng 50ml",price:1150000},
+  {sku:"PVN300",brand:"PAYOT",name:"Pate Grise Serum 30ml",price:1600000},
+  {sku:"PVN299",brand:"PAYOT",name:"Pate Grise Nước Dưỡng 125ml",price:600000},
+  {sku:"PVN298",brand:"PAYOT",name:"Pate Grise Gel Rửa Mặt 200ml",price:790000},
+  {sku:"PVN352",brand:"VERSO",name:"Dầu dưỡng số 7",price:5000000},
+  {sku:"PVN350",brand:"VERSO",name:"Vitamin C Serum 30ml",price:2300000},
+  {sku:"PVN349",brand:"VERSO",name:"Night Cream Retinol 8 50ml",price:2900000},
+  {sku:"PVN348",brand:"VERSO",name:"Super Facial Serum 30ml",price:3800000},
+  {sku:"PVN344",brand:"USOLAB",name:"Bio Barrier K Mist 150ml",price:770000},
+  {sku:"PVN340",brand:"USOLAB",name:"Repair Cleanser 150ml",price:528000},
+  {sku:"PVN339",brand:"USOLAB",name:"Tẩy da chết Enzyme 150ml",price:612000},
+  {sku:"PVN338",brand:"USOLAB",name:"Sensitive Purifying Mist 150ml",price:700000},
+  {sku:"PVN337",brand:"USOLAB",name:"Sensitive K Cream 50ml",price:935000},
+  {sku:"PVN336",brand:"USOLAB",name:"Sensitive Sun Block Matte 50ml",price:836000},
+  {sku:"PVN269",brand:"Biotrade",name:"Acnaut Active Cream 15ml",price:380000},
+  {sku:"PVN267",brand:"Gói tư vấn",name:"Gói W.VIP",price:800000},
+  {sku:"PVN266",brand:"Gói tư vấn",name:"Gói W.Premium",price:600000},
+  {sku:"PVN265",brand:"Gói tư vấn",name:"Gói W.Basic",price:500000},
+];
+const skuMap={};
+PRODUCTS.forEach(p=>{skuMap[p.sku]=p;skuMap[p.name]=p;});
+
+/* ════════════════════════════════════════════════════
+   LOCAL STORAGE KEYS
+════════════════════════════════════════════════════ */
+const DB_KEY     = "weelab_customers";
+const INV_KEY    = "weelab_inventory";
+const FC_KEY     = "weelab_fixed_costs";
+const URL_KEY    = "weelab_sheet_url";
+const CACHE_KEY  = "weelab_sheet_cache";
+
+function getDB(){ return JSON.parse(localStorage.getItem(DB_KEY)||"{}"); }
+function getInvStore(){ return JSON.parse(localStorage.getItem(INV_KEY)||"{}"); }
+function saveInvStore(d){ localStorage.setItem(INV_KEY,JSON.stringify(d)); }
+function getFcStore(){ return JSON.parse(localStorage.getItem(FC_KEY)||"{}"); }
+function saveFcStore(d){ localStorage.setItem(FC_KEY,JSON.stringify(d)); }
+
+/* ════════════════════════════════════════════════════
+   GOOGLE SHEETS CONNECTION
+════════════════════════════════════════════════════ */
+let sheetVisits=[];
+let sheetLoaded=false;
+
+function saveUrlDraft(v){ /* only save on connect */ }
+
+function connectSheets(){
+  const url=(document.getElementById("sheetsUrlInput").value||"").trim();
+  if(!url||!url.includes("script.google.com")){
+    alert("Vui lòng dán đúng URL Web App từ Google Apps Script (dạng https://script.google.com/macros/s/…/exec)");
+    return;
+  }
+  localStorage.setItem(URL_KEY,url);
+  loadFromSheets(url);
+}
+
+function loadFromSheets(url){
+  if(!url) return;
+  setDot("loading","Đang tải dữ liệu từ Google Sheets…");
+  const cbName="weeReportCb_"+Date.now();
+  const to=setTimeout(()=>{
+    delete window[cbName];
+    setDot("err","Timeout — kiểm tra lại URL hoặc quyền truy cập.");
+  },20000);
+  window[cbName]=function(data){
+    clearTimeout(to);
+    if(document.head.contains(script)) document.head.removeChild(script);
+    delete window[cbName];
+    if(data&&data.ok&&data.visits){
+      sheetVisits=data.visits||[];
+      sheetLoaded=true;
+      localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),visits:sheetVisits}));
+      setDot("ok","Đã kết nối · "+sheetVisits.length+" bill từ Sheets");
+      document.getElementById("sheetsInfo").textContent="(cập nhật: "+new Date().toLocaleTimeString("vi-VN")+")";
+    } else {
+      setDot("err","Lỗi: "+(data&&data.error||"Không nhận được dữ liệu"));
+    }
+    renderCurrentTab();
+  };
+  const script=document.createElement("script");
+  script.onerror=()=>{
+    clearTimeout(to);
+    delete window[cbName];
+    setDot("err","Không tải được script — kiểm tra URL.");
+    renderCurrentTab();
+  };
+  script.src=url+"?action=getAllVisits&callback="+cbName;
+  document.head.appendChild(script);
+}
+
+function setDot(state,msg){
+  const dot=document.getElementById("sheetsDot");
+  const txt=document.getElementById("sheetsStatusTxt");
+  dot.className="dot"+(state?(" "+state):"");
+  txt.textContent=msg||"";
+}
+
+// Load cache on start
+(function initSheets(){
+  const savedUrl=localStorage.getItem(URL_KEY)||"";
+  if(savedUrl) document.getElementById("sheetsUrlInput").value=savedUrl;
+  const cache=localStorage.getItem(CACHE_KEY);
+  if(cache){
+    try{
+      const c=JSON.parse(cache);
+      if(c.visits&&c.visits.length>0){
+        sheetVisits=c.visits;
+        sheetLoaded=true;
+        const age=Math.round((Date.now()-c.ts)/60000);
+        setDot("ok","Dùng cache · "+sheetVisits.length+" bill (cập nhật "+age+"ph trước)");
+        document.getElementById("sheetsInfo").textContent="Nhấn 'Kết nối & tải dữ liệu' để làm mới";
+      }
+    } catch(e){}
+  }
+})();
+
+/* ════════════════════════════════════════════════════
+   DATE HELPERS
+════════════════════════════════════════════════════ */
+function parseDate(str){
+  if(!str) return null;
+  const s=String(str).trim();
+  const m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(+m[3],+m[2]-1,+m[1]);
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+function isSameDay(a,b){ return a.getDate()===b.getDate()&&a.getMonth()===b.getMonth()&&a.getFullYear()===b.getFullYear(); }
+function fmtDate(d){ if(!d) return "—"; return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear(); }
+function monthKey(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); }
+function monthLabel(key){ const[y,m]=key.split("-"); return "T"+parseInt(m)+"/"+y; }
+
+/* ════════════════════════════════════════════════════
+   MERGED VISITS (Sheets + localStorage, deduplicated)
+════════════════════════════════════════════════════ */
+function allVisits(){
+  // 1. Sheet visits (source of truth for historical data)
+  const list=sheetVisits.map(v=>({...v,_src:"sheet"}));
+  // 2. Local visits — only add if NOT already in sheet (deduplicate by phone+date string)
+  const sheetKeys=new Set(sheetVisits.map(v=>v.phone+"_"+v.date));
+  const db=getDB();
+  for(const phone in db){
+    const c=db[phone];
+    for(const v of (c.visits||[])){
+      const key=phone+"_"+(v.date||"");
+      if(!sheetKeys.has(key)){
+        list.push({
+          date:v.date,name:c.name||"—",phone,
+          customerType:v.customerType||"",
+          skins:v.skins||[],
+          mode:v.mode||"alc",
+          buffetName:v.buffetName||"",
+          itemsStr:(v.items||[]).map(i=>i.name).join(", "),
+          items:v.items||[],
+          totalTimeMins:v.totalTimeMins||0,
+          totalLabor:v.totalLabor||0,
+          membershipFee:v.membershipFee||0,
+          vipTier:v.vipTier||"",
+          total:v.total||0,
+          productItems:v.productItems||[],
+          prodTotal:v.prodTotal||0,
+          _src:"local"
+        });
+      }
+    }
+  }
+  return list.sort((a,b)=>{
+    const da=parseDate(a.date),db2=parseDate(b.date);
+    return (db2?.getTime()||0)-(da?.getTime()||0);
+  });
+}
+
+function filteredVisits(){
+  const now=new Date();
+  return allVisits().filter(v=>{
+    const d=parseDate(v.date);
+    if(!d) return currentPeriod==="all";
+    switch(currentPeriod){
+      case "today": return isSameDay(d,now);
+      case "week": {
+        const s=new Date(now);s.setDate(now.getDate()-now.getDay()+1);s.setHours(0,0,0,0);
+        return d>=s;
+      }
+      case "month": return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+      case "year": return d.getFullYear()===now.getFullYear();
+      case "custom":
+        if(customFrom&&d<customFrom) return false;
+        if(customTo&&d>customTo) return false;
+        return true;
+      default: return true;
+    }
+  });
+}
+
+// Parse itemsStr from sheet (format: "• ServiceName\n• ServiceName2")
+function parseItemsStr(str){
+  if(!str) return [];
+  return String(str).split(/\n|•/).map(s=>s.trim()).filter(Boolean).map(name=>({name}));
+}
+
+/* ════════════════════════════════════════════════════
+   SOLD QTY MAP (all visits, for inventory)
+════════════════════════════════════════════════════ */
+function soldQtyMap(){
+  const map={};
+  allVisits().forEach(v=>{
+    for(const item of (v.productItems||[])){
+      const p=skuMap[item.name]||skuMap[item.sku];
+      if(!p) continue;
+      map[p.sku]=(map[p.sku]||0)+(item.qty||1);
+    }
+  });
+  return map;
+}
+
+/* ════════════════════════════════════════════════════
+   FORMAT HELPERS
+════════════════════════════════════════════════════ */
+const fmt=n=>{
+  if(n==null||isNaN(n)) return "—";
+  return new Intl.NumberFormat("vi-VN").format(Math.round(n))+"đ";
+};
+const fmtShort=n=>{
+  if(!n&&n!==0) return "—";
+  if(n>=1000000) return (n/1000000).toFixed(1).replace(".0","")+"tr";
+  if(n>=1000) return (n/1000).toFixed(0)+"k";
+  return String(Math.round(n));
+};
+
+/* ════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════ */
+let currentPeriod="month";
+let customFrom=null,customTo=null;
+let currentTab="overview";
+let revenueChart=null,plChart=null;
+
+/* ════════════════════════════════════════════════════
+   TAB / PERIOD
+════════════════════════════════════════════════════ */
+function switchTab(tab){
+  currentTab=tab;
+  const tabs=["overview","invoices","customers","inventory","pl"];
+  document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("on",tabs[i]===tab));
+  document.querySelectorAll(".tab-section").forEach(el=>el.classList.toggle("show",el.id==="tab-"+tab));
+  renderCurrentTab();
+}
+
+function renderCurrentTab(){
+  if(currentTab==="overview") renderOverview();
+  else if(currentTab==="invoices") renderInvoices();
+  else if(currentTab==="customers") renderCustomers();
+  else if(currentTab==="inventory") renderInventory();
+  else if(currentTab==="pl") renderPL();
+}
+
+function setPeriod(p){
+  currentPeriod=p;
+  const ps=["today","week","month","year","all","custom"];
+  document.querySelectorAll(".period-btn").forEach((el,i)=>el.classList.toggle("on",ps[i]===p));
+  document.getElementById("customRange").classList.toggle("show",p==="custom");
+  renderCurrentTab();
+}
+
+function applyCustomRange(){
+  const f=document.getElementById("dateFrom").value;
+  const t=document.getElementById("dateTo").value;
+  customFrom=f?new Date(f):null;
+  customTo=t?(()=>{const d=new Date(t);d.setHours(23,59,59,999);return d;})():null;
+  renderCurrentTab();
+}
+
+/* ════════════════════════════════════════════════════
+   OVERVIEW
+════════════════════════════════════════════════════ */
+function renderOverview(){
+  const visits=filteredVisits();
+  const revenue=visits.reduce((s,v)=>s+(v.total||0),0);
+  const visitCount=visits.length;
+  const labor=visits.reduce((s,v)=>s+(v.totalLabor||0),0);
+  const uniqueCustomers=new Set(visits.map(v=>v.phone).filter(Boolean)).size;
+  const avgPerVisit=visitCount>0?revenue/visitCount:0;
+  document.getElementById("statCards").innerHTML=`
+    <div class="scard"><div class="sc-label">💰 Doanh thu</div><div class="sc-val">${fmtShort(revenue)}</div><div class="sc-sub">${fmt(revenue)}</div></div>
+    <div class="scard green"><div class="sc-label">🧾 Số hoá đơn</div><div class="sc-val">${visitCount}</div><div class="sc-sub">lượt khách</div></div>
+    <div class="scard gold"><div class="sc-label">👤 Khách hàng</div><div class="sc-val">${uniqueCustomers}</div><div class="sc-sub">người</div></div>
+    <div class="scard"><div class="sc-label">📊 TB/đơn</div><div class="sc-val">${fmtShort(avgPerVisit)}</div><div class="sc-sub">Công KTV: ${fmtShort(labor)}</div></div>`;
+
+  // Revenue chart: last 30 days (uses ALL visits, not filtered)
+  const last30={};
+  const today=new Date();
+  for(let i=29;i>=0;i--){const d=new Date(today);d.setDate(today.getDate()-i);last30[fmtDate(d)]=0;}
+  allVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const k=fmtDate(d);if(k in last30)last30[k]+=(v.total||0);});
+  const labels=Object.keys(last30).map(k=>k.slice(0,5));
+  const data=Object.values(last30);
+  if(revenueChart) revenueChart.destroy();
+  revenueChart=new Chart(document.getElementById("chartRevenue"),{
+    type:"bar",
+    data:{labels,datasets:[{label:"Doanh thu",data,backgroundColor:"rgba(86,135,145,.7)",borderColor:"#568791",borderWidth:1,borderRadius:3}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
+  });
+
+  // Top services (from filtered visits)
+  const svcCount={};
+  visits.forEach(v=>{
+    const items=v.items||parseItemsStr(v.itemsStr);
+    items.forEach(it=>{const n=it.name||"";if(n){svcCount[n]=(svcCount[n]||0)+1;}});
+    if(v.buffetName&&items.length===0) svcCount["Buffet: "+v.buffetName]=(svcCount["Buffet: "+v.buffetName]||0)+1;
+  });
+  const topSvc=Object.entries(svcCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById("topServices").innerHTML=topSvc.length===0?`<div class="empty">Chưa có dữ liệu</div>`:
+    topSvc.map(([name,cnt])=>`<div class="top-list-row"><span style="max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span><span style="color:var(--brand-dark);font-weight:700;">${cnt} lần</span></div>`).join("");
+
+  // Top customers (from filtered)
+  const custRev={};
+  visits.forEach(v=>{
+    const k=v.phone||v.name||"?";
+    if(!custRev[k]) custRev[k]={name:v.name||v.phone||"—",total:0,visits:0};
+    custRev[k].total+=(v.total||0);custRev[k].visits++;
+  });
+  const topCust=Object.entries(custRev).sort((a,b)=>b[1].total-a[1].total).slice(0,8);
+  document.getElementById("topCustomers").innerHTML=topCust.length===0?`<div class="empty">Chưa có dữ liệu</div>`:
+    topCust.map(([,c])=>`<div class="top-list-row"><span>${c.name}</span><span style="color:var(--brand-dark);font-weight:700;">${c.visits} lần · ${fmtShort(c.total)}</span></div>`).join("");
+
+  // Top products
+  const prodRev={};
+  visits.forEach(v=>{
+    for(const item of (v.productItems||[])){
+      const name=item.name||item.sku||"?";
+      if(!prodRev[name]) prodRev[name]={qty:0,revenue:0};
+      prodRev[name].qty+=(item.qty||1);
+      prodRev[name].revenue+=(item.subtotal||item.price*(item.qty||1)||0);
+    }
+  });
+  const topProd=Object.entries(prodRev).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,8);
+  document.getElementById("topProducts").innerHTML=topProd.length===0?`<div class="empty">Chưa có sản phẩm nào bán</div>`:
+    topProd.map(([name,p])=>`<div class="top-list-row"><span>${name}</span><span style="color:var(--brand-dark);font-weight:700;">×${p.qty} · ${fmtShort(p.revenue)}</span></div>`).join("");
+}
+
+/* ════════════════════════════════════════════════════
+   INVOICES
+════════════════════════════════════════════════════ */
+function renderInvoices(){
+  const q=(document.getElementById("invSearch")?.value||"").toLowerCase();
+  let visits=filteredVisits().filter(v=>!q||(v.name||"").toLowerCase().includes(q)||(v.phone||"").includes(q));
+  document.getElementById("invCount").textContent=visits.length;
+  document.getElementById("invBody").innerHTML=visits.length===0?`<tr><td colspan="9" class="empty">Không có hoá đơn nào</td></tr>`:
+    visits.map((v,i)=>{
+      const svcStr=v.itemsStr?v.itemsStr.replace(/•\s*/g,"").replace(/\n/g,", ").slice(0,80)+(v.itemsStr.length>80?"…":""):(v.buffetName?"Buffet: "+v.buffetName:"—");
+      const prodStr=(v.productItems||[]).map(it=>`${it.name||it.sku}${(it.qty||1)>1?" ×"+it.qty:""}`).join(", ")||"";
+      const srcBadge=v._src==="sheet"?`<span class="tag gold">Sheet</span>`:`<span class="tag green">App</span>`;
+      return `<tr>
+        <td style="color:var(--muted);">${i+1}</td>
+        <td style="white-space:nowrap;font-size:12px;">${fmtDate(parseDate(v.date))}</td>
+        <td><b>${v.name||"—"}</b></td>
+        <td style="color:var(--muted);font-size:12px;">${v.phone||"—"}</td>
+        <td><span class="tag muted">${v.mode==="buf"?"Buffet":"Gọi lẻ"}</span></td>
+        <td style="font-size:11.5px;max-width:220px;">${svcStr}${prodStr?`<br><span style="color:var(--brand);">🧴 ${prodStr}</span>`:""}</td>
+        <td style="color:var(--muted);">${v.totalLabor>0?fmt(v.totalLabor):"—"}</td>
+        <td style="font-weight:800;color:var(--brand-dark);">${fmt(v.total)}</td>
+        <td>${srcBadge}</td>
+      </tr>`;
+    }).join("");
+}
+
+/* ════════════════════════════════════════════════════
+   CUSTOMERS
+════════════════════════════════════════════════════ */
+function renderCustomers(){
+  const q=(document.getElementById("custSearch")?.value||"").toLowerCase();
+  // Build from all visits
+  const custMap={};
+  allVisits().forEach(v=>{
+    const k=v.phone||v.name||"?";
+    if(!custMap[k]) custMap[k]={name:v.name||"—",phone:v.phone||"—",visits:0,total:0,lastDate:null,skins:{}};
+    custMap[k].visits++;
+    custMap[k].total+=(v.total||0);
+    const d=parseDate(v.date);
+    if(d&&(!custMap[k].lastDate||d>custMap[k].lastDate)) custMap[k].lastDate=d;
+    (v.skins||[]).forEach(s=>{custMap[k].skins[s]=(custMap[k].skins[s]||0)+1;});
+  });
+  let custs=Object.values(custMap);
+  if(q) custs=custs.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q));
+  custs.sort((a,b)=>b.total-a.total);
+  document.getElementById("custCount").textContent=custs.length;
+  document.getElementById("custBody").innerHTML=custs.length===0?`<tr><td colspan="8" class="empty">Chưa có khách hàng</td></tr>`:
+    custs.map((c,i)=>{
+      const topSkins=Object.entries(c.skins).sort((a,b)=>b[1]-a[1]).slice(0,2).map(e=>e[0]);
+      return `<tr>
+        <td style="color:var(--muted);">${i+1}</td>
+        <td><b>${c.name}</b></td>
+        <td style="color:var(--muted);">${c.phone}</td>
+        <td style="text-align:center;"><span class="tag green">${c.visits}</span></td>
+        <td style="font-weight:800;color:var(--brand-dark);">${fmt(c.total)}</td>
+        <td>${fmt(c.visits>0?c.total/c.visits:0)}</td>
+        <td style="color:var(--muted);white-space:nowrap;">${c.lastDate?fmtDate(c.lastDate):"—"}</td>
+        <td style="font-size:12px;">${topSkins.join(", ")||"—"}</td>
+      </tr>`;
+    }).join("");
+}
+
+/* ════════════════════════════════════════════════════
+   INVENTORY
+════════════════════════════════════════════════════ */
+function renderInventory(){
+  const store=getInvStore();
+  const sold=soldQtyMap();
+  document.getElementById("invBody2").innerHTML=PRODUCTS.map(p=>{
+    const s=store[p.sku]||{stockInitial:0,costPrice:0};
+    const soldQty=sold[p.sku]||0;
+    const remaining=Math.max(0,(s.stockInitial||0)-soldQty);
+    const stockValue=remaining*(s.costPrice||0);
+    const grossProfit=soldQty*(p.price-(s.costPrice||0));
+    const low=s.stockInitial>0&&remaining<=5;
+    return `<tr>
+      <td><b>${p.name}</b><br><span style="font-size:10.5px;color:var(--muted);">${p.brand}</span></td>
+      <td style="font-size:11px;color:var(--muted);">${p.sku}</td>
+      <td style="font-weight:700;color:var(--brand-dark);">${fmt(p.price)}</td>
+      <td><input type="number" min="0" placeholder="0" value="${s.costPrice||""}"
+        onchange="saveInvField('${p.sku}','costPrice',this.value)"
+        style="border-color:${s.costPrice?'var(--line)':'#e0c870'};"></td>
+      <td><input type="number" min="0" placeholder="0" value="${s.stockInitial||""}"
+        onchange="saveInvField('${p.sku}','stockInitial',this.value)"></td>
+      <td style="text-align:center;font-weight:700;">${soldQty||"—"}</td>
+      <td class="${low?"stock-low":"stock-ok"}" style="text-align:center;">${s.stockInitial?remaining+"sp":"—"}</td>
+      <td>${s.stockInitial&&s.costPrice?fmt(stockValue):"—"}</td>
+      <td style="font-weight:700;${grossProfit>0?"color:var(--green)":soldQty>0?"color:var(--danger)":"color:var(--muted)"}">
+        ${soldQty>0&&s.costPrice?fmt(grossProfit):"—"}</td>
+    </tr>`;
+  }).join("");
+}
+
+function saveInvField(sku,field,val){
+  const store=getInvStore();
+  if(!store[sku]) store[sku]={stockInitial:0,costPrice:0};
+  store[sku][field]=parseFloat(val)||0;
+  saveInvStore(store);
+  renderInventory();
+}
+
+/* ════════════════════════════════════════════════════
+   FIXED COSTS
+════════════════════════════════════════════════════ */
+const FC_CATS=[
+  {key:"rent",    label:"Mặt bằng (thuê nhà/MP)"},
+  {key:"salary",  label:"Lương NV (không tính KTV)"},
+  {key:"utility", label:"Điện nước"},
+  {key:"material",label:"NL dịch vụ (hóa chất, serum dùng trong liệu trình)"},
+  {key:"marketing",label:"Marketing & quảng cáo"},
+  {key:"supplies",label:"Vật tư tiêu hao (khăn, găng tay…)"},
+  {key:"depreciation",label:"Khấu hao máy móc thiết bị"},
+  {key:"software",label:"Phần mềm & công cụ"},
+  {key:"tax",     label:"Thuế & phí"},
+  {key:"other",   label:"Chi phí khác"},
+];
+
+function populateFcMonths(){
+  const sel=document.getElementById("fcMonthSel");
+  const now=new Date();
+  sel.innerHTML="";
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const mk=monthKey(d);
+    const opt=document.createElement("option");
+    opt.value=mk;opt.textContent=monthLabel(mk);
+    sel.appendChild(opt);
+  }
+}
+
+function renderFcFields(){
+  const mk=document.getElementById("fcMonthSel")?.value;
+  if(!mk) return;
+  const store=getFcStore();
+  const mc=store[mk]||{};
+  document.getElementById("fcGrid").innerHTML=FC_CATS.map(cat=>`
+    <div class="fc-item">
+      <label>${cat.label}</label>
+      <input type="number" min="0" placeholder="0"
+        value="${mc[cat.key]||""}"
+        oninput="saveFcField('${mk}','${cat.key}',this.value)">
+    </div>`).join("");
+  updateFcTotal(mk);
+}
+
+function saveFcField(mk,key,val){
+  const store=getFcStore();
+  if(!store[mk]) store[mk]={};
+  store[mk][key]=parseFloat(val)||0;
+  saveFcStore(store);
+  updateFcTotal(mk);
+}
+
+function updateFcTotal(mk){
+  const store=getFcStore();
+  const mc=store[mk]||{};
+  const total=FC_CATS.reduce((s,c)=>s+(mc[c.key]||0),0);
+  document.getElementById("fcTotal").textContent=`Tổng chi phí cố định ${monthLabel(mk)}: ${fmt(total)}`;
+}
+
+function getMonthFcTotal(mk){
+  const store=getFcStore();
+  const mc=store[mk]||{};
+  return FC_CATS.reduce((s,c)=>s+(mc[c.key]||0),0);
+}
+
+/* ════════════════════════════════════════════════════
+   P&L
+════════════════════════════════════════════════════ */
+function renderPL(){
+  populateFcMonths();
+  renderFcFields();
+  const store=getInvStore();
+
+  // Group ALL visits by month
+  const months={};
+  allVisits().forEach(v=>{
+    const d=parseDate(v.date);if(!d) return;
+    const mk=monthKey(d);
+    if(!months[mk]) months[mk]={revenue:0,labor:0,prodCogs:0,visits:0};
+    months[mk].revenue+=(v.total||0);
+    months[mk].labor+=(v.totalLabor||0);
+    months[mk].visits++;
+    for(const item of (v.productItems||[])){
+      const p=skuMap[item.name]||skuMap[item.sku];
+      if(!p) continue;
+      const s=store[p.sku]||{};
+      months[mk].prodCogs+=(s.costPrice||0)*(item.qty||1);
+    }
+  });
+
+  const sortedMonths=Object.keys(months).sort();
+  const allRevenue=sortedMonths.map(m=>months[m].revenue);
+  const allProfit=sortedMonths.map(m=>{
+    const fc=getMonthFcTotal(m);
+    return months[m].revenue-months[m].labor-months[m].prodCogs-fc;
+  });
+
+  const totalRev=allRevenue.reduce((s,v)=>s+v,0);
+  const totalLabor=sortedMonths.reduce((s,m)=>s+months[m].labor,0);
+  const totalProdCogs=sortedMonths.reduce((s,m)=>s+months[m].prodCogs,0);
+  const totalFc=sortedMonths.reduce((s,m)=>s+getMonthFcTotal(m),0);
+  const totalProfit=totalRev-totalLabor-totalProdCogs-totalFc;
+
+  document.getElementById("plCards").innerHTML=`
+    <div class="scard"><div class="sc-label">💰 Tổng doanh thu</div><div class="sc-val">${fmtShort(totalRev)}</div><div class="sc-sub">${fmt(totalRev)}</div></div>
+    <div class="scard"><div class="sc-label">👩 Chi phí KTV</div><div class="sc-val" style="color:var(--warn);">${fmtShort(totalLabor)}</div><div class="sc-sub">${fmt(totalLabor)}</div></div>
+    <div class="scard"><div class="sc-label">🗂️ Chi phí cố định</div><div class="sc-val" style="color:var(--gold);">${fmtShort(totalFc)}</div><div class="sc-sub">${totalFc===0?"⚠️ Chưa nhập":fmt(totalFc)}</div></div>
+    <div class="scard ${totalProfit>=0?"green":"red"}"><div class="sc-label">📈 Lợi nhuận ước tính</div><div class="sc-val">${fmtShort(totalProfit)}</div><div class="sc-sub">${fmt(totalProfit)}</div></div>`;
+
+  if(plChart) plChart.destroy();
+  plChart=new Chart(document.getElementById("chartPL"),{
+    type:"bar",
+    data:{
+      labels:sortedMonths.map(monthLabel),
+      datasets:[
+        {label:"Doanh thu",data:allRevenue,backgroundColor:"rgba(86,135,145,.75)",borderRadius:3},
+        {label:"Lợi nhuận",data:allProfit,backgroundColor:allProfit.map(v=>v>=0?"rgba(91,138,114,.75)":"rgba(163,20,32,.65)"),borderRadius:3},
+      ]
+    },
+    options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+": "+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{grid:{display:false}}}}
+  });
+
+  document.getElementById("plBody").innerHTML=sortedMonths.length===0?`<tr><td colspan="8" class="empty">Chưa có dữ liệu</td></tr>`:
+    [...sortedMonths].reverse().map(mk=>{
+      const m=months[mk];
+      const fc=getMonthFcTotal(mk);
+      const totalCost=m.labor+m.prodCogs+fc;
+      const profit=m.revenue-totalCost;
+      const margin=m.revenue>0?(profit/m.revenue*100).toFixed(1):0;
+      const cls=profit>=0?"pl-row-profit":"pl-row-loss";
+      return `<tr class="${cls}">
+        <td>${monthLabel(mk)}</td>
+        <td style="font-weight:700;">${fmt(m.revenue)}</td>
+        <td>${m.labor>0?fmt(m.labor):"—"}</td>
+        <td>${m.prodCogs>0?fmt(m.prodCogs):"—"}</td>
+        <td>${fc>0?fmt(fc):`<span style="color:var(--muted);font-size:11.5px;">chưa nhập</span>`}</td>
+        <td>${fmt(totalCost)}</td>
+        <td style="font-weight:800;">${fmt(profit)}</td>
+        <td>${margin}%</td>
+      </tr>`;
+    }).join("");
+}
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+renderOverview();
+</script>
+</body>
+</html>

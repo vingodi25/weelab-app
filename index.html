@@ -250,6 +250,43 @@
   .invoice .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;}
   .invoice .inv-footer{text-align:center;font-size:11px;color:#777;margin-top:14px;line-height:1.5;}
 
+  /* ── Shop mode chooser ── */
+  .shop-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
+  .shopmode{border:2px solid var(--line);border-radius:14px;padding:16px 12px;cursor:pointer;text-align:center;transition:.15s;background:#fcfaf7;position:relative;}
+  .shopmode:hover{border-color:var(--brand);}
+  .shopmode.on{border-color:var(--brand);background:var(--brand-soft);}
+  .shopmode .sm-icon{font-size:28px;margin-bottom:6px;}
+  .shopmode .sm-title{font-size:14px;font-weight:700;color:var(--brand-dark);}
+  .shopmode .sm-count{position:absolute;top:8px;right:10px;background:var(--danger);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px;min-width:22px;text-align:center;}
+  /* ── Product section ── */
+  .product-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+  .back-btn{background:none;border:1.5px solid var(--line);border-radius:8px;padding:7px 13px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted);transition:.12s;}
+  .back-btn:hover{border-color:var(--brand);color:var(--brand-dark);}
+  .brand-filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+  .brand-btn{border:1.5px solid var(--line);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:#fff;color:var(--muted);transition:.12s;}
+  .brand-btn:hover{border-color:var(--brand);color:var(--brand-dark);}
+  .brand-btn.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark);}
+  .product-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+  @media(max-width:560px){.product-grid{grid-template-columns:1fr;}}
+  .prod-card{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;transition:.15s;}
+  .prod-card:hover{border-color:var(--brand);}
+  .prod-card.in-cart{border-color:var(--brand);background:var(--brand-soft);}
+  .prod-img-wrap{width:100%;aspect-ratio:1;background:#f5f2ef;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+  .prod-img-wrap img{width:100%;height:100%;object-fit:cover;}
+  .prod-img-wrap .prod-no-img{font-size:36px;color:var(--muted);}
+  .prod-body{padding:10px;}
+  .prod-brand{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--brand);margin-bottom:3px;}
+  .prod-name{font-size:12.5px;font-weight:600;line-height:1.35;margin-bottom:4px;color:var(--ink);}
+  .prod-sku{font-size:10px;color:var(--muted);}
+  .prod-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+  .prod-price{font-size:14px;font-weight:800;color:var(--brand-dark);}
+  .prod-qty-ctrl{display:flex;align-items:center;gap:0;}
+  .qty-btn{border:1.5px solid var(--line);background:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:inherit;transition:.1s;line-height:1;padding:0;}
+  .qty-btn:hover{border-color:var(--brand);background:var(--brand-soft);}
+  .qty-num{font-size:14px;font-weight:700;min-width:28px;text-align:center;color:var(--ink);}
+  /* bill section separator */
+  .bill-section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:4px 0 2px;margin-top:6px;border-top:1px dashed var(--line);}
+
   /* Birthday popup */
   .bd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;}
   .bd-box{background:linear-gradient(135deg,#8b1a3b 0%,#c4385a 50%,#8b1a3b 100%);color:#fff;border-radius:18px;padding:28px 24px;max-width:380px;width:100%;text-align:center;position:relative;box-shadow:0 8px 40px rgba(139,26,59,.4);}
@@ -325,9 +362,40 @@
       <textarea id="cNote" placeholder="VD: da đang kích ứng vùng má, tránh peel mạnh; khách nhạy cảm với mùi..."></textarea>
     </div>
 
-    <!-- STEP 3: HÌNH THỨC -->
-    <div class="card">
-      <h2><span class="step-num">3</span> <span id="t_step3Title"></span></h2>
+    <!-- SHOP MODE CHOOSER (between skin + service) -->
+    <div class="card" id="shopModeCard">
+      <h2><span class="step-num">3</span> Chọn loại giao dịch</h2>
+      <div class="sub">Chọn 1 hoặc cả 2 — Di có thể thêm cả sản phẩm lẫn liệu trình vào cùng 1 bill</div>
+      <div class="shop-modes">
+        <div class="shopmode" id="smProduct" onclick="switchShopMode('product')">
+          <div class="sm-icon">🧴</div>
+          <div class="sm-title">Mua sản phẩm</div>
+          <div class="sm-count" id="smProductCount" style="display:none">0</div>
+        </div>
+        <div class="shopmode on" id="smService" onclick="switchShopMode('service')">
+          <div class="sm-icon">✨</div>
+          <div class="sm-title">Sử dụng liệu trình</div>
+          <div class="sm-count" id="smServiceCount" style="display:none">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT PAGE (shown when shopMode='product') -->
+    <div class="card" id="productSection" style="display:none">
+      <div class="product-nav">
+        <button class="back-btn" onclick="switchShopMode('service')">✨ Thêm liệu trình</button>
+        <span style="font-size:14px;font-weight:700;color:var(--brand-dark);">🧴 Chọn sản phẩm</span>
+      </div>
+      <div id="brandFilters" class="brand-filters"></div>
+      <div id="productGrid" class="product-grid"></div>
+    </div>
+
+    <!-- STEP 4 (HÌNH THỨC) — service section -->
+    <div class="card" id="serviceSection">
+      <div class="product-nav" style="margin-bottom:10px;">
+        <button class="back-btn" onclick="switchShopMode('product')">🧴 Thêm sản phẩm</button>
+      </div>
+      <h2><span class="step-num">4</span> <span id="t_step3Title"></span></h2>
       <div class="sub" id="t_step3Sub"></div>
       <div class="modes">
         <div class="mode on" id="modeALC" onclick="setMode('alc')">
@@ -374,6 +442,7 @@
         <button class="btn ghost" onclick="printInvoice()">🖨️ <span id="t_btnPrint"></span></button>
         <button class="btn ghost" onclick="resetAll()">↺ <span id="t_btnReset"></span></button>
         <button class="btn ghost" onclick="toggleSheetUrlBox()" style="font-size:12px;">⚙️ <span id="t_btnCfg"></span></button>
+        <a href="report.html" class="btn ghost" style="text-decoration:none;text-align:center;font-size:13px;display:block;margin-top:6px;">📊 Xem báo cáo &amp; kho hàng</a>
       </div>
     </div>
   </div>
@@ -640,6 +709,59 @@ const MENU = [
    list:70000, member:50000, vip:50000, time:45, labor:10000, desc:"Phụ thu · 45p", desc_en:"Surcharge · 45 min"},
 ];
 
+/* ============ PRODUCTS (trang bán sản phẩm) ============ */
+const PRODUCTS = [
+  // Ivawhite / Ivatherm
+  {sku:"PVN384",brand:"Ivawhite",name:"Whitening Night Fluid 50ml",fullName:"Ivawhite Whitening Night Fluid 50ml",price:1339000,img:null},
+  {sku:"PVN383",brand:"Ivawhite",name:"Whitening Cream 50ml",fullName:"Ivawhite Whitening Cream 50ml",price:1428000,img:null},
+  {sku:"PVN382",brand:"Ivawhite",name:"Intensive Whitening Serum 30ml",fullName:"Ivawhite Intensive Whitening Serum 30ml",price:1518000,img:null},
+  {sku:"PVN381",brand:"Ivatherm",name:"Glycolic Acid Cleanser 150ml",fullName:"Ivatherm Glycolic Acid Cleanser 150ml",price:820000,img:null},
+  // CicaDerm & Christina
+  {sku:"PVN380",brand:"CicaDerm",name:"Repairing Cream Mimosa",fullName:"CicaDerm Repairing Cream Mimosa",price:550000,img:null},
+  {sku:"PVN379",brand:"Christina",name:"Elastin Collagen Moisture Cream",fullName:"Christina Elastin Collagen Moisture Cream",price:1212000,img:null},
+  // Mặt nạ
+  {sku:"PVN378",brand:"Mặt nạ",name:"Mặt nạ SRX (1 hộp)",fullName:"Mặt nạ SRX (1 hộp)",price:420000,img:null},
+  {sku:"PVN377",brand:"Mặt nạ",name:"Mặt nạ thạch LA PÉC",fullName:"Mặt nạ thạch LA PÉC",price:480000,img:null},
+  // DMK
+  {sku:"PVN376",brand:"DMK",name:"Enbioment Cleanser 150ml",fullName:"DMK Enbioment Cleanser 150ml",price:1767000,img:null},
+  {sku:"PVN375",brand:"DMK",name:"Beta Gel Serum 30ml",fullName:"DMK Beta Gel Serum 30ml",price:2800000,img:null},
+  {sku:"PVN374",brand:"DMK",name:"Enbioment Serum 30ml",fullName:"DMK Enbioment Serum 30ml",price:2553000,img:null},
+  {sku:"PVN373",brand:"DMK",name:"Beta Gel chiết 5ml",fullName:"DMK Beta Gel chiết 5ml",price:420000,img:null},
+  // PAYOT
+  {sku:"PVN353",brand:"PAYOT",name:"Kem dưỡng lợi khuẩn",fullName:"PAYOT Probiotic Expert Kem dưỡng lợi khuẩn",price:1800000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1744338717789.png"},
+  {sku:"PVN351",brand:"PAYOT",name:"Neo Serum tái tạo",fullName:"PAYOT Neo Serum tái tạo chống lão hoá",price:2900000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1744338740379.png"},
+  {sku:"PVN334",brand:"PAYOT",name:"Nước Tẩy Trang 400ml",fullName:"PAYOT Nước Tẩy Trang Micellar Water 400ml",price:769000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1731311571107.png"},
+  {sku:"PVN333",brand:"PAYOT",name:"Kem dưỡng Vitamin C3",fullName:"PAYOT Kem dưỡng Vitamin C3 Brightening Cream",price:1400000,img:"https://sapo.dktcdn.net/100/665/180/variants/dfef9e9f-6378-4d87-9029-58d4128cf37f.jpg"},
+  {sku:"PVN309",brand:"PAYOT",name:"Source Adaptogen Cream",fullName:"PAYOT Source Adaptogen Moisturising Cream",price:1800000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1721115317551.png"},
+  {sku:"PVN308",brand:"PAYOT",name:"Adaptogen Serum",fullName:"PAYOT Adaptogen Rehydrating Serum",price:1800000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1720149921776.png"},
+  {sku:"PVN306",brand:"PAYOT",name:"Nước Dưỡng Sáng 15ml",fullName:"PAYOT Nước Dưỡng Sáng Da 15ml",price:98000,img:"https://sapo.dktcdn.net/100/665/180/variants/cf48f9c7-07f6-4362-aa74-b632f4f37964.jpg"},
+  {sku:"PVN305",brand:"PAYOT",name:"Serum Vitamin C3 30ml",fullName:"PAYOT Serum Vitamin C3 Supreme 30ml",price:1700000,img:"https://sapo.dktcdn.net/100/665/180/variants/7a06228f-0c8c-4117-b767-15d6a4b816d4.jpg"},
+  {sku:"PVN304",brand:"PAYOT",name:"Gel Dưỡng Vitamin 50ml",fullName:"PAYOT Gel Dưỡng Vitamin 50ml",price:1319000,img:"https://sapo.dktcdn.net/100/665/180/variants/e9cf8e18-0c37-4209-bf69-e5e08f052e99.jpg"},
+  {sku:"PVN301",brand:"PAYOT",name:"Pate Grise Kem Dưỡng 50ml",fullName:"PAYOT Pate Grise Kem Dưỡng 50ml",price:1150000,img:"https://sapo.dktcdn.net/100/665/180/variants/eaac3bee-5617-4f64-a7bf-345baeb5cdc7.jpg"},
+  {sku:"PVN300",brand:"PAYOT",name:"Pate Grise Serum 30ml",fullName:"PAYOT Pate Grise Serum 30ml",price:1600000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1717669536742.png"},
+  {sku:"PVN299",brand:"PAYOT",name:"Pate Grise Nước Dưỡng 125ml",fullName:"PAYOT Pate Grise Nước Dưỡng 2 Lớp 125ml",price:600000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1717669482834.png"},
+  {sku:"PVN298",brand:"PAYOT",name:"Pate Grise Gel Rửa Mặt 200ml",fullName:"PAYOT Pate Grise Gel Rửa Mặt 200ml",price:790000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1717669426580.png"},
+  // VERSO
+  {sku:"PVN352",brand:"VERSO",name:"Dầu dưỡng số 7",fullName:"VERSO Dầu dưỡng số 7",price:5000000,img:"https://sapo.dktcdn.net/100/665/180/variants/6f43c3cd-23ca-4a38-97ea-5f785ebd2ac1.jpg"},
+  {sku:"PVN350",brand:"VERSO",name:"Vitamin C Serum 30ml",fullName:"VERSO Vitamin C Serum 30ml",price:2300000,img:"https://sapo.dktcdn.net/100/665/180/variants/5298f079-3e30-4556-8285-7d656a2f6140.jpg"},
+  {sku:"PVN349",brand:"VERSO",name:"Night Cream Retinol 8 50ml",fullName:"VERSO Night Cream Retinol 8 50ml",price:2900000,img:"https://sapo.dktcdn.net/100/665/180/variants/4e9c2d89-a663-4a1c-a4a8-070676f1b66f.jpg"},
+  {sku:"PVN348",brand:"VERSO",name:"Super Facial Serum 30ml",fullName:"VERSO Super Facial Serum 30ml",price:3800000,img:"https://sapo.dktcdn.net/100/665/180/variants/cc0eaa8f-21e2-43fa-ae8e-955451ed4bb6.jpg"},
+  // USOLAB
+  {sku:"PVN344",brand:"USOLAB",name:"Bio Barrier K Mist 150ml",fullName:"USOLAB Bio Intensive Barrier K Mist 150ml",price:770000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1734592437076.png"},
+  {sku:"PVN340",brand:"USOLAB",name:"Repair Cleanser 150ml",fullName:"USOLAB Bio Intensive Repair Cleanser 150ml",price:528000,img:"https://sapo.dktcdn.net/100/665/180/variants/09d045ad-b31d-432b-87eb-0b3d5143de28.jpg"},
+  {sku:"PVN339",brand:"USOLAB",name:"Tẩy da chết Enzyme 150ml",fullName:"USOLAB Tẩy da chết Enzyme 150ml",price:612000,img:null},
+  {sku:"PVN338",brand:"USOLAB",name:"Sensitive Purifying Mist 150ml",fullName:"USOLAB Bio Sensitive Purifying Mist 150ml",price:700000,img:"https://sapo.dktcdn.net/100/665/180/variants/image-1734592474324.png"},
+  {sku:"PVN337",brand:"USOLAB",name:"Sensitive K Cream 50ml",fullName:"USOLAB Bio Sensitive K Cream 50ml",price:935000,img:"https://sapo.dktcdn.net/100/665/180/variants/7b37b2e1-3515-4cb4-9b47-002a06976a24.jpg"},
+  {sku:"PVN336",brand:"USOLAB",name:"Sensitive Sun Block Matte 50ml",fullName:"USOLAB Bio Sensitive Sun Block Matte 50ml",price:836000,img:"https://sapo.dktcdn.net/100/665/180/variants/d8d0a750-b3d2-4289-b67a-0a21f5593a24.jpg"},
+  // Biotrade
+  {sku:"PVN269",brand:"Biotrade",name:"Acnaut Active Cream 15ml",fullName:"Biotrade Acnaut Active Cream 15ml",price:380000,img:"https://sapo.dktcdn.net/100/665/180/variants/9702d83e-ab82-4378-b4db-9eaaa2b05fcb.jpg"},
+  // Gói tư vấn
+  {sku:"PVN267",brand:"Gói tư vấn",name:"Gói W.VIP",fullName:"Gói Tư Vấn Wee W.VIP",price:800000,img:"https://sapo.dktcdn.net/100/665/180/variants/12bd36e2-e208-4bf9-b854-2993967c0729.jpg"},
+  {sku:"PVN266",brand:"Gói tư vấn",name:"Gói W.Premium",fullName:"Gói Tư Vấn Wee W.Premium",price:600000,img:"https://sapo.dktcdn.net/100/665/180/variants/83dd9441-871a-490d-9b07-cc34533c8e9b.jpg"},
+  {sku:"PVN265",brand:"Gói tư vấn",name:"Gói W.Basic",fullName:"Gói Tư Vấn Wee W.Basic",price:500000,img:"https://sapo.dktcdn.net/100/665/180/variants/9cf911c9-bb48-4aee-82c1-c0af68de7cf9.jpg"},
+];
+let activeBrand = "Tất cả";
+
 const GROUPS = [
   {key:"CB",   title:"KHAI VỊ", title_en:"STARTER", note:"", note_en:""},
   {key:"NC",   title:"MÓN CHÍNH", title_en:"MAIN COURSE", note:"", note_en:""},
@@ -772,6 +894,8 @@ let state = {
   dob:"",                // ngày sinh dd/mm/yyyy
   membership:null,       // {months, fee, startDate, expiryDate}
   vipCard:null,          // {tier, name, price, cashback, balance, registeredDate, expiryDate, newReg}
+  shopMode:"service",    // 'service' | 'product'
+  productCart:{},        // {sku: {name, fullName, brand, price, qty}}
 };
 const fmt = n => tr("fmtCurrency")(n);
 const byId = id => MENU.find(m=>m.id===id);
@@ -1055,6 +1179,7 @@ function totalTimeMins(){
   return billItems().reduce((s,m)=>s+(m.time||0),0);
 }
 function renderBill(){
+  updateShopModeBadges();
   // khách
   const name=document.getElementById("cName").value.trim();
   const phone=document.getElementById("cPhone").value.trim();
@@ -1077,7 +1202,8 @@ function renderBill(){
     timeBox.style.display="none";
   }
 
-  if(items.length===0 && !isBuf){
+  const prodItems = Object.values(state.productCart||{});
+  if(items.length===0 && !isBuf && prodItems.length===0){
     lines.innerHTML=`<div class="empty">${tr("billEmpty")}</div>`;
     document.getElementById("grandTotal").textContent=fmt(0);
     document.getElementById("savingNote").textContent="";
@@ -1086,15 +1212,29 @@ function renderBill(){
   }
 
   let html="";
-  items.forEach(m=>{
-    const price=priceFor(m);
-    html+=`<div class="billline ${isBuf?"struck":""}"><span class="bn">${mName(m)}</span><span class="bp">${fmt(price)}</span></div>`;
-  });
+  // — Sản phẩm section —
+  if(prodItems.length>0){
+    html+=`<div class="bill-section-hdr">🧴 Sản phẩm</div>`;
+    prodItems.forEach(item=>{
+      html+=`<div class="billline"><span class="bn">${item.name}${item.qty>1?` ×${item.qty}`:""}</span><span class="bp">${fmt(item.price*item.qty)}</span></div>`;
+    });
+  }
+  // — Liệu trình section —
+  if(items.length>0||isBuf){
+    if(prodItems.length>0){
+      html+=`<div class="bill-section-hdr">✨ Liệu trình</div>`;
+    }
+    items.forEach(m=>{
+      const price=priceFor(m);
+      html+=`<div class="billline ${isBuf?"struck":""}"><span class="bn">${mName(m)}</span><span class="bp">${fmt(price)}</span></div>`;
+    });
+  }
 
   let grand, saving="", warn="";
+  const prodTotal = productCartTotal();
   if(isBuf){
     html+=`<div class="billline"><span class="bn"><b>${tr("bundleLabel")} ${bName(buf)}</b></span><span class="bp">${fmt(buf.price)}</span></div>`;
-    grand=buf.price;
+    grand=buf.price+prodTotal;
     const alc=alcTotal();
     if(alc>0){
       if(alc>buf.price){
@@ -1104,7 +1244,7 @@ function renderBill(){
       }
     }
   }else{
-    grand=alcTotal();
+    grand=alcTotal()+prodTotal;
   }
   // Membership fee
   if(state.membership){
@@ -1180,6 +1320,100 @@ function renderBill(){
     cw.innerHTML=tr("contraWarn")(picked.join(", "));
     cw.style.display="block";
   }else{ cw.style.display="none"; }
+}
+
+/* ============ SHOP MODE + PRODUCT PAGE ============ */
+function switchShopMode(mode){
+  state.shopMode = mode;
+  // toggle chooser buttons
+  document.getElementById("smProduct").classList.toggle("on", mode==="product");
+  document.getElementById("smService").classList.toggle("on", mode==="service");
+  // show/hide sections
+  document.getElementById("productSection").style.display = mode==="product" ? "block" : "none";
+  document.getElementById("serviceSection").style.display = mode==="service" ? "block" : "none";
+  if(mode==="product") renderProductPage();
+  renderBill();
+}
+
+function productBrands(){
+  const brands = [...new Set(PRODUCTS.map(p=>p.brand))];
+  return ["Tất cả", ...brands];
+}
+
+function renderProductPage(){
+  // Brand filter buttons
+  const fb = document.getElementById("brandFilters");
+  fb.innerHTML = productBrands().map(b=>`
+    <button class="brand-btn${activeBrand===b?" on":""}" onclick="filterBrand('${b.replace(/'/g,"\\'")}')">
+      ${b}
+    </button>`).join("");
+
+  // Product grid
+  const pg = document.getElementById("productGrid");
+  const list = activeBrand==="Tất cả" ? PRODUCTS : PRODUCTS.filter(p=>p.brand===activeBrand);
+  pg.innerHTML = list.map(p=>{
+    const qty = state.productCart[p.sku] ? state.productCart[p.sku].qty : 0;
+    const inCart = qty > 0;
+    return `<div class="prod-card${inCart?" in-cart":""}">
+      <div class="prod-img-wrap">
+        ${p.img
+          ? `<img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'prod-no-img\\'>🧴</div>'">`
+          : `<div class="prod-no-img">🧴</div>`}
+      </div>
+      <div class="prod-body">
+        <div class="prod-brand">${p.brand}</div>
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-sku">${p.sku}</div>
+        <div class="prod-bottom">
+          <div class="prod-price">${fmt(p.price)}</div>
+          <div class="prod-qty-ctrl">
+            ${qty>0
+              ? `<button class="qty-btn" onclick="updateProductCart('${p.sku}',-1)">−</button>
+                 <span class="qty-num">${qty}</span>
+                 <button class="qty-btn" onclick="updateProductCart('${p.sku}',1)">+</button>`
+              : `<button class="qty-btn" style="width:auto;padding:0 10px;font-size:13px;" onclick="updateProductCart('${p.sku}',1)">+ Thêm</button>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function filterBrand(brand){
+  activeBrand = brand;
+  renderProductPage();
+}
+
+function updateProductCart(sku, delta){
+  const p = PRODUCTS.find(x=>x.sku===sku);
+  if(!p) return;
+  const cur = state.productCart[sku] ? state.productCart[sku].qty : 0;
+  const newQty = Math.max(0, cur + delta);
+  if(newQty===0){
+    delete state.productCart[sku];
+  } else {
+    state.productCart[sku] = {name:p.name, fullName:p.fullName, brand:p.brand, price:p.price, qty:newQty};
+  }
+  updateShopModeBadges();
+  renderProductPage();
+  renderBill();
+}
+
+function productCartTotal(){
+  return Object.values(state.productCart).reduce((s,item)=>s+item.price*item.qty, 0);
+}
+
+function productCartCount(){
+  return Object.values(state.productCart).reduce((s,item)=>s+item.qty, 0);
+}
+
+function updateShopModeBadges(){
+  const pc = productCartCount();
+  const sc = [...state.selected].length;
+  const pcEl = document.getElementById("smProductCount");
+  const scEl = document.getElementById("smServiceCount");
+  if(pcEl){ pcEl.textContent=pc; pcEl.style.display=pc>0?"inline-block":"none"; }
+  if(scEl){ scEl.textContent=sc; scEl.style.display=sc>0?"inline-block":"none"; }
 }
 
 /* ============ KHÁCH CŨ (localStorage) ============ */
@@ -1427,29 +1661,29 @@ function currentRecord(){
   const isBuf=state.mode==="buf"&&state.buffet;
   const buf=isBuf?BUFFET.find(b=>b.id===state.buffet):null;
   const svcTotal = isBuf ? buf.price : alcTotal();
+  const prodTotal = productCartTotal();
   const memberFee = state.membership ? state.membership.fee : 0;
   const vipFee = (state.vipCard && state.vipCard.newReg) ? state.vipCard.price : 0;
   const isNewVip = !!(state.vipCard && state.vipCard.newReg);
   const isReturningVip = !!(state.vipCard && !state.vipCard.newReg);
-  // VIP mới: trả tiền thẻ; VIP cũ: trả 0 (từ thẻ); thường: trả dịch vụ
   const discountAmt = parseInt(document.getElementById("discountInput")?.value)||0;
   let grandTotal;
   if(isNewVip){
-    grandTotal = Math.max(0, vipFee + memberFee - discountAmt);
+    grandTotal = Math.max(0, vipFee + prodTotal + memberFee - discountAmt);
   } else if(isReturningVip){
     const cardBal = state.vipCard.balance || 0;
     if(cardBal >= svcTotal){
-      // Thẻ đủ tiền
-      grandTotal = Math.max(0, memberFee - discountAmt);
+      grandTotal = Math.max(0, prodTotal + memberFee - discountAmt);
     } else {
-      // Thẻ thiếu hoặc hết: thu thêm phần chênh
-      grandTotal = Math.max(0, (svcTotal - cardBal) + memberFee - discountAmt);
+      grandTotal = Math.max(0, (svcTotal - cardBal) + prodTotal + memberFee - discountAmt);
     }
   } else {
-    grandTotal = Math.max(0, svcTotal + memberFee - discountAmt);
+    grandTotal = Math.max(0, svcTotal + prodTotal + memberFee - discountAmt);
   }
-  // Số dư thẻ sau buổi = số dư hiện tại - chi phí dịch vụ buổi này
   const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
+  const productItems = Object.values(state.productCart||{}).map(item=>({
+    sku:item.name, name:item.fullName||item.name, price:item.price, qty:item.qty, subtotal:item.price*item.qty
+  }));
   return {
     name:document.getElementById("cName").value.trim(),
     phone:document.getElementById("cPhone").value.trim(),
@@ -1461,8 +1695,10 @@ function currentRecord(){
     mode:isBuf?"buf":"alc",
     buffetName:buf?buf.name:"",
     items:items.map(m=>({id:m.id,name:m.name,price:priceFor(m),listPrice:m.list,contra:contraIds().has(m.id)})),
+    productItems:productItems,
     contraPicked:items.filter(m=>contraIds().has(m.id)).map(m=>m.name),
     alcTotal:alcTotal(),
+    prodTotal:prodTotal,
     totalTimeMins:totalTimeMins(),
     totalLabor:items.reduce((s,m)=>s+(m.labor||0),0),
     membershipMonths:state.membership?state.membership.months:0,
@@ -1507,7 +1743,7 @@ function saveAndExport(){
   const emailOk=validateEmail();
   if(!phoneOk){ document.getElementById("cPhone").focus(); return; }
   if(!emailOk){ document.getElementById("cEmail").focus(); return; }
-  if(r.items.length===0 && r.mode==="alc"){ alert(tr("alertNoItems")); return; }
+  if(r.items.length===0 && r.mode==="alc" && (!r.productItems||r.productItems.length===0)){ alert(tr("alertNoItems")); return; }
 
   const url=getSheetUrl();
   if(!url){
@@ -1521,7 +1757,10 @@ function saveAndExport(){
   if(!db[r.phone]) db[r.phone]={name:r.name,email:r.email,visits:[]};
   db[r.phone].name=r.name||db[r.phone].name;
   db[r.phone].email=r.email||db[r.phone].email;
-  db[r.phone].visits.push({date:r.date,skins:r.skins,note:r.note,mode:r.mode,buffetName:r.buffetName,total:r.total,items:r.items});
+  db[r.phone].visits.push({date:r.date,skins:r.skins,note:r.note,mode:r.mode,buffetName:r.buffetName,
+    total:r.total,items:r.items,productItems:r.productItems||[],
+    totalLabor:r.totalLabor||0,discount:r.discount||0,
+    alcTotal:r.alcTotal||0,prodTotal:r.prodTotal||0});
   saveDB(db);
 
   // Hiện hoá đơn ngay (không chờ sheet)
@@ -1552,19 +1791,38 @@ function showInvoice(r){
   // Build item rows
   let rows = "";
   const isBuf = r.mode==="buf" && r.buffetName;
-  if(isBuf){
-    rows = `<tr><td class="inv-tbl item-name" colspan="3">${r.buffetName ? "Gói Buffet "+r.buffetName : "Dịch vụ"}</td></tr>
-            <tr><td class="inv-tbl">${fmt(r.alcTotal)}</td><td class="inv-tbl c">1</td><td class="inv-tbl r">${fmt(r.alcTotal)}</td></tr>
-            <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
-  } else {
-    for(const item of r.items){
-      const hasDisc = item.listPrice && item.listPrice > item.price;
-      const priceCell = hasDisc
-        ? `<span class="inv-strike">${fmt(item.listPrice)}</span> ${fmt(item.price)}`
-        : fmt(item.price);
+  const hasProd = r.productItems && r.productItems.length > 0;
+  const hasSvc = r.items && r.items.length > 0;
+  // Product rows
+  if(hasProd){
+    if(hasSvc || isBuf){
+      rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">🧴 Sản phẩm</td></tr>`;
+    }
+    for(const item of r.productItems){
       rows += `<tr><td class="item-name" colspan="3">${item.name}</td></tr>
-               <tr><td>${priceCell}</td><td class="c">1</td><td class="r">${fmt(item.price)}</td></tr>
+               <tr><td>${fmt(item.price)}</td><td class="c">${item.qty}</td><td class="r">${fmt(item.subtotal)}</td></tr>
                <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    }
+  }
+  // Service rows
+  if(hasSvc || isBuf){
+    if(hasProd){
+      rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">✨ Liệu trình</td></tr>`;
+    }
+    if(isBuf){
+      rows += `<tr><td class="inv-tbl item-name" colspan="3">${r.buffetName ? "Gói Buffet "+r.buffetName : "Dịch vụ"}</td></tr>
+              <tr><td class="inv-tbl">${fmt(r.alcTotal)}</td><td class="inv-tbl c">1</td><td class="inv-tbl r">${fmt(r.alcTotal)}</td></tr>
+              <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    } else {
+      for(const item of r.items){
+        const hasDisc = item.listPrice && item.listPrice > item.price;
+        const priceCell = hasDisc
+          ? `<span class="inv-strike">${fmt(item.listPrice)}</span> ${fmt(item.price)}`
+          : fmt(item.price);
+        rows += `<tr><td class="item-name" colspan="3">${item.name}</td></tr>
+                 <tr><td>${priceCell}</td><td class="c">1</td><td class="r">${fmt(item.price)}</td></tr>
+                 <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+      }
     }
   }
 
@@ -1819,6 +2077,7 @@ _dobEl.addEventListener("blur",checkBirthday);
 _dobEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter") checkBirthday(); });
 setLang("vi");
 setMode("alc");
+switchShopMode("service");
 renderBill();
 </script>
 
