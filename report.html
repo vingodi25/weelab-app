@@ -595,18 +595,77 @@ function renderOverview(){
     <div class="scard gold"><div class="sc-label">👤 Khách hàng</div><div class="sc-val">${uniqueCustomers}</div><div class="sc-sub">người</div></div>
     <div class="scard"><div class="sc-label">📊 TB/đơn</div><div class="sc-val">${fmtShort(avgPerVisit)}</div><div class="sc-sub">Công KTV: ${fmtShort(labor)}</div></div>`;
 
-  // Revenue chart: last 30 days (uses ALL visits, not filtered)
-  const last30={};
-  const today=new Date();
-  for(let i=29;i>=0;i--){const d=new Date(today);d.setDate(today.getDate()-i);last30[fmtDate(d)]=0;}
-  allVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const k=fmtDate(d);if(k in last30)last30[k]+=(v.total||0);});
-  const labels=Object.keys(last30).map(k=>k.slice(0,5));
-  const data=Object.values(last30);
+  // Revenue chart — theo period đang chọn
+  const chartBuckets={};
+  let chartTitle="";
+  const now=new Date();
+
+  if(currentPeriod==="today"){
+    // Theo giờ trong ngày hôm nay
+    chartTitle="Doanh thu hôm nay theo giờ";
+    for(let h=0;h<24;h++) chartBuckets[String(h).padStart(2,"0")+"h"]=0;
+    filteredVisits().forEach(v=>{
+      const d=parseDate(v.date);if(!d)return;
+      const hk=String(d.getHours()).padStart(2,"0")+"h";
+      if(hk in chartBuckets) chartBuckets[hk]+=(v.total||0);
+    });
+  } else if(currentPeriod==="week"){
+    // Theo ngày trong tuần này
+    chartTitle="Doanh thu tuần này theo ngày";
+    const startOfWeek=new Date(now);startOfWeek.setDate(now.getDate()-now.getDay()+1);startOfWeek.setHours(0,0,0,0);
+    for(let i=0;i<7;i++){
+      const d=new Date(startOfWeek);d.setDate(startOfWeek.getDate()+i);
+      chartBuckets[fmtDate(d)]=0;
+    }
+    filteredVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const k=fmtDate(d);if(k in chartBuckets)chartBuckets[k]+=(v.total||0);});
+  } else if(currentPeriod==="month"){
+    // Theo ngày trong tháng này
+    chartTitle="Doanh thu tháng này theo ngày";
+    const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+    for(let i=1;i<=daysInMonth;i++){
+      const d=new Date(now.getFullYear(),now.getMonth(),i);
+      chartBuckets[fmtDate(d)]=0;
+    }
+    filteredVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const k=fmtDate(d);if(k in chartBuckets)chartBuckets[k]+=(v.total||0);});
+  } else if(currentPeriod==="year"){
+    // Theo tháng trong năm này
+    chartTitle="Doanh thu năm "+now.getFullYear()+" theo tháng";
+    for(let m=1;m<=12;m++) chartBuckets["T"+m+"/"+(now.getFullYear()%100)]=0;
+    filteredVisits().forEach(v=>{
+      const d=parseDate(v.date);if(!d)return;
+      const mk="T"+(d.getMonth()+1)+"/"+(d.getFullYear()%100);
+      if(mk in chartBuckets) chartBuckets[mk]+=(v.total||0);
+    });
+  } else if(currentPeriod==="custom"&&customFrom&&customTo){
+    // Theo ngày trong khoảng tuỳ chọn
+    const diffDays=Math.round((customTo-customFrom)/86400000);
+    chartTitle="Doanh thu "+(diffDays<=31?"theo ngày":"theo tháng");
+    if(diffDays<=93){
+      // Theo ngày
+      for(let i=0;i<=diffDays;i++){const d=new Date(customFrom);d.setDate(customFrom.getDate()+i);chartBuckets[fmtDate(d)]=0;}
+      filteredVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const k=fmtDate(d);if(k in chartBuckets)chartBuckets[k]+=(v.total||0);});
+    } else {
+      // Theo tháng
+      filteredVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const mk=monthLabel(monthKey(d));chartBuckets[mk]=(chartBuckets[mk]||0)+(v.total||0);});
+    }
+  } else {
+    // "all" hoặc custom chưa chọn — theo tháng toàn bộ lịch sử
+    chartTitle="Doanh thu theo tháng (toàn bộ)";
+    filteredVisits().forEach(v=>{const d=parseDate(v.date);if(!d)return;const mk=monthLabel(monthKey(d));chartBuckets[mk]=(chartBuckets[mk]||0)+(v.total||0);});
+  }
+
+  const labels=Object.keys(chartBuckets).map(k=>{
+    // Rút gọn nhãn cho dễ đọc: DD/MM/YYYY → DD/MM
+    return k.length===10?k.slice(0,5):k;
+  });
+  const data=Object.values(chartBuckets);
+  // Cập nhật tiêu đề chart
+  document.querySelector("#tab-overview .chart-card h3").textContent="📈 "+chartTitle;
   if(revenueChart) revenueChart.destroy();
   revenueChart=new Chart(document.getElementById("chartRevenue"),{
     type:"bar",
     data:{labels,datasets:[{label:"Doanh thu",data,backgroundColor:"rgba(86,135,145,.7)",borderColor:"#568791",borderWidth:1,borderRadius:3}]},
-    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{ticks:{font:{size:9}},grid:{display:false}}}}
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{ticks:{font:{size:9},maxRotation:45},grid:{display:false}}}}
   });
 
   // Top services (from filtered visits)
