@@ -991,7 +991,7 @@ let state = {
   mode:"alc",            // 'alc' | 'buf'
   buffet:null,
   skins:[],
-  selected:new Set(["CB"]),
+  selected:new Set(),
   customerType:"retail", // 'retail' | 'member' | 'vip'
   dob:"",                // ngày sinh dd/mm/yyyy
   membership:null,       // {months, fee, startDate, expiryDate}
@@ -1844,7 +1844,10 @@ function currentRecord(){
       grandTotal = Math.max(0, (svcTotal - cardBal) + prodTotal + memberFee - discountAmt);
     }
   } else {
-    grandTotal = Math.max(0, svcTotal + prodTotal + memberFee - discountAmt);
+    const tlTotal=(state.tlCart||[]).reduce((s,x)=>s+x.price,0);
+    const peelTotal=(state.peelCart||[]).reduce((s,x)=>s+x.price,0);
+    const lieutrinhTotal=(state.lieutrinhCart||[]).reduce((s,x)=>s+x.price,0);
+    grandTotal = Math.max(0, svcTotal + prodTotal + tlTotal + peelTotal + lieutrinhTotal + memberFee - discountAmt);
   }
   const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
   const prodCost = productCartCost();
@@ -1865,6 +1868,9 @@ function currentRecord(){
     buffetName:buf?buf.name:"",
     items:items.map(m=>({id:m.id,name:m.name,price:priceFor(m),listPrice:m.list,contra:contraIds().has(m.id)})),
     productItems:productItems,
+    tlItems:(state.tlCart||[]).map(x=>({name:x.name,typeLabel:x.typeLabel,price:x.price,priceStr:x.priceStr})),
+    peelItems:(state.peelCart||[]).map(x=>({name:x.name,typeLabel:x.typeLabel,price:x.price,priceStr:x.priceStr})),
+    lieutrinhItems:(state.lieutrinhCart||[]).map(x=>({name:x.name,typeLabel:x.typeLabel,price:x.price,priceStr:x.priceStr})),
     contraPicked:items.filter(m=>contraIds().has(m.id)).map(m=>m.name),
     alcTotal:alcTotal(),
     prodTotal:prodTotal,
@@ -1913,7 +1919,8 @@ function saveAndExport(){
   const emailOk=validateEmail();
   if(!phoneOk){ document.getElementById("cPhone").focus(); return; }
   if(!emailOk){ document.getElementById("cEmail").focus(); return; }
-  if(r.items.length===0 && r.mode==="alc" && (!r.productItems||r.productItems.length===0)){ alert(tr("alertNoItems")); return; }
+  const hasAnything = r.items.length>0 || r.mode==="buf" || (r.productItems&&r.productItems.length>0) || (state.tlCart&&state.tlCart.length>0) || (state.peelCart&&state.peelCart.length>0) || (state.lieutrinhCart&&state.lieutrinhCart.length>0);
+  if(!hasAnything){ alert(tr("alertNoItems")); return; }
 
   const url=getSheetUrl();
   if(!url){
@@ -1996,6 +2003,34 @@ function showInvoice(r){
     }
   }
 
+  // Triệt lông rows
+  if(r.tlItems && r.tlItems.length>0){
+    rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#111;padding-top:8px;">🪄 Triệt lông</td></tr>`;
+    for(const item of r.tlItems){
+      rows += `<tr><td class="item-name" colspan="3">${item.name} <span style="font-size:11px;font-weight:400">(${item.typeLabel})</span></td></tr>
+               <tr><td>${item.priceStr}</td><td class="c">1</td><td class="r">${item.priceStr}</td></tr>
+               <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    }
+  }
+  // Peel Body rows
+  if(r.peelItems && r.peelItems.length>0){
+    rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#111;padding-top:8px;">✦ Peel Body</td></tr>`;
+    for(const item of r.peelItems){
+      rows += `<tr><td class="item-name" colspan="3">${item.name} <span style="font-size:11px;font-weight:400">(${item.typeLabel})</span></td></tr>
+               <tr><td>${item.priceStr}</td><td class="c">1</td><td class="r">${item.priceStr}</td></tr>
+               <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    }
+  }
+  // Liệu trình gợi ý rows
+  if(r.lieutrinhItems && r.lieutrinhItems.length>0){
+    rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#111;padding-top:8px;">✨ Liệu trình gợi ý</td></tr>`;
+    for(const item of r.lieutrinhItems){
+      rows += `<tr><td class="item-name" colspan="3">${item.name} <span style="font-size:11px;font-weight:400">(${item.typeLabel})</span></td></tr>
+               <tr><td>${item.priceStr}</td><td class="c">1</td><td class="r">${item.priceStr}</td></tr>
+               <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    }
+  }
+
   // VIP card note
   let vipNote = "";
   if(r.vipTier && !r.vipCardPrice){
@@ -2004,6 +2039,9 @@ function showInvoice(r){
                <div class="sumrow"><span>Số dư thẻ còn lại:</span><span>${fmt(Math.max(0,bal))}</span></div>`;
   }
 
+  const tlTotal2=(r.tlItems||[]).reduce((s,x)=>s+x.price,0);
+  const peelTotal2=(r.peelItems||[]).reduce((s,x)=>s+x.price,0);
+  const lieutrinhTotal2=(r.lieutrinhItems||[]).reduce((s,x)=>s+x.price,0);
   const subtotal = r.total + (r.discount||0);
 
   document.getElementById("invoiceContent").innerHTML = `
@@ -2398,7 +2436,7 @@ function resetAll(){
   ["cPhone","cEmail"].forEach(id=>document.getElementById(id).classList.remove("fld-bad"));
   document.getElementById("cPhoneWarn").style.display="none";
   document.getElementById("cEmailWarn").style.display="none";
-  state={mode:"alc",buffet:null,skins:[],selected:new Set(["CB"]),customerType:"retail",
+  state={mode:"alc",buffet:null,skins:[],selected:new Set(),customerType:"retail",
     dob:"",membership:null,vipCard:null,shopMode:"service",productCart:{},tlCart:[],peelCart:[],lieutrinhCart:[]};
   document.getElementById("cDob").value="";
   document.getElementById("returningBox").style.display="none";
