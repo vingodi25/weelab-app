@@ -107,6 +107,9 @@ tr:hover td{background:#fafbf9;}
 /* Top list items */
 .top-list-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:12.5px;}
 .top-list-row:last-child{border-bottom:none;}
+/* Delete button */
+.del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 5px;border-radius:5px;transition:.12s;line-height:1;}
+.del-btn:hover{background:var(--danger-soft);color:var(--danger);}
 </style>
 </head>
 <body>
@@ -194,7 +197,7 @@ tr:hover td{background:#fafbf9;}
         <thead><tr>
           <th>#</th><th>Ngày giờ</th><th>Khách hàng</th><th>SĐT</th>
           <th>Hình thức</th><th>Dịch vụ / sản phẩm</th>
-          <th>Công KTV</th><th>Tổng thu</th><th>Nguồn</th>
+          <th>Công KTV</th><th>Tổng thu</th><th>Nguồn</th><th></th>
         </tr></thead>
         <tbody id="invBody"></tbody>
       </table>
@@ -376,7 +379,26 @@ function loadFromSheets(url){
     if(document.head.contains(script)) document.head.removeChild(script);
     delete window[cbName];
     if(data&&data.ok&&data.visits){
-      sheetVisits=data.visits||[];
+      const newVisits=data.visits||[];
+      // ── Auto-sync: xoá local copy của bill đã xoá khỏi Sheet ──
+      try{
+        const oldCacheStr=localStorage.getItem(CACHE_KEY);
+        if(oldCacheStr){
+          const oldVisits=(JSON.parse(oldCacheStr).visits)||[];
+          const newKeys=new Set(newVisits.map(v=>v.phone+"_"+v.date));
+          const deletedKeys=new Set(oldVisits.filter(v=>!newKeys.has(v.phone+"_"+v.date)).map(v=>v.phone+"_"+v.date));
+          if(deletedKeys.size>0){
+            const db=getDB();let changed=false;
+            for(const phone in db){
+              const before=(db[phone].visits||[]).length;
+              db[phone].visits=(db[phone].visits||[]).filter(x=>!deletedKeys.has(phone+"_"+(x.date||"")));
+              if(db[phone].visits.length!==before) changed=true;
+            }
+            if(changed) localStorage.setItem(DB_KEY,JSON.stringify(db));
+          }
+        }
+      }catch(e){}
+      sheetVisits=newVisits;
       sheetLoaded=true;
       localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),visits:sheetVisits}));
       setDot("ok","Đã kết nối · "+sheetVisits.length+" bill từ Sheets");
@@ -708,11 +730,13 @@ function renderOverview(){
 /* ════════════════════════════════════════════════════
    INVOICES
 ════════════════════════════════════════════════════ */
+let _invoiceCache=[];
 function renderInvoices(){
   const q=(document.getElementById("invSearch")?.value||"").toLowerCase();
   let visits=filteredVisits().filter(v=>!q||(v.name||"").toLowerCase().includes(q)||(v.phone||"").includes(q));
+  _invoiceCache=visits;
   document.getElementById("invCount").textContent=visits.length;
-  document.getElementById("invBody").innerHTML=visits.length===0?`<tr><td colspan="9" class="empty">Không có hoá đơn nào</td></tr>`:
+  document.getElementById("invBody").innerHTML=visits.length===0?`<tr><td colspan="10" class="empty">Không có hoá đơn nào</td></tr>`:
     visits.map((v,i)=>{
       const svcStr=v.itemsStr?v.itemsStr.replace(/•\s*/g,"").replace(/\n/g,", ").slice(0,80)+(v.itemsStr.length>80?"…":""):(v.buffetName?"Buffet: "+v.buffetName:"—");
       const prodStr=(v.productItems||[]).map(it=>`${it.name||it.sku}${(it.qty||1)>1?" ×"+it.qty:""}`).join(", ")||"";
@@ -727,8 +751,29 @@ function renderInvoices(){
         <td style="color:var(--muted);">${v.totalLabor>0?fmt(v.totalLabor):"—"}</td>
         <td style="font-weight:800;color:var(--brand-dark);">${fmt(v.total)}</td>
         <td>${srcBadge}</td>
+        <td><button class="del-btn" onclick="deleteVisit(${i})" title="Xoá hoá đơn này">🗑</button></td>
       </tr>`;
     }).join("");
+}
+
+function deleteVisit(idx){
+  const v=_invoiceCache[idx];
+  if(!v) return;
+  const label=v.name||v.phone||"?";
+  const dateLabel=fmtDate(parseDate(v.date));
+  if(!confirm(`Xoá hoá đơn của ${label} ngày ${dateLabel}?\n${v._src==="sheet"?"⚠️ Hoá đơn này từ Sheet — sẽ ẩn trên app nhưng vẫn còn trong Google Sheets. Để xoá hẳn hãy xoá trực tiếp trên Sheet.":""}`)) return;
+  if(v._src==="local"){
+    const db=getDB();
+    if(db[v.phone]){
+      db[v.phone].visits=(db[v.phone].visits||[]).filter(x=>x.date!==v.date);
+      localStorage.setItem(DB_KEY,JSON.stringify(db));
+    }
+  } else {
+    // Sheet: xoá khỏi bộ nhớ đệm (cache) — sẽ trở lại nếu tải lại từ Sheet
+    sheetVisits=sheetVisits.filter(x=>!(x.phone===v.phone&&x.date===v.date));
+    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),visits:sheetVisits}));
+  }
+  renderAll();
 }
 
 /* ════════════════════════════════════════════════════
