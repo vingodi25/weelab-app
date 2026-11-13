@@ -141,10 +141,10 @@
 
   /* summary */
   .sumcard{position:-webkit-sticky;position:sticky;top:18px;align-self:start;}
-  .billline{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);gap:8px;}
-  .billline .bn{flex:1;}
-  .billline .bp{font-weight:600;white-space:nowrap;}
-  .billline.struck .bp{text-decoration:line-through;color:var(--muted);font-weight:500;}
+  .billline{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);gap:8px;font-family:"Montserrat",sans-serif;color:#1a1a1a;}
+  .billline .bn{flex:1;color:#1a1a1a;}
+  .billline .bp{font-weight:600;white-space:nowrap;color:#1a1a1a;}
+  .billline.struck .bp{text-decoration:line-through;color:#888;font-weight:500;}
   .timeline{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 0 0;color:var(--muted);font-weight:600;}
   .timeline .tv{color:var(--ink);font-weight:700;}
   .total{display:flex;justify-content:space-between;font-size:18px;font-weight:800;margin-top:12px;padding-top:12px;border-top:2px solid var(--ink);}
@@ -230,25 +230,25 @@
   .inv-print:hover{background:#1e3d7a;}
   .inv-close-btn{background:#f3efe9;color:#0d171c;border:1px solid #ddd!important;}
   /* Receipt paper styling */
-  .invoice{font-family:'Courier New',Courier,monospace;font-size:12.5px;color:#111;padding:22px 22px 14px;line-height:1.6;background:#fff;}
-  .invoice .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;}
-  .invoice .inv-info{font-size:12px;color:#333;}
+  .invoice{font-family:'Montserrat',-apple-system,sans-serif;font-size:12.5px;color:#111;padding:22px 22px 14px;line-height:1.6;background:#fff;}
+  .invoice .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;color:#111;}
+  .invoice .inv-info{font-size:12px;color:#111;}
   .invoice .inv-sep{border:none;border-top:1px dashed #aaa;margin:8px 0;}
-  .invoice .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;}
-  .invoice .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#444;}
-  .invoice .inv-cust p{margin:1px 0;font-size:12.5px;}
+  .invoice .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;color:#111;}
+  .invoice .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#111;}
+  .invoice .inv-cust p{margin:1px 0;font-size:12.5px;color:#111;}
   .invoice .inv-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
-  .invoice .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;}
+  .invoice .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;color:#111;}
   .invoice .inv-tbl th:last-child,.invoice .inv-tbl td.r{text-align:right;}
   .invoice .inv-tbl th:nth-child(2),.invoice .inv-tbl td.c{text-align:center;}
-  .invoice .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;}
-  .invoice .inv-tbl .item-name{padding-top:7px;font-weight:600;}
+  .invoice .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;color:#111;}
+  .invoice .inv-tbl .item-name{padding-top:7px;font-weight:600;color:#111;}
   .invoice .inv-tbl .item-sep td{padding:0;line-height:.5;}
-  .invoice .inv-strike{text-decoration:line-through;color:#999;font-size:11px;margin-right:4px;}
+  .invoice .inv-strike{text-decoration:line-through;color:#555;font-size:11px;margin-right:4px;}
   .invoice .inv-summary{padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;}
-  .invoice .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;}
-  .invoice .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;}
-  .invoice .inv-footer{text-align:center;font-size:11px;color:#777;margin-top:14px;line-height:1.5;}
+  .invoice .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;color:#111;}
+  .invoice .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;color:#111;}
+  .invoice .inv-footer{text-align:center;font-size:11px;color:#111;margin-top:14px;line-height:1.5;}
 
   /* ── Shop mode chooser ── */
   .shop-modes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;}
@@ -291,7 +291,7 @@
   .qty-btn.promo-add:hover{background:#fde8c0;}
   .qty-num{font-size:14px;font-weight:700;min-width:28px;text-align:center;color:var(--ink);}
   /* bill section separator */
-  .bill-section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:4px 0 2px;margin-top:6px;border-top:1px dashed var(--line);}
+  .bill-section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#1a1a1a;padding:4px 0 2px;margin-top:6px;border-top:1px dashed var(--line);font-family:"Montserrat",sans-serif;}
 
   /* Birthday popup */
   .bd-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;}
@@ -301,6 +301,49 @@
   .bd-box .bd-msg{font-size:16px;font-weight:700;letter-spacing:.3px;line-height:1.5;}
   .bd-box .bd-btn{margin-top:18px;background:#fff;color:#8b1a3b;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
 
+
+  /* ── Triệt lông & Peel Body panels ── */
+  .hair-table{width:100%;border-collapse:collapse;margin-bottom:16px;table-layout:fixed}
+  .hair-table th,.peel-table th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:7px 10px;border-bottom:2px solid #e7e0d6;text-align:left;background:#f5f1ea}
+  .hair-table td,.peel-table td{padding:8px 10px;border-bottom:1px solid #e7e0d6;font-size:13px;vertical-align:middle;word-break:break-word}
+  .hair-table tr:hover td,.peel-table tr:hover td{background:#faf7f4}
+  .hair-group-hdr td{background:#ede9e3;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:5px 10px}
+  .peel-table{width:100%;border-collapse:collapse;margin-bottom:16px;table-layout:fixed}
+  .sav-xs-tl{font-size:10px;background:#e6f7ef;color:#2d8c5a;padding:1px 6px;border-radius:9px;display:inline-block;margin-top:2px}
+  .peel-combo-price-sm{font-size:12px;color:#8a8178}
+  .peel-combo-total-sm{font-size:14px;font-weight:700;color:#2a4c5e}
+  .sel-chk-tl{width:22px;height:22px;border:2px solid #d0c8c0;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;transition:.12s}
+  .sel-chk-tl.on-tl{background:#568791;border-color:#568791;color:#fff}
+  .sel-chk-tl.on-pkg{background:#2a4c5e;border-color:#2a4c5e;color:#fff}
+  .sel-chk-tl.on-rj{background:#8060b0;border-color:#8060b0;color:#fff}
+  .tl-svc-chips{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .tl-chip{padding:6px 14px;border-radius:20px;border:1.5px solid #d0c8c0;font-size:13px;cursor:pointer;background:#fff;transition:.12s}
+  .tl-chip.active{background:#568791;border-color:#568791;color:#fff;font-weight:600}
+  .tl-rj-ctrl{display:flex;gap:6px;align-items:center;font-size:12px;margin-bottom:12px;flex-wrap:wrap}
+  .tl-rj-btn{padding:4px 10px;border-radius:12px;border:1.5px solid #d0c8c0;font-size:12px;cursor:pointer;background:#fff;transition:.12s}
+  .tl-rj-btn.active{background:#8060b0;border-color:#8060b0;color:#fff}
+  .tl-summary,.peel-summary-box{background:#f5f1ea;border-radius:10px;padding:12px 14px;margin-top:12px}
+  .tl-sum-row,.peel-sum-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed #e7e0d6}
+  .tl-sum-total,.peel-sum-total{display:flex;justify-content:space-between;font-size:14px;font-weight:700;padding-top:8px;margin-top:4px;color:#568791}
+  .combo-gift-tl{background:#fdf6e3;border:1.5px solid #bfa15a;border-radius:10px;padding:10px 14px;font-size:13px;color:#8a6a1e;margin-bottom:10px;display:none}
+  /* ── FACIAL TREATMENT CARDS ── */
+  .fc-price-toggle{display:flex;gap:6px;margin-bottom:12px;align-items:center;font-size:12px;color:var(--muted)}
+  .fc-price-btn{padding:4px 12px;border-radius:12px;border:1.5px solid var(--line);font-size:12px;cursor:pointer;background:#fff;transition:.12s;font-family:inherit}
+  .fc-price-btn.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .fc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px}
+  .fc-card{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:.15s;background:#fff;position:relative}
+  .fc-card:hover{border-color:var(--brand)}
+  .fc-card.selected{border-color:var(--brand);background:#f0f8fa}
+  .fc-card.selected::after{content:"✓";position:absolute;top:8px;right:10px;color:var(--brand);font-weight:800;font-size:14px}
+  .fc-name{font-size:13.5px;font-weight:700;color:var(--brand-dark);margin-bottom:2px}
+  .fc-dur{font-size:11px;color:var(--muted);margin-bottom:3px}
+  .fc-skin{font-size:11.5px;color:#6b6460;margin-bottom:8px;line-height:1.4}
+  .fc-price{font-size:14px;font-weight:700;color:var(--brand-dark)}
+  .fc-price-vip{font-size:12px;color:var(--gold);font-weight:600}
+  .fc-add-btn{margin-top:8px;width:100%;padding:7px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  .fc-add-btn.removing{background:#c0563f}
+  .fc-section-hdr{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .fc-divider{border:none;border-top:1px dashed var(--line);margin:14px 0}
 </style>
 </head>
 <body>
@@ -383,6 +426,16 @@
           <div class="sm-title">Sử dụng liệu trình</div>
           <div class="sm-count" id="smServiceCount" style="display:none">0</div>
         </div>
+        <div class="shopmode" id="smHair" onclick="switchShopMode('hair')">
+          <div class="sm-icon">🪄</div>
+          <div class="sm-title">Triệt lông</div>
+          <div class="sm-count" id="smHairCount" style="display:none">0</div>
+        </div>
+        <div class="shopmode" id="smPeel" onclick="switchShopMode('peel')">
+          <div class="sm-icon">✦</div>
+          <div class="sm-title">Peel Body</div>
+          <div class="sm-count" id="smPeelCount" style="display:none">0</div>
+        </div>
       </div>
     </div>
 
@@ -397,10 +450,45 @@
     </div>
 
     <!-- STEP 4 (HÌNH THỨC) — service section -->
+
+    <!-- TRIỆT LÔNG SECTION -->
+    <div class="card" id="hairSection" style="display:none">
+      <div class="tl-svc-chips">
+        <span class="tl-chip active" id="chip-tl" onclick="tlToggleService('tl')">✓ Triệt lông</span>
+        <span class="tl-chip" id="chip-rj" onclick="tlToggleService('rj')">Làm sáng da</span>
+      </div>
+      <div id="rj-pkg-ctrl2" class="tl-rj-ctrl" style="display:none">
+        Làm sáng:
+        <span class="tl-rj-btn active" id="rj-le2" onclick="tlSetRjMode('le')">Lẻ</span>
+        <span class="tl-rj-btn" id="rj-5b2" onclick="tlSetRjMode('5b')">Gói 5b −20%</span>
+        <span class="tl-rj-btn" id="rj-10b2" onclick="tlSetRjMode('10b')">Gói 10b −30%</span>
+      </div>
+      <div style="overflow-x:auto"><table class="hair-table" id="hair-tbl2"></table></div>
+      <div id="hair-summary2"></div>
+      <button class="back-btn" style="margin-top:8px;background:#568791;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600" onclick="tlAddToCart()">➕ Thêm vào bill</button>
+    </div>
+
+    <!-- PEEL BODY SECTION -->
+    <div class="card" id="peelSection" style="display:none">
+      <p style="font-size:12.5px;color:#8a8178;margin:0 0 10px">Bấm vào cột <b>Regular</b> hoặc <b>Combo 4+1</b> để chọn. Bấm lại để bỏ chọn.</p>
+      <div id="peel-combo-gift2" class="combo-gift-tl">🎁 Chọn 2 vùng Combo trở lên — <b>tặng thêm 1 buổi mỗi vùng!</b></div>
+      <div style="overflow-x:auto"><table class="peel-table" id="peel-tbl2"></table></div>
+      <div id="peel-summary2"></div>
+      <button class="back-btn" style="margin-top:8px;background:#2a4c5e;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600" onclick="plAddToCart()">➕ Thêm vào bill</button>
+    </div>
     <div class="card" id="serviceSection">
       <div class="product-nav" style="margin-bottom:10px;">
         <button class="back-btn" onclick="switchShopMode('product')">🧴 Thêm sản phẩm</button>
       </div>
+      <!-- LIỆU TRÌNH GỢI Ý -->
+      <div class="fc-section-hdr">✨ Liệu trình gợi ý</div>
+      <div class="fc-price-toggle">
+        Giá:
+        <span class="fc-price-btn on" id="fcPriceNY" onclick="fcSetPrice('ny')">Niêm yết</span>
+        <span class="fc-price-btn" id="fcPriceVIP" onclick="fcSetPrice('vip')">VIP</span>
+      </div>
+      <div class="fc-grid" id="fcGrid"></div>
+      <hr class="fc-divider">
       <h2><span class="step-num">4</span> <span id="t_step3Title"></span></h2>
       <div class="sub" id="t_step3Sub"></div>
       <div class="modes">
@@ -776,6 +864,16 @@ const GROUPS = [
 ];
 
 /* Buffet: gói → nhóm món được phép */
+const FACIAL_TREATMENTS=[
+  {id:'loli',  name:'Lo-Li (Lighting)',    dur:"—",        list:1150000, vip:899000,  skin:'Da mụn tổng hợp, dày sừng trung bình'},
+  {id:'glowii',name:'Glowii',              dur:"90'–120'", list:1350000, vip:1200000, skin:'Da dầu, dày sừng, mụn ẩn, da xỉn màu'},
+  {id:'babii',  name:'Babii',              dur:"90'",       list:1500000, vip:1250000, skin:'Da căng thẳng, xỉn màu, thiếu nước'},
+  {id:'khoe',  name:'Khoẻ (Re)',           dur:"90'–120'", list:1350000, vip:1200000, skin:'Da dầu mụn, thâm tổng hợp'},
+  {id:'chill', name:'Chillout Breakout',   dur:"90'–120'", list:1250000, vip:1050000, skin:'Da yếu, nhạy cảm, sức đề kháng kém'},
+  {id:'nano',  name:'Nano Luminous',       dur:"120'",      list:1650000, vip:1450000, skin:'Da bít tắc, khô sần, sạm màu'},
+  {id:'micro', name:'Micro Luminous',      dur:"120'",      list:6000000, vip:5000000, skin:'Da thiếu sức sống, lỗ chân lông to'},
+  {id:'redbl', name:'Red Blemish Clear',   dur:"—",        list:1350000, vip:1100000, skin:'Da mụn viêm, thâm đỏ, không đều màu'},
+];
 const BUFFET = [
   {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:1099000, groups:["CB","NC"],
    inc:"Khai vị & Món chính", inc_en:"Starter & Main Course",
@@ -900,6 +998,9 @@ let state = {
   vipCard:null,          // {tier, name, price, cashback, balance, registeredDate, expiryDate, newReg}
   shopMode:"service",    // 'service' | 'product'
   productCart:{},        // {sku: {name, fullName, brand, price, qty}}
+  tlCart:[],             // [{name, typeLabel, price}]
+  peelCart:[],           // [{name, typeLabel, price}]
+  lieutrinhCart:[],      // [{id, name, price}]
 };
 const fmt = n => tr("fmtCurrency")(n);
 const byId = id => MENU.find(m=>m.id===id);
@@ -1207,7 +1308,7 @@ function renderBill(){
   }
 
   const prodItems = Object.values(state.productCart||{});
-  if(items.length===0 && !isBuf && prodItems.length===0){
+  if(items.length===0 && !isBuf && prodItems.length===0 && !(state.tlCart||[]).length && !(state.peelCart||[]).length && !(state.lieutrinhCart||[]).length){
     lines.innerHTML=`<div class="empty">${tr("billEmpty")}</div>`;
     document.getElementById("grandTotal").textContent=fmt(0);
     document.getElementById("savingNote").textContent="";
@@ -1223,9 +1324,30 @@ function renderBill(){
       html+=`<div class="billline"><span class="bn">${item.name}${item.qty>1?` ×${item.qty}`:""}</span><span class="bp">${fmt(item.price*item.qty)}</span></div>`;
     });
   }
+  // — Triệt lông section —
+  if((state.tlCart||[]).length>0){
+    html+=`<div class="bill-section-hdr">🪄 Triệt lông</div>`;
+    state.tlCart.forEach((item,i)=>{
+      html+=`<div class="billline"><span class="bn">${item.name} <span style="color:#444;font-size:11px">(${item.typeLabel})</span></span><span class="bp">${item.priceStr} <button onclick="removeTlCart(${i})" style="border:none;background:none;cursor:pointer;color:#c0563f;font-size:14px;padding:0 2px">×</button></span></div>`;
+    });
+  }
+  // — Peel Body section —
+  if((state.peelCart||[]).length>0){
+    html+=`<div class="bill-section-hdr">✦ Peel Body</div>`;
+    state.peelCart.forEach((item,i)=>{
+      html+=`<div class="billline"><span class="bn">${item.name} <span style="color:#444;font-size:11px">(${item.typeLabel})</span></span><span class="bp">${item.priceStr} <button onclick="removePeelCart(${i})" style="border:none;background:none;cursor:pointer;color:#c0563f;font-size:14px;padding:0 2px">×</button></span></div>`;
+    });
+  }
+  // — Liệu trình gợi ý section —
+  if((state.lieutrinhCart||[]).length>0){
+    html+=`<div class="bill-section-hdr">✨ Liệu trình gợi ý</div>`;
+    state.lieutrinhCart.forEach((item,i)=>{
+      html+=`<div class="billline"><span class="bn">${item.name} <span style="color:#444;font-size:11px">(${item.typeLabel})</span></span><span class="bp">${item.priceStr} <button onclick="removeLieutrinhCart(${i})" style="border:none;background:none;cursor:pointer;color:#c0563f;font-size:14px;padding:0 2px">×</button></span></div>`;
+    });
+  }
   // — Liệu trình section —
   if(items.length>0||isBuf){
-    if(prodItems.length>0){
+    if(prodItems.length>0 || (state.tlCart||[]).length>0 || (state.peelCart||[]).length>0){
       html+=`<div class="bill-section-hdr">✨ Liệu trình</div>`;
     }
     items.forEach(m=>{
@@ -1250,6 +1372,10 @@ function renderBill(){
   }else{
     grand=alcTotal()+prodTotal;
   }
+  const tlTotal=(state.tlCart||[]).reduce((s,x)=>s+x.price,0);
+  const peelTotal=(state.peelCart||[]).reduce((s,x)=>s+x.price,0);
+  const lieutrinhTotal=(state.lieutrinhCart||[]).reduce((s,x)=>s+x.price,0);
+  grand+=tlTotal+peelTotal+lieutrinhTotal;
   // Membership fee
   if(state.membership){
     html+=`<div class="billline"><span class="bn">✦ Membership ${state.membership.months} tháng</span><span class="bp">${fmt(state.membership.fee)}</span></div>`;
@@ -1328,15 +1454,23 @@ function renderBill(){
 
 /* ============ SHOP MODE + PRODUCT PAGE ============ */
 function switchShopMode(mode){
-  state.shopMode = mode;
-  // toggle chooser buttons
+  // productSection: chỉ hiện khi mode=product
+  document.getElementById("productSection").style.display = mode==="product" ? "block" : "none";
+  // serviceSection: hiện khi mode=service, hair, hoặc peel (luôn hiện trừ khi đang xem sản phẩm)
+  document.getElementById("serviceSection").style.display = mode==="product" ? "none" : "block";
+  // hairSection và peelSection: chỉ hiện đúng mode
+  document.getElementById("hairSection").style.display = mode==="hair" ? "block" : "none";
+  document.getElementById("peelSection").style.display = mode==="peel" ? "block" : "none";
+  // badge on/off
   document.getElementById("smProduct").classList.toggle("on", mode==="product");
   document.getElementById("smService").classList.toggle("on", mode==="service");
-  // show/hide sections
-  document.getElementById("productSection").style.display = mode==="product" ? "block" : "none";
-  document.getElementById("serviceSection").style.display = mode==="service" ? "block" : "none";
+  document.getElementById("smHair").classList.toggle("on", mode==="hair");
+  document.getElementById("smPeel").classList.toggle("on", mode==="peel");
+  // re-render khi switch vào
   if(mode==="product") renderProductPage();
-  renderBill();
+  if(mode==="service"){ renderSkins(); renderMenu(); renderFacialCards(); }
+  if(mode==="hair") renderHairTbl2();
+  if(mode==="peel") renderPeelTbl2();
 }
 
 function productBrands(){
@@ -1435,11 +1569,17 @@ function productCartCount(){
 
 function updateShopModeBadges(){
   const pc = productCartCount();
-  const sc = [...state.selected].length;
+  const sc = [...state.selected].length + (state.lieutrinhCart||[]).length;
+  const hc = (state.tlCart||[]).length;
+  const pelc = (state.peelCart||[]).length;
   const pcEl = document.getElementById("smProductCount");
   const scEl = document.getElementById("smServiceCount");
+  const hEl = document.getElementById("smHairCount");
+  const pelEl = document.getElementById("smPeelCount");
   if(pcEl){ pcEl.textContent=pc; pcEl.style.display=pc>0?"inline-block":"none"; }
   if(scEl){ scEl.textContent=sc; scEl.style.display=sc>0?"inline-block":"none"; }
+  if(hEl){ hEl.textContent=hc; hEl.style.display=hc>0?"inline-block":"none"; }
+  if(pelEl){ pelEl.textContent=pelc; pelEl.style.display=pelc>0?"inline-block":"none"; }
 }
 
 /* ============ KHÁCH CŨ (localStorage) ============ */
@@ -1914,27 +2054,28 @@ function printInvoice(){
   }
   const content = document.getElementById("invoiceContent").innerHTML;
   const css = `
-    body{margin:0;padding:12px;background:#fff;}
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+    body{margin:0;padding:12px;background:#fff;font-family:'Montserrat',sans-serif;}
     *{box-sizing:border-box;}
-    .invoice{font-family:'Courier New',Courier,monospace;font-size:12.5px;color:#111;line-height:1.6;}
-    .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;}
-    .inv-info{font-size:12px;color:#333;}
+    .invoice{font-family:'Montserrat',sans-serif;font-size:12.5px;color:#111;line-height:1.6;}
+    .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;color:#111;}
+    .inv-info{font-size:12px;color:#111;}
     .inv-sep{border:none;border-top:1px dashed #aaa;margin:8px 0;}
-    .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;}
-    .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#444;}
-    .inv-cust p{margin:1px 0;font-size:12.5px;}
+    .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;color:#111;}
+    .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#111;}
+    .inv-cust p{margin:1px 0;font-size:12.5px;color:#111;}
     .inv-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
-    .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;}
+    .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;color:#111;}
     .inv-tbl th:last-child,.r{text-align:right;}
     .inv-tbl th:nth-child(2),.c{text-align:center;}
-    .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;}
-    .item-name{padding-top:7px;font-weight:600;}
+    .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;color:#111;}
+    .item-name{padding-top:7px;font-weight:600;color:#111;}
     .item-sep td{padding:0;line-height:.5;}
-    .inv-strike{text-decoration:line-through;color:#999;font-size:11px;margin-right:4px;}
+    .inv-strike{text-decoration:line-through;color:#555;font-size:11px;margin-right:4px;}
     .inv-summary{padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;}
-    .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;}
-    .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;}
-    .inv-footer{text-align:center;font-size:11px;color:#777;margin-top:14px;line-height:1.5;}
+    .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;color:#111;}
+    .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;color:#111;}
+    .inv-footer{text-align:center;font-size:11px;color:#111;margin-top:14px;line-height:1.5;}
     hr{border:none;border-top:1px dashed #aaa;margin:8px 0;}
     @media print{@page{margin:8mm;size:80mm auto;}}
   `;
@@ -1944,9 +2085,294 @@ function printInvoice(){
     <style>${css}</style></head><body>
     <div class="invoice">${content}</div>
     <script>window.onload=function(){window.focus();window.print();}<\/script>
-    </body></html>`);
+</body></html>`);
   win.document.close();
 }
+
+// ── TRIỆT LÔNG DATA ──────────────────────────────────────────────────────────
+const TL_HAIR_AREAS=[
+  {group:'Mặt',areas:[
+    {id:'tl_ul',name:'Mép',single:99000,pkg:869000},
+    {id:'tl_nape',name:'Gáy',single:99000,pkg:869000},
+    {id:'tl_eyebrow',name:'Lông mày',single:199000,pkg:1199000},
+    {id:'tl_hairline',name:'Chân tóc',single:199000,pkg:1199000},
+    {id:'tl_fullface',name:'Mặt đầy đủ',single:199000,pkg:1199000},
+  ]},
+  {group:'Thân trên',areas:[
+    {id:'tl_halfarm',name:'½ Tay',single:199000,pkg:1199000},
+    {id:'tl_fullarm',name:'Tay đầy đủ',single:299000,pkg:1669000},
+    {id:'tl_chest',name:'Ngực',single:199000,pkg:1199000},
+    {id:'tl_stomach',name:'Bụng',single:199000,pkg:1199000},
+    {id:'tl_fullback',name:'Lưng đầy đủ',single:299000,pkg:1669000},
+  ]},
+  {group:'Thân dưới',areas:[
+    {id:'tl_halfleg',name:'½ Chân',single:199000,pkg:1199000},
+    {id:'tl_fullleg',name:'Chân đầy đủ',single:299000,pkg:1669000},
+    {id:'tl_bikini',name:'Bikini',single:299000,pkg:1669000},
+    {id:'tl_feet',name:'Bàn chân',single:99000,pkg:869000},
+    {id:'tl_butt',name:'Mông',single:199000,pkg:1199000},
+  ]},
+  {group:'Toàn thân',areas:[
+    {id:'tl_fullbody',name:'Toàn thân',single:1779000,pkg:9999000},
+  ]},
+];
+const TL_PEEL_AREAS=[
+  {id:'pl_moi',name:'Môi',regular:350000,combo:299000},
+  {id:'pl_co',name:'Cổ',regular:800000,combo:699000},
+  {id:'pl_nach',name:'Nách',regular:900000,combo:799000},
+  {id:'pl_lung',name:'Lưng',regular:1000000,combo:899000},
+  {id:'pl_nguc',name:'Ngực',regular:1000000,combo:899000},
+  {id:'pl_khuy',name:'Khuỷu tay',regular:800000,combo:699000},
+  {id:'pl_mong',name:'Mông',regular:1500000,combo:1099000},
+  {id:'pl_ben',name:'Bẹn (Bikini Line)',regular:1000000,combo:899000},
+  {id:'pl_goi',name:'Đầu gối',regular:800000,combo:699000},
+  {id:'pl_chan',name:'½ Chân',regular:1500000,combo:1099000},
+];
+let tlSvcActive={tl:true,rj:false};
+let tlRjMode='le';
+let tlHairSel={};
+let plPeelSel={};
+function fmt2(n){return n.toLocaleString('vi-VN')+'đ';}
+function tlRjPrice(a){if(tlRjMode==='5b')return a.single*5*0.8;if(tlRjMode==='10b')return a.single*10*0.7;return a.single;}
+function tlRjLabel(){return tlRjMode==='5b'?'Gói 5b (−20%)':tlRjMode==='10b'?'Gói 10b (−30%)':'Buổi lẻ';}
+function tlToggleService(s){
+  tlSvcActive[s]=!tlSvcActive[s];
+  const c=document.getElementById('chip-'+s);
+  c.classList.toggle('active',tlSvcActive[s]);
+  c.textContent=(tlSvcActive[s]?'✓ ':'')+(s==='tl'?'Triệt lông':'Làm sáng da');
+  document.getElementById('rj-pkg-ctrl2').style.display=tlSvcActive.rj?'flex':'none';
+  if(!tlSvcActive.tl) Object.keys(tlHairSel).forEach(id=>{if(tlHairSel[id]==='tl_goi'||tlHairSel[id]==='tl_le')delete tlHairSel[id];});
+  if(!tlSvcActive.rj) Object.keys(tlHairSel).forEach(id=>{if(tlHairSel[id]==='rj')delete tlHairSel[id];});
+  renderHairTbl2();
+}
+function tlSetRjMode(m){
+  tlRjMode=m;
+  ['le','5b','10b'].forEach(x=>document.getElementById('rj-'+x+'2').classList.toggle('active',x===m));
+  renderHairTbl2();
+}
+function clearHairSel2(id){delete tlHairSel[id];renderHairTbl2();}
+function selectHairCol2(id,colType){
+  const cur=tlHairSel[id];
+  const hasTlLe=cur==='tl_le'||cur==='both_le';
+  const hasTlGoi=cur==='tl_goi'||cur==='both_goi';
+  const hasRj=cur==='rj'||cur==='both_goi'||cur==='both_le';
+  if(colType==='tl_le'){
+    if(hasTlLe){if(hasRj)tlHairSel[id]='rj';else delete tlHairSel[id];}
+    else{tlHairSel[id]=hasRj?'both_le':'tl_le';}
+  }else if(colType==='tl_goi'){
+    if(hasTlGoi){if(hasRj)tlHairSel[id]='rj';else delete tlHairSel[id];}
+    else{tlHairSel[id]=hasRj?'both_goi':'tl_goi';}
+  }else if(colType==='rj'){
+    if(hasRj){if(hasTlLe)tlHairSel[id]='tl_le';else if(hasTlGoi)tlHairSel[id]='tl_goi';else delete tlHairSel[id];}
+    else{tlHairSel[id]=hasTlLe?'both_le':hasTlGoi?'both_goi':'rj';}
+  }
+  renderHairTbl2();
+}
+function renderHairTbl2(){
+  const showTl=tlSvcActive.tl,showRj=tlSvcActive.rj;
+  const totalCols=1+1+(showTl?2:0)+(showRj?1:0)+(showTl&&showRj?1:0);
+  let colW=showTl&&showRj?'18%':'22%';
+  let cg=`<colgroup><col style="width:36px"><col>`;
+  if(showTl)cg+=`<col style="width:${colW}"><col style="width:${colW}">`;
+  if(showRj)cg+=`<col style="width:${colW}">`;
+  if(showTl&&showRj)cg+=`<col style="width:${colW}">`;
+  cg+=`</colgroup>`;
+  let html=cg+`<thead><tr>
+    <th></th><th>Vùng</th>
+    ${showTl?`<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:7px 10px;border-bottom:2px solid #e7e0d6;background:#f5f1ea">Triệt lẻ<br><small style="font-weight:400">1 buổi</small></th><th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:7px 10px;border-bottom:2px solid #e7e0d6;background:#f5f1ea">Gói 8b BH<br><small style="font-weight:400">bảo hành 1 năm</small></th>`:''}
+    ${showRj?`<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8060b0;padding:7px 10px;border-bottom:2px solid #e7e0d6;background:#f5f1ea">Làm sáng<br><small style="font-weight:400">${tlRjLabel()}</small></th>`:''}
+    ${showTl&&showRj?`<th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:7px 10px;border-bottom:2px solid #e7e0d6;background:#f5f1ea">Cả 2</th>`:''}
+  </tr></thead><tbody>`;
+  TL_HAIR_AREAS.forEach(g=>{
+    html+=`<tr class="hair-group-hdr"><td colspan="${totalCols}">${g.group}</td></tr>`;
+    g.areas.forEach(a=>{
+      const sel=tlHairSel[a.id];
+      const rjP=Math.round(tlRjPrice(a));
+      const rjSav=tlRjMode==='5b'?fmt2(a.single*5*0.2):tlRjMode==='10b'?fmt2(a.single*10*0.3):'';
+      const isTlLe=sel==='tl_le'||sel==='both_le';
+      const isTlGoi=sel==='tl_goi'||sel==='both_goi';
+      const isRj=sel==='rj'||sel==='both_goi'||sel==='both_le';
+      const chkCls=isTlGoi?'on-pkg':isTlLe?'on-tl':isRj?'on-rj':'';
+      html+=`<tr>
+        <td style="text-align:center;width:28px"><div class="sel-chk-tl ${sel?chkCls:''}" onclick="clearHairSel2('${a.id}')" title="Bỏ chọn">${sel?'✓':''}</div></td>
+        <td style="padding:8px 10px;font-size:13px;border-bottom:1px solid #e7e0d6">${a.name}</td>
+        ${showTl?`
+        <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #e7e0d6;cursor:pointer;${isTlLe?'background:#e8f4f8;border-left:3px solid #568791;':''}" onclick="selectHairCol2('${a.id}','tl_le')">
+          <span style="font-size:13px;font-weight:600;color:${isTlLe?'#568791':'#555'}">${fmt2(a.single)}</span>
+        </td>
+        <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #e7e0d6;cursor:pointer;${isTlGoi?'background:#edf1f5;border-left:3px solid #2a4c5e;':''}" onclick="selectHairCol2('${a.id}','tl_goi')">
+          <div style="font-size:14px;font-weight:700;color:${isTlGoi?'#2a4c5e':'#444'}">${fmt2(a.pkg)}</div>
+          <span class="sav-xs-tl">tiết kiệm ${fmt2(a.single*20-a.pkg)}</span>
+        </td>`:''}
+        ${showRj?`<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #e7e0d6;cursor:pointer;${isRj?'background:#f0eaf8;border-left:3px solid #8060b0;':''}" onclick="selectHairCol2('${a.id}','rj')">
+          <span style="font-size:13px;font-weight:${isRj?700:400};color:${isRj?'#8060b0':'#555'}">${fmt2(rjP)}</span>
+          ${rjSav?`<br><span class="sav-xs-tl" style="background:#f0eaff;color:#6040a0">tiết kiệm ${rjSav}</span>`:''}
+        </td>`:''}
+        ${showTl&&showRj?`<td style="text-align:right;padding:8px 10px;border-bottom:1px solid #e7e0d6">
+          ${(isTlLe||isTlGoi)&&isRj?`<span style="font-size:13px;color:#2d8c5a;font-weight:600">${fmt2((isTlGoi?a.pkg:a.single)+rjP)}</span>`:'<span style="color:#ccc;font-size:11px">—</span>'}
+        </td>`:''}
+      </tr>`;
+    });
+  });
+  html+='</tbody>';
+  document.getElementById('hair-tbl2').innerHTML=html;
+  renderHairSum2();
+}
+function renderHairSum2(){
+  const items=Object.entries(tlHairSel);
+  if(!items.length){document.getElementById('hair-summary2').innerHTML='';return;}
+  let total=0,lines='';
+  items.forEach(([id,type])=>{
+    const a=TL_HAIR_AREAS.flatMap(g=>g.areas).find(x=>x.id===id);if(!a)return;
+    const rjP=Math.round(tlRjPrice(a));
+    let price=0,typeLabel='';
+    if(type==='tl_goi'){price=a.pkg;typeLabel='Gói 8b BH';}
+    else if(type==='tl_le'){price=a.single;typeLabel='Lẻ';}
+    else if(type==='rj'){price=rjP;typeLabel='Làm sáng';}
+    else if(type==='both_goi'){price=a.pkg+rjP;typeLabel='Gói 8b + Làm sáng';}
+    else if(type==='both_le'){price=a.single+rjP;typeLabel='Lẻ + Làm sáng';}
+    total+=price;
+    lines+=`<div class="tl-sum-row"><span>${a.name} <span style="color:#8a8178;font-size:11px">(${typeLabel})</span></span><span style="font-weight:600">${fmt2(price)}</span></div>`;
+  });
+  document.getElementById('hair-summary2').innerHTML=`<div class="tl-summary">${lines}<div class="tl-sum-total"><span>Tổng</span><span>${fmt2(total)}</span></div></div>`;
+}
+function tlAddToCart(){
+  const items=Object.entries(tlHairSel);
+  if(!items.length){alert('Chưa chọn vùng nào!');return;}
+  items.forEach(([id,type])=>{
+    const a=TL_HAIR_AREAS.flatMap(g=>g.areas).find(x=>x.id===id);if(!a)return;
+    const rjP=Math.round(tlRjPrice(a));
+    if(type==='tl_goi')state.tlCart.push({name:a.name+' — Triệt lông',typeLabel:'Gói 8b BH',price:a.pkg,priceStr:fmt2(a.pkg)});
+    else if(type==='tl_le')state.tlCart.push({name:a.name+' — Triệt lông',typeLabel:'Lẻ',price:a.single,priceStr:fmt2(a.single)});
+    else if(type==='rj')state.tlCart.push({name:a.name+' — Làm sáng da',typeLabel:tlRjLabel(),price:rjP,priceStr:fmt2(rjP)});
+    else if(type==='both_goi'){state.tlCart.push({name:a.name+' — Triệt lông',typeLabel:'Gói 8b BH',price:a.pkg,priceStr:fmt2(a.pkg)});state.tlCart.push({name:a.name+' — Làm sáng',typeLabel:tlRjLabel(),price:rjP,priceStr:fmt2(rjP)});}
+    else if(type==='both_le'){state.tlCart.push({name:a.name+' — Triệt lông',typeLabel:'Lẻ',price:a.single,priceStr:fmt2(a.single)});state.tlCart.push({name:a.name+' — Làm sáng',typeLabel:tlRjLabel(),price:rjP,priceStr:fmt2(rjP)});}
+  });
+  tlHairSel={};
+  renderHairTbl2();
+  document.getElementById('hair-summary2').innerHTML='';
+  renderBill();
+  switchShopMode('service');
+}
+// ── PEEL BODY JS ─────────────────────────────────────────────────────────────
+function clearPeelSel2(id){
+  delete plPeelSel[id];
+  const c=Object.values(plPeelSel).filter(v=>v==='combo').length;
+  document.getElementById('peel-combo-gift2').style.display=c>=2?'block':'none';
+  renderPeelTbl2();renderPeelSum2();
+}
+function selectPeelCol2(id,type){
+  if(plPeelSel[id]===type)delete plPeelSel[id];else plPeelSel[id]=type;
+  const c=Object.values(plPeelSel).filter(v=>v==='combo').length;
+  document.getElementById('peel-combo-gift2').style.display=c>=2?'block':'none';
+  renderPeelTbl2();renderPeelSum2();
+}
+function renderPeelTbl2(){
+  const cg=`<colgroup><col style="width:36px"><col><col style="width:22%"><col style="width:22%"></colgroup>`;
+  let html=cg+`<thead><tr>
+    <th></th><th>Vùng</th>
+    <th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:7px 10px;border-bottom:2px solid #e7e0d6;background:#f5f1ea">Regular<br><small style="font-weight:400">1 buổi</small></th>
+    <th style="text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a8178;padding:7px 10px;border-bottom:2px solid #e7e0d6;background:#f5f1ea">Combo 4+1<br><small style="font-weight:400">mua 4 tặng 1</small></th>
+  </tr></thead><tbody>`;
+  TL_PEEL_AREAS.forEach(a=>{
+    const sel=plPeelSel[a.id];
+    const comboTotal=a.combo*4,sav=a.regular*4-comboTotal;
+    const isReg=sel==='reg',isCombo=sel==='combo';
+    html+=`<tr>
+      <td style="text-align:center;width:28px"><div class="sel-chk-tl ${isCombo?'on-pkg':isReg?'on-tl':''}" onclick="clearPeelSel2('${a.id}')" title="Bỏ chọn">${sel?'✓':''}</div></td>
+      <td style="padding:8px 10px;font-size:13px;border-bottom:1px solid #e7e0d6">${a.name}</td>
+      <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #e7e0d6;cursor:pointer;${isReg?'background:#e8f4f8;border-left:3px solid #568791;':''}" onclick="selectPeelCol2('${a.id}','reg')">
+        <span style="font-size:13px;font-weight:600;color:${isReg?'#568791':'#555'}">${fmt2(a.regular)}</span>
+      </td>
+      <td style="text-align:right;padding:8px 10px;border-bottom:1px solid #e7e0d6;cursor:pointer;${isCombo?'background:#edf1f5;border-left:3px solid #2a4c5e;':''}" onclick="selectPeelCol2('${a.id}','combo')">
+        <div class="peel-combo-price-sm">${fmt2(a.combo)}/buổi</div>
+        <div class="peel-combo-total-sm" style="${isCombo?'color:#2a4c5e':''}">${fmt2(comboTotal)} tổng</div>
+        <span class="sav-xs-tl">tiết kiệm ${fmt2(sav)}</span>
+      </td>
+    </tr>`;
+  });
+  html+='</tbody>';
+  document.getElementById('peel-tbl2').innerHTML=html;
+}
+function renderPeelSum2(){
+  const entries=Object.entries(plPeelSel);
+  if(!entries.length){document.getElementById('peel-summary2').innerHTML='';return;}
+  let total=0,lines='';
+  entries.forEach(([id,type])=>{
+    const a=TL_PEEL_AREAS.find(x=>x.id===id);if(!a)return;
+    const price=type==='combo'?a.combo*4:a.regular;
+    const typeLabel=type==='combo'?'Combo 4+1':'Regular (1 buổi)';
+    total+=price;
+    lines+=`<div class="peel-sum-row"><span>${a.name} <span style="color:#8a8178;font-size:11px">(${typeLabel})</span></span><span style="font-weight:600">${fmt2(price)}</span></div>`;
+  });
+  document.getElementById('peel-summary2').innerHTML=`<div class="peel-summary-box">${lines}<div class="peel-sum-total"><span>Tổng</span><span>${fmt2(total)}</span></div></div>`;
+}
+function plAddToCart(){
+  const entries=Object.entries(plPeelSel);
+  if(!entries.length){alert('Chưa chọn vùng nào!');return;}
+  entries.forEach(([id,type])=>{
+    const a=TL_PEEL_AREAS.find(x=>x.id===id);if(!a)return;
+    const price=type==='combo'?a.combo*4:a.regular;
+    const typeLabel=type==='combo'?'Peel Combo 4+1':'Peel Regular';
+    state.peelCart.push({name:'Peel Body — '+a.name,typeLabel,price,priceStr:fmt2(price)});
+  });
+  plPeelSel={};
+  renderPeelTbl2();renderPeelSum2();
+  document.getElementById('peel-combo-gift2').style.display='none';
+  renderBill();
+  switchShopMode('service');
+}
+function removeTlCart(i){state.tlCart.splice(i,1);renderBill();}
+function removePeelCart(i){state.peelCart.splice(i,1);renderBill();}
+
+// ── FACIAL TREATMENT CARD JS ─────────────────────────────────────────────────
+let fcPriceMode='ny'; // 'ny' | 'vip'
+function fcSetPrice(mode){
+  fcPriceMode=mode;
+  document.getElementById('fcPriceNY').classList.toggle('on',mode==='ny');
+  document.getElementById('fcPriceVIP').classList.toggle('on',mode==='vip');
+  renderFacialCards();
+}
+function fcGetPrice(t){
+  return fcPriceMode==='vip'?t.vip:t.list;
+}
+function fcIsSelected(id){
+  return state.lieutrinhCart.some(x=>x.id===id);
+}
+function fcToggle(id){
+  const idx=state.lieutrinhCart.findIndex(x=>x.id===id);
+  if(idx>=0){ state.lieutrinhCart.splice(idx,1); }
+  else {
+    const t=FACIAL_TREATMENTS.find(x=>x.id===id);if(!t)return;
+    const price=fcGetPrice(t);
+    const label=fcPriceMode==='vip'?'VIP':'Niêm yết';
+    state.lieutrinhCart.push({id,name:t.name,typeLabel:'Liệu trình ('+label+')',price,priceStr:fmt2(price)});
+  }
+  renderFacialCards();
+  renderBill();
+}
+function removeLieutrinhCart(i){state.lieutrinhCart.splice(i,1);renderFacialCards();renderBill();}
+function renderFacialCards(){
+  const grid=document.getElementById('fcGrid');
+  if(!grid)return;
+  grid.innerHTML=FACIAL_TREATMENTS.map(t=>{
+    const sel=fcIsSelected(t.id);
+    const price=fcGetPrice(t);
+    return `<div class="fc-card${sel?' selected':''}" onclick="fcToggle('${t.id}')">
+      <div class="fc-name">${t.name}</div>
+      <div class="fc-dur">${t.dur}</div>
+      <div class="fc-skin">${t.skin}</div>
+      <div class="fc-price">${fmt2(price)}</div>
+      ${fcPriceMode==='ny'?`<div class="fc-price-vip">VIP: ${fmt2(t.vip)}</div>`:`<div class="fc-price-vip">Niêm yết: ${fmt2(t.list)}</div>`}
+    </div>`;
+  }).join('');
+}
+
+// init
+renderHairTbl2();
+renderPeelTbl2();
+renderFacialCards();
+
 
 async function downloadInvoice(){
   const content = document.getElementById("invoiceContent");
@@ -1973,7 +2399,7 @@ function resetAll(){
   document.getElementById("cPhoneWarn").style.display="none";
   document.getElementById("cEmailWarn").style.display="none";
   state={mode:"alc",buffet:null,skins:[],selected:new Set(["CB"]),customerType:"retail",
-    dob:"",membership:null,vipCard:null};
+    dob:"",membership:null,vipCard:null,shopMode:"service",productCart:{},tlCart:[],peelCart:[],lieutrinhCart:[]};
   document.getElementById("cDob").value="";
   document.getElementById("returningBox").style.display="none";
   document.getElementById("birthdayOverlay").style.display="none";
@@ -1984,7 +2410,7 @@ function resetAll(){
   document.getElementById("btnMembership").classList.remove("active-reg");
   document.getElementById("btnVip").textContent="💎 Đăng ký Wee.LUX VIP";
   document.getElementById("btnVip").classList.remove("active-reg");
-  setMode("alc"); renderSkins(); renderBill();
+  setMode("alc"); renderSkins(); renderFacialCards(); renderBill();
 }
 
 
