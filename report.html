@@ -465,7 +465,7 @@ function allVisits(){
           totalLabor:v.totalLabor||0,
           membershipFee:v.membershipFee||0,
           vipTier:v.vipTier||"",
-          total:v.total||0,
+          total:v.total||(v.alcTotal||0)+(v.prodTotal||0)||0,
           productItems:v.productItems||[],
           prodTotal:v.prodTotal||0,
           _src:"local"
