@@ -141,6 +141,7 @@ tr:hover td{background:#fafbf9;}
   <button class="tab"     onclick="switchTab('invoices')">📋 Hoá đơn</button>
   <button class="tab"     onclick="switchTab('customers')">👤 Khách hàng</button>
   <button class="tab"     onclick="switchTab('inventory')">📦 Sản phẩm & Kho</button>
+  <button class="tab"     onclick="switchTab('purchases')">📥 Nhập hàng</button>
   <button class="tab"     onclick="switchTab('pl')">💰 Lãi lỗ</button>
 </div>
 
@@ -226,8 +227,23 @@ tr:hover td{background:#fafbf9;}
 
 <!-- ═══ INVENTORY ═══ -->
 <div class="tab-section" id="tab-inventory">
+  <!-- Sync từ Google Sheet -->
+  <div class="tbl-card" style="margin-bottom:14px;">
+    <div class="tbl-hdr">
+      <h3>🔄 Đồng bộ tồn kho từ Google Sheet</h3>
+    </div>
+    <div style="padding:4px 0 10px;font-size:13px;color:var(--muted);">Dán URL Google Spreadsheet (không phải Apps Script) để tự động điền số lượng tồn kho.</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <input id="sheetSyncUrl" type="text" placeholder="https://docs.google.com/spreadsheets/d/…"
+        style="flex:1;min-width:200px;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;"
+        value="">
+      <button onclick="syncInventoryFromSheet()" style="background:var(--brand);color:#fff;border:none;padding:8px 18px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;">Đồng bộ ngay</button>
+    </div>
+    <div id="syncMsg" style="margin-top:8px;font-size:12.5px;color:var(--green);display:none;"></div>
+  </div>
+
   <div style="background:var(--warn-soft);border:1px solid #e0c870;border-radius:10px;padding:11px 16px;margin-bottom:14px;font-size:13px;color:var(--warn);">
-    💡 <b>Nhập giá vốn & tồn ban đầu</b> cho từng sản phẩm. Dữ liệu tự lưu, app tự trừ theo bill bán. Tồn ≤ 5 → cảnh báo đỏ.
+    💡 <b>Tồn kho</b> = tồn ban đầu + đã nhập hàng − đã bán. Giá vốn & tồn ban đầu có thể nhập tay. Tồn ≤ 5 → cảnh báo đỏ.
   </div>
   <div class="tbl-card">
     <div class="tbl-hdr">
@@ -238,12 +254,111 @@ tr:hover td{background:#fafbf9;}
       <table class="inv-tbl">
         <thead><tr>
           <th>Sản phẩm</th><th>SKU</th><th>Giá bán</th>
-          <th>Giá vốn</th><th>Tồn ban đầu</th><th>Đã bán</th>
+          <th>Giá vốn</th><th>Tồn ban đầu</th><th>Đã nhập thêm</th><th>Đã bán</th>
           <th>Còn lại</th><th>GT tồn</th><th>Lãi gộp SP</th>
         </tr></thead>
         <tbody id="invBody2"></tbody>
       </table>
     </div>
+  </div>
+
+</div>
+
+<!-- ═══ PURCHASES ═══ -->
+<div class="tab-section" id="tab-purchases">
+
+  <!-- Tạo đơn nhập hàng mới -->
+  <div class="tbl-card" style="margin-bottom:16px;">
+    <div class="tbl-hdr">
+      <h3>📥 Tạo đơn nhập hàng</h3>
+      <div style="font-size:12px;color:var(--muted);">Có thể thêm nhiều sản phẩm trong 1 đơn</div>
+    </div>
+
+    <!-- Thêm sản phẩm vào giỏ -->
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px;">
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Sản phẩm</label>
+        <select id="poAddSku" style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+          <option value="">— Chọn sản phẩm —</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Số lượng</label>
+        <input type="number" id="poAddQty" min="1" placeholder="1"
+          style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Giá nhập / sp</label>
+        <input type="number" id="poAddCost" min="0" placeholder="0"
+          style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <button onclick="addPoItem()" style="background:var(--brand);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap;">+ Thêm</button>
+      </div>
+    </div>
+
+    <!-- Giỏ hàng -->
+    <div class="tbl-scroll" style="margin-bottom:14px;">
+      <table id="poCartTable">
+        <thead><tr>
+          <th>Sản phẩm</th><th>SKU</th>
+          <th style="text-align:center;">SL</th>
+          <th>Giá nhập/sp</th><th>Thành tiền</th>
+          <th style="text-align:center;">Xóa</th>
+        </tr></thead>
+        <tbody id="poCartBody">
+          <tr id="poCartEmpty"><td colspan="6" style="text-align:center;color:var(--muted);padding:18px;">Chưa có sản phẩm nào — thêm bên trên</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Thông tin đơn + tổng -->
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;">
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Nhà cung cấp (tuỳ chọn)</label>
+        <input type="text" id="poSupplier" placeholder="VD: Công ty ABC…"
+          style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+      </div>
+      <div>
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Ghi chú</label>
+        <input type="text" id="poNote" placeholder="Ghi chú thêm (nếu có)"
+          style="width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:13px;">
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Tổng đơn nhập</div>
+        <div id="poCartGrandTotal" style="font-size:20px;font-weight:800;color:var(--brand-dark);">—</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;text-align:right;">
+      <button onclick="clearPoCart()" style="background:#f1f3f5;color:var(--muted);border:none;padding:9px 18px;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;margin-right:10px;">🗑️ Xoá giỏ</button>
+      <button onclick="createPurchaseOrder()" style="background:var(--brand-dark);color:#fff;border:none;padding:10px 28px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;">💾 Tạo đơn nhập</button>
+    </div>
+  </div>
+
+  <!-- Lịch sử đơn nhập -->
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <h3>📋 Lịch sử nhập hàng</h3>
+      <div style="font-size:12px;color:var(--muted);">Nhấn vào đơn để xem chi tiết</div>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>Mã đơn</th><th>Ngày nhập</th><th>Nhà cung cấp</th>
+          <th style="text-align:center;">Số SP</th><th style="text-align:center;">Tổng SL</th>
+          <th>Tổng tiền</th><th>Ghi chú</th><th style="text-align:center;">Thao tác</th>
+        </tr></thead>
+        <tbody id="poHistoryBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal chi tiết đơn nhập -->
+<div id="poDetailOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;overflow-y:auto;" onclick="if(event.target===this)closePoDetail()">
+  <div style="background:#fff;border-radius:16px;max-width:620px;margin:40px auto;padding:28px 28px 24px;position:relative;" onclick="event.stopPropagation()">
+    <button onclick="closePoDetail()" style="position:absolute;top:16px;right:18px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">✕</button>
+    <div id="poDetailContent"></div>
   </div>
 </div>
 
@@ -326,45 +441,48 @@ const SVC_PRICES={
    PRODUCTS
 ════════════════════════════════════════════════════ */
 const PRODUCTS=[
-  {sku:"PVN384",brand:"Ivawhite",name:"Whitening Night Fluid 50ml",price:1339000,costPrice:670000},
-  {sku:"PVN383",brand:"Ivawhite",name:"Whitening Cream 50ml",price:1428000,costPrice:714000},
-  {sku:"PVN382",brand:"Ivawhite",name:"Intensive Whitening Serum 30ml",price:1518000,costPrice:759000},
-  {sku:"PVN381",brand:"Ivatherm",name:"Glycolic Acid Cleanser 150ml",price:820000,costPrice:495000},
-  {sku:"PVN380",brand:"CicaDerm",name:"Repairing Cream Mimosa",price:550000,costPrice:350000},
-  {sku:"PVN379",brand:"Christina",name:"Elastin Collagen Moisture Cream",price:1212000,costPrice:727000},
-  {sku:"PVN378",brand:"Mặt nạ",name:"Mặt nạ SRX (1 hộp)",price:420000,costPrice:273000},
-  {sku:"PVN377",brand:"Mặt nạ",name:"Mặt nạ thạch LA PÉC",price:480000,costPrice:245000},
-  {sku:"PVN376",brand:"DMK",name:"Enbioment Cleanser 150ml",price:1767000,costPrice:899000},
-  {sku:"PVN375",brand:"DMK",name:"Beta Gel Serum 30ml",price:2800000,costPrice:1250000},
-  {sku:"PVN374",brand:"DMK",name:"Enbioment Serum 30ml",price:2553000,costPrice:1532000},
-  {sku:"PVN373",brand:"DMK",name:"Beta Gel chiết 5ml",price:420000,costPrice:189000},
-  {sku:"PVN353",brand:"PAYOT",name:"Kem dưỡng lợi khuẩn",price:1800000,costPrice:765000},
-  {sku:"PVN351",brand:"PAYOT",name:"Neo Serum tái tạo",price:2900000,costPrice:1305000},
-  {sku:"PVN334",brand:"PAYOT",name:"Nước Tẩy Trang 400ml",price:769000,costPrice:396000},
-  {sku:"PVN333",brand:"PAYOT",name:"Kem dưỡng Vitamin C3",price:1400000,costPrice:730000},
-  {sku:"PVN309",brand:"PAYOT",name:"Source Adaptogen Cream",price:1800000,costPrice:726000},
-  {sku:"PVN308",brand:"PAYOT",name:"Adaptogen Serum",price:1800000,costPrice:700000},
-  {sku:"PVN306",brand:"PAYOT",name:"Nước Dưỡng Sáng 15ml",price:98000,costPrice:0},
-  {sku:"PVN305",brand:"PAYOT",name:"Serum Vitamin C3 30ml",price:1700000,costPrice:890000},
-  {sku:"PVN304",brand:"PAYOT",name:"Gel Dưỡng Vitamin 50ml",price:1319000,costPrice:730000},
-  {sku:"PVN301",brand:"PAYOT",name:"Pate Grise Kem Dưỡng 50ml",price:1150000,costPrice:590000},
-  {sku:"PVN300",brand:"PAYOT",name:"Pate Grise Serum 30ml",price:1600000,costPrice:839000},
-  {sku:"PVN299",brand:"PAYOT",name:"Pate Grise Nước Dưỡng 125ml",price:600000,costPrice:305000},
-  {sku:"PVN298",brand:"PAYOT",name:"Pate Grise Gel Rửa Mặt 200ml",price:790000,costPrice:420000},
-  {sku:"PVN352",brand:"VERSO",name:"Dầu dưỡng số 7",price:5000000,costPrice:2250000},
-  {sku:"PVN350",brand:"VERSO",name:"Vitamin C Serum 30ml",price:2300000,costPrice:1265000},
-  {sku:"PVN349",brand:"VERSO",name:"Night Cream Retinol 8 50ml",price:2900000,costPrice:1540000},
-  {sku:"PVN348",brand:"VERSO",name:"Super Facial Serum 30ml",price:3800000,costPrice:2035000},
-  {sku:"PVN344",brand:"USOLAB",name:"Bio Barrier K Mist 150ml",price:770000,costPrice:390000},
-  {sku:"PVN340",brand:"USOLAB",name:"Repair Cleanser 150ml",price:528000,costPrice:264000},
-  {sku:"PVN339",brand:"USOLAB",name:"Tẩy da chết Enzyme 150ml",price:612000,costPrice:315000},
-  {sku:"PVN338",brand:"USOLAB",name:"Sensitive Purifying Mist 150ml",price:700000,costPrice:390000},
-  {sku:"PVN337",brand:"USOLAB",name:"Sensitive K Cream 50ml",price:935000,costPrice:473000},
-  {sku:"PVN336",brand:"USOLAB",name:"Sensitive Sun Block Matte 50ml",price:836000,costPrice:425000},
-  {sku:"PVN269",brand:"Biotrade",name:"Acnaut Active Cream 15ml",price:380000,costPrice:235000},
-  {sku:"PVN267",brand:"Gói tư vấn",name:"Gói W.VIP",price:800000,costPrice:0},
-  {sku:"PVN266",brand:"Gói tư vấn",name:"Gói W.Premium",price:600000,costPrice:0},
-  {sku:"PVN265",brand:"Gói tư vấn",name:"Gói W.Basic",price:500000,costPrice:0},
+  // stockInitial: số lượng tồn kho từ sheet "Danh sách tồn kho" (cập nhật 14/11/2026)
+  {sku:"PVN384",brand:"Ivawhite",name:"Whitening Night Fluid 50ml",price:1339000,costPrice:670000,stockInitial:7},
+  {sku:"PVN383",brand:"Ivawhite",name:"Whitening Cream 50ml",price:1428000,costPrice:714000,stockInitial:8},
+  {sku:"PVN382",brand:"Ivawhite",name:"Intensive Whitening Serum 30ml",price:1518000,costPrice:759000,stockInitial:8},
+  {sku:"PVN381",brand:"Ivatherm",name:"Glycolic Acid Cleanser 150ml",price:820000,costPrice:495000,stockInitial:9},
+  {sku:"PVN380",brand:"CicaDerm",name:"Repairing Cream Mimosa",price:550000,costPrice:350000,stockInitial:1},
+  {sku:"PVN379",brand:"Christina",name:"Elastin Collagen Moisture Cream",price:1212000,costPrice:727000,stockInitial:3},
+  {sku:"PVN378",brand:"Mặt nạ",name:"Mặt nạ SRX (1 hộp)",price:420000,costPrice:273000,stockInitial:3},
+  {sku:"PVN377",brand:"Mặt nạ",name:"Mặt nạ thạch LA PÉC",price:480000,costPrice:245000,stockInitial:4},
+  {sku:"PVN376",brand:"DMK",name:"Enbioment Cleanser 150ml",price:1767000,costPrice:899000,stockInitial:1},
+  {sku:"PVN375",brand:"DMK",name:"Beta Gel Serum 30ml",price:2800000,costPrice:1250000,stockInitial:0},
+  {sku:"PVN374",brand:"DMK",name:"Enbioment Serum 30ml",price:2553000,costPrice:1532000,stockInitial:0},
+  {sku:"PVN373",brand:"DMK",name:"Beta Gel chiết 5ml",price:420000,costPrice:189000,stockInitial:20},
+  {sku:"PVN353",brand:"PAYOT",name:"Kem dưỡng lợi khuẩn",price:1800000,costPrice:765000,stockInitial:1},
+  {sku:"PVN351",brand:"PAYOT",name:"Neo Serum tái tạo",price:2900000,costPrice:1305000,stockInitial:0},
+  {sku:"PVN334",brand:"PAYOT",name:"Nước Tẩy Trang 400ml",price:769000,costPrice:396000,stockInitial:0},
+  {sku:"PVN333",brand:"PAYOT",name:"Kem dưỡng Vitamin C3",price:1400000,costPrice:730000,stockInitial:3},
+  {sku:"PVN309",brand:"PAYOT",name:"Source Adaptogen Cream",price:1800000,costPrice:726000,stockInitial:0},
+  {sku:"PVN308",brand:"PAYOT",name:"Adaptogen Serum",price:1800000,costPrice:700000,stockInitial:0},
+  {sku:"PVN306",brand:"PAYOT",name:"Nước Dưỡng Sáng 15ml",price:98000,costPrice:0,stockInitial:0},
+  {sku:"PVN305",brand:"PAYOT",name:"Serum Vitamin C3 30ml",price:1700000,costPrice:890000,stockInitial:1},
+  {sku:"PVN304",brand:"PAYOT",name:"Gel Dưỡng Vitamin 50ml",price:1319000,costPrice:730000,stockInitial:0},
+  {sku:"PVN301",brand:"PAYOT",name:"Pate Grise Kem Dưỡng 50ml",price:1150000,costPrice:590000,stockInitial:9},
+  {sku:"PVN300",brand:"PAYOT",name:"Pate Grise Serum 30ml",price:1600000,costPrice:839000,stockInitial:8},
+  {sku:"PVN299",brand:"PAYOT",name:"Pate Grise Nước Dưỡng 125ml",price:600000,costPrice:305000,stockInitial:0},
+  {sku:"PVN298",brand:"PAYOT",name:"Pate Grise Gel Rửa Mặt 200ml",price:790000,costPrice:420000,stockInitial:6},
+  {sku:"PVN352",brand:"VERSO",name:"Dầu dưỡng số 7",price:5000000,costPrice:2250000,stockInitial:0},
+  {sku:"PVN350",brand:"VERSO",name:"Vitamin C Serum 30ml",price:2300000,costPrice:1265000,stockInitial:0},
+  {sku:"PVN349",brand:"VERSO",name:"Night Cream Retinol 8 50ml",price:2900000,costPrice:1540000,stockInitial:0},
+  {sku:"PVN348",brand:"VERSO",name:"Super Facial Serum 30ml",price:3800000,costPrice:2035000,stockInitial:3},
+  {sku:"PVN344",brand:"USOLAB",name:"Bio Barrier K Mist 150ml",price:770000,costPrice:390000,stockInitial:3},
+  {sku:"PVN340",brand:"USOLAB",name:"Repair Cleanser 150ml",price:528000,costPrice:264000,stockInitial:2},
+  {sku:"PVN339",brand:"USOLAB",name:"Tẩy da chết Enzyme 150ml",price:612000,costPrice:315000,stockInitial:0},
+  {sku:"PVN338",brand:"USOLAB",name:"Sensitive Purifying Mist 150ml",price:700000,costPrice:390000,stockInitial:0},
+  {sku:"PVN337",brand:"USOLAB",name:"Sensitive K Cream 50ml",price:935000,costPrice:473000,stockInitial:0},
+  {sku:"PVN336",brand:"USOLAB",name:"Sensitive Sun Block Matte 50ml",price:836000,costPrice:425000,stockInitial:3},
+  {sku:"PVN269",brand:"Biotrade",name:"Acnaut Active Cream 15ml",price:380000,costPrice:235000,stockInitial:5},
+  {sku:"PVN257",brand:"Mặt nạ",name:"Nước Tẩy Trang Oh Oh 500ml",price:600000,costPrice:0,stockInitial:5},
+  {sku:"PVN198",brand:"Mặt nạ",name:"Mặt nạ Swisse Manuka Honey 70g",price:575000,costPrice:345000,stockInitial:5},
+  {sku:"PVN267",brand:"Gói tư vấn",name:"Gói W.VIP",price:800000,costPrice:0,stockInitial:0},
+  {sku:"PVN266",brand:"Gói tư vấn",name:"Gói W.Premium",price:600000,costPrice:0,stockInitial:0},
+  {sku:"PVN265",brand:"Gói tư vấn",name:"Gói W.Basic",price:500000,costPrice:0,stockInitial:0},
 ];
 const skuMap={};
 PRODUCTS.forEach(p=>{skuMap[p.sku]=p;skuMap[p.name]=p;});
@@ -377,12 +495,16 @@ const INV_KEY    = "weelab_inventory";
 const FC_KEY     = "weelab_fixed_costs";
 const URL_KEY    = "weelab_sheet_url";
 const CACHE_KEY  = "weelab_sheet_cache";
+const PO_KEY     = "weelab_purchases";
+const SYNC_URL_KEY = "weelab_sync_sheet_url";
 
 function getDB(){ return JSON.parse(localStorage.getItem(DB_KEY)||"{}"); }
 function getInvStore(){ return JSON.parse(localStorage.getItem(INV_KEY)||"{}"); }
 function saveInvStore(d){ localStorage.setItem(INV_KEY,JSON.stringify(d)); }
 function getFcStore(){ return JSON.parse(localStorage.getItem(FC_KEY)||"{}"); }
 function saveFcStore(d){ localStorage.setItem(FC_KEY,JSON.stringify(d)); }
+function getPurchases(){ return JSON.parse(localStorage.getItem(PO_KEY)||"[]"); }
+function savePurchases(d){ localStorage.setItem(PO_KEY,JSON.stringify(d)); }
 
 /* ════════════════════════════════════════════════════
    GOOGLE SHEETS CONNECTION
@@ -613,7 +735,7 @@ let revenueChart=null,plChart=null;
 ════════════════════════════════════════════════════ */
 function switchTab(tab){
   currentTab=tab;
-  const tabs=["overview","invoices","customers","inventory","pl"];
+  const tabs=["overview","invoices","customers","inventory","purchases","pl"];
   document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("on",tabs[i]===tab));
   document.querySelectorAll(".tab-section").forEach(el=>el.classList.toggle("show",el.id==="tab-"+tab));
   renderCurrentTab();
@@ -624,6 +746,7 @@ function renderCurrentTab(){
   else if(currentTab==="invoices") renderInvoices();
   else if(currentTab==="customers") renderCustomers();
   else if(currentTab==="inventory") renderInventory();
+  else if(currentTab==="purchases") renderPurchases();
   else if(currentTab==="pl") renderPL();
 }
 
@@ -857,34 +980,437 @@ function renderCustomers(){
 /* ════════════════════════════════════════════════════
    INVENTORY
 ════════════════════════════════════════════════════ */
+function purchasedQtyMap(){
+  const map={};
+  getPurchases().forEach(po=>{
+    // Hỗ trợ cả format mới (multi-item) và cũ (single-item)
+    if(po.items){
+      po.items.forEach(it=>{ map[it.sku]=(map[it.sku]||0)+it.qty; });
+    } else if(po.sku){
+      map[po.sku]=(map[po.sku]||0)+po.qty;
+    }
+  });
+  return map;
+}
+
 function renderInventory(){
   const store=getInvStore();
   const sold=soldQtyMap();
+  const purchased=purchasedQtyMap();
+  // Restore saved sheet sync URL
+  const savedUrl=localStorage.getItem(SYNC_URL_KEY)||"";
+  const syncInput=document.getElementById("sheetSyncUrl");
+  if(syncInput&&!syncInput.value&&savedUrl) syncInput.value=savedUrl;
+
   document.getElementById("invBody2").innerHTML=PRODUCTS.map(p=>{
-    const s=store[p.sku]||{stockInitial:0,costPrice:0};
-    // Dùng costPrice từ file làm default nếu localStorage chưa có
-    const cp = s.costPrice || p.costPrice || 0;
+    const s=store[p.sku]||{};
+    // Ưu tiên localStorage, fallback về dữ liệu gốc trong PRODUCTS
+    const cp = s.costPrice!=null ? s.costPrice : (p.costPrice||0);
+    const stockInit = s.stockInitial!=null ? s.stockInitial : (p.stockInitial||0);
     const soldQty=sold[p.sku]||0;
-    const remaining=Math.max(0,(s.stockInitial||0)-soldQty);
+    const purchasedQty=purchased[p.sku]||0;
+    const remaining=Math.max(0,stockInit+purchasedQty-soldQty);
     const stockValue=remaining*cp;
     const grossProfit=soldQty*(p.price-cp);
-    const low=s.stockInitial>0&&remaining<=5;
+    const hasStock=stockInit>0||purchasedQty>0;
+    const low=hasStock&&remaining<=5;
     return `<tr>
       <td><b>${p.name}</b><br><span style="font-size:10.5px;color:var(--muted);">${p.brand}</span></td>
       <td style="font-size:11px;color:var(--muted);">${p.sku}</td>
       <td style="font-weight:700;color:var(--brand-dark);">${fmt(p.price)}</td>
-      <td><input type="number" min="0" placeholder="0" value="${s.costPrice||p.costPrice||""}"
+      <td><input type="number" min="0" placeholder="0" value="${cp||""}"
         onchange="saveInvField('${p.sku}','costPrice',this.value)"
         style="border-color:var(--line);"></td>
-      <td><input type="number" min="0" placeholder="0" value="${s.stockInitial||""}"
+      <td><input type="number" min="0" placeholder="0" value="${stockInit!=null?stockInit:""}"
         onchange="saveInvField('${p.sku}','stockInitial',this.value)"></td>
+      <td style="text-align:center;color:var(--green);font-weight:700;">${purchasedQty||"—"}</td>
       <td style="text-align:center;font-weight:700;">${soldQty||"—"}</td>
-      <td class="${low?"stock-low":"stock-ok"}" style="text-align:center;">${s.stockInitial?remaining+"sp":"—"}</td>
-      <td>${s.stockInitial&&cp?fmt(stockValue):"—"}</td>
+      <td class="${low?"stock-low":"stock-ok"}" style="text-align:center;">${hasStock?remaining+"sp":"—"}</td>
+      <td>${hasStock&&cp?fmt(stockValue):"—"}</td>
       <td style="font-weight:700;${grossProfit>0?"color:var(--green)":soldQty>0?"color:var(--danger)":"color:var(--muted)"}">
         ${soldQty>0&&cp?fmt(grossProfit):"—"}</td>
     </tr>`;
   }).join("");
+}
+
+/* ════════════════════════════════════════════════════
+   PURCHASES TAB — cart state + functions
+════════════════════════════════════════════════════ */
+let _poCart=[];
+
+function renderPurchases(){
+  // Populate product dropdown
+  const sel=document.getElementById("poAddSku");
+  if(sel&&sel.options.length<=1){
+    PRODUCTS.filter(p=>p.brand!=="Gói tư vấn").forEach(p=>{
+      const opt=document.createElement("option");
+      opt.value=p.sku;
+      opt.textContent=`[${p.sku}] ${p.name} (${p.brand})`;
+      sel.appendChild(opt);
+    });
+  }
+  renderPoCart();
+  renderPoHistory();
+}
+
+function renderPoCart(){
+  const tbody=document.getElementById("poCartBody");
+  if(!tbody) return;
+  if(_poCart.length===0){
+    tbody.innerHTML=`<tr id="poCartEmpty"><td colspan="6" style="text-align:center;color:var(--muted);padding:18px;">Chưa có sản phẩm nào — thêm bên trên</td></tr>`;
+    document.getElementById("poCartGrandTotal").textContent="—";
+    return;
+  }
+  let grand=0;
+  tbody.innerHTML=_poCart.map((it,i)=>{
+    const lineTotal=it.qty*(it.costPrice||0);
+    grand+=lineTotal;
+    return `<tr>
+      <td><b>${it.name}</b><br><span style="font-size:10.5px;color:var(--muted);">${it.brand}</span></td>
+      <td style="font-size:11px;color:var(--muted);">${it.sku}</td>
+      <td style="text-align:center;">
+        <input type="number" min="1" value="${it.qty}" style="width:56px;padding:4px;border:1px solid var(--line);border-radius:6px;text-align:center;"
+          onchange="_poCart[${i}].qty=Math.max(1,parseInt(this.value)||1);renderPoCart()">
+      </td>
+      <td>
+        <input type="number" min="0" value="${it.costPrice||""}" placeholder="0" style="width:110px;padding:4px;border:1px solid var(--line);border-radius:6px;"
+          onchange="_poCart[${i}].costPrice=parseFloat(this.value)||0;renderPoCart()">
+      </td>
+      <td style="font-weight:700;color:var(--brand-dark);">${lineTotal>0?fmt(lineTotal):"—"}</td>
+      <td style="text-align:center;">
+        <button onclick="_poCart.splice(${i},1);renderPoCart()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--danger);">✕</button>
+      </td>
+    </tr>`;
+  }).join("");
+  document.getElementById("poCartGrandTotal").textContent=fmt(grand);
+}
+
+function addPoItem(){
+  const sku=(document.getElementById("poAddSku")?.value||"").trim();
+  const qty=parseInt(document.getElementById("poAddQty")?.value)||1;
+  const cp=parseFloat(document.getElementById("poAddCost")?.value)||0;
+  if(!sku){alert("Vui lòng chọn sản phẩm.");return;}
+  const p=PRODUCTS.find(x=>x.sku===sku);
+  if(!p) return;
+  // Nếu SP đã có trong giỏ → cộng thêm qty
+  const existing=_poCart.find(x=>x.sku===sku);
+  if(existing){
+    existing.qty+=qty;
+    if(cp>0) existing.costPrice=cp;
+  } else {
+    _poCart.push({sku,name:p.name,brand:p.brand,qty,costPrice:cp||p.costPrice||0});
+  }
+  // Reset add form
+  document.getElementById("poAddSku").value="";
+  document.getElementById("poAddQty").value="";
+  document.getElementById("poAddCost").value="";
+  renderPoCart();
+}
+
+function clearPoCart(){
+  if(_poCart.length===0) return;
+  _showDeleteConfirm("toàn bộ giỏ hàng", function(){ _poCart=[]; renderPoCart(); });
+}
+
+function createPurchaseOrder(){
+  if(_poCart.length===0){alert("Giỏ nhập hàng đang trống.");return;}
+  const now=new Date();
+  const pad=x=>String(x).padStart(2,"0");
+  const dateStr=`${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
+  const list=getPurchases();
+  const items=_poCart.map(it=>({
+    sku:it.sku,name:it.name,brand:it.brand,
+    qty:it.qty,
+    costPrice:it.costPrice||0,
+    lineTotal:it.qty*(it.costPrice||0)
+  }));
+  const total=items.reduce((s,it)=>s+it.lineTotal,0);
+  const totalQty=items.reduce((s,it)=>s+it.qty,0);
+  const supplier=(document.getElementById("poSupplier")?.value||"").trim();
+  const note=(document.getElementById("poNote")?.value||"").trim();
+
+  let id,isEdit=false;
+  if(_editingPoId){
+    // Chế độ chỉnh sửa: thay thế đơn cũ, giữ nguyên id + ngày gốc
+    const idx=list.findIndex(x=>x.id===_editingPoId);
+    if(idx>=0){
+      id=_editingPoId;
+      const origDate=list[idx].date;
+      list[idx]={id,date:origDate,supplier,note,total,totalQty,items};
+      isEdit=true;
+    }
+  }
+  if(!isEdit){
+    id=`PO-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${String(list.length+1).padStart(3,"0")}`;
+    list.push({id,date:dateStr,supplier,note,total,totalQty,items});
+  }
+  savePurchases(list);
+  // Cập nhật costPrice trong inventory store
+  const store=getInvStore();
+  items.forEach(it=>{
+    if(!store[it.sku]) store[it.sku]={};
+    if(it.costPrice>0) store[it.sku].costPrice=it.costPrice;
+  });
+  saveInvStore(store);
+  // Reset
+  _poCart=[];
+  _editingPoId=null;
+  document.getElementById("poSupplier").value="";
+  document.getElementById("poNote").value="";
+  const banner=document.getElementById("poEditBanner");
+  if(banner) banner.remove();
+  const btn=document.querySelector("button[onclick='createPurchaseOrder()']");
+  if(btn) btn.textContent="💾 Tạo đơn nhập";
+  renderPoCart();
+  renderPoHistory();
+  alert(isEdit?`✅ Đã cập nhật đơn ${id}`:`✅ Đã tạo đơn ${id}\n${items.length} SP · ${totalQty} sp · Tổng: ${fmt(total)}`);
+}
+
+let _editingPoId=null; // null = tạo mới, string = đang sửa đơn cũ
+
+function renderPoHistory(){
+  const tbody=document.getElementById("poHistoryBody");
+  if(!tbody) return;
+  const list=getPurchases();
+  if(list.length===0){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">Chưa có đơn nhập hàng nào.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=[...list].reverse().map(po=>{
+    const isNew=!!po.items;
+    const itemCount=isNew?po.items.length:1;
+    const totalQty=isNew?po.totalQty:(po.qty||0);
+    const total=po.total||0;
+    const id=po.id||po.date;
+    const supplier=po.supplier||"—";
+    const note=po.note||"—";
+    const safeId=encodeURIComponent(po.id||"");
+    const safeDate=encodeURIComponent(po.date||"");
+    return `<tr>
+      <td style="font-weight:700;color:var(--brand);cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${id}</td>
+      <td style="cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${po.date}</td>
+      <td style="cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${supplier}</td>
+      <td style="text-align:center;cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${itemCount}</td>
+      <td style="text-align:center;font-weight:700;cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${totalQty}</td>
+      <td style="font-weight:700;color:var(--brand-dark);cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${fmt(total)}</td>
+      <td style="font-size:12px;color:var(--muted);cursor:pointer;" onclick="showPoDetail('${safeId}','${safeDate}')">${note}</td>
+      <td style="text-align:center;white-space:nowrap;">
+        <button onclick="event.stopPropagation();loadPoForEdit('${safeId}','${safeDate}')"
+          style="background:var(--brand);color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:4px;">✏️</button>
+        <button onclick="event.stopPropagation();deletePurchaseOrder('${safeId}','${safeDate}')"
+          style="background:var(--danger,#e53e3e);color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:12px;">🗑️</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+function showPoDetail(poId,poDate){
+  poId=decodeURIComponent(poId); poDate=decodeURIComponent(poDate);
+  const list=getPurchases();
+  const po=list.find(x=>x.id===poId)||list.find(x=>x.date===poDate);
+  if(!po) return;
+  const isNew=!!po.items;
+  const items=isNew?po.items:[{sku:po.sku,name:(PRODUCTS.find(x=>x.sku===po.sku)||{}).name||po.sku,brand:(PRODUCTS.find(x=>x.sku===po.sku)||{}).brand||"",qty:po.qty,costPrice:po.costPrice,lineTotal:po.total}];
+  const rows=items.map(it=>`
+    <tr>
+      <td><b>${it.name}</b><br><span style="font-size:11px;color:#888;">${it.brand||""}</span></td>
+      <td style="font-size:12px;color:#888;text-align:center;">${it.sku}</td>
+      <td style="text-align:center;font-weight:700;">${it.qty}</td>
+      <td>${it.costPrice?fmt(it.costPrice):"—"}</td>
+      <td style="font-weight:700;color:var(--brand-dark);">${it.lineTotal?fmt(it.lineTotal):"—"}</td>
+    </tr>`).join("");
+  const safeId=encodeURIComponent(po.id||"");
+  const safeDate=encodeURIComponent(po.date||"");
+  document.getElementById("poDetailContent").innerHTML=`
+    <div style="margin-bottom:4px;font-size:12px;color:#888;">ĐƠN NHẬP HÀNG</div>
+    <div style="font-size:22px;font-weight:800;color:var(--brand-dark);margin-bottom:2px;">${po.id||"—"}</div>
+    <div style="font-size:13px;color:#888;margin-bottom:16px;">📅 ${po.date}${po.supplier?" &nbsp;·&nbsp; 🏭 "+po.supplier:""}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+      <thead><tr style="border-bottom:2px solid #eee;">
+        <th style="text-align:left;padding:7px 6px;">Sản phẩm</th>
+        <th style="text-align:center;padding:7px 6px;">SKU</th>
+        <th style="text-align:center;padding:7px 6px;">SL</th>
+        <th style="padding:7px 6px;">Giá nhập</th>
+        <th style="padding:7px 6px;">Thành tiền</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:16px;border-top:2px solid #eee;padding-top:12px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:13px;color:#888;">${po.note?"📝 "+po.note:""}</div>
+      <div style="text-align:right;">
+        <div style="font-size:12px;color:#888;">Tổng đơn nhập</div>
+        <div style="font-size:24px;font-weight:800;color:var(--brand-dark);">${fmt(po.total)}</div>
+      </div>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="loadPoForEdit('${safeId}','${safeDate}')"
+        style="background:var(--brand);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer;">✏️ Chỉnh sửa</button>
+      <button onclick="deletePurchaseOrder('${safeId}','${safeDate}')"
+        style="background:var(--danger,#e53e3e);color:#fff;border:none;padding:9px 20px;border-radius:8px;font-weight:700;cursor:pointer;">🗑️ Xoá đơn</button>
+    </div>`;
+  document.getElementById("poDetailOverlay").style.display="block";
+}
+
+function closePoDetail(){
+  document.getElementById("poDetailOverlay").style.display="none";
+}
+
+function deletePurchaseOrder(poId,poDate){
+  poId=decodeURIComponent(poId); poDate=decodeURIComponent(poDate);
+  const list=getPurchases();
+  let idx=list.findIndex(x=>x.id===poId);
+  if(idx<0) idx=list.findIndex(x=>x.date===poDate);
+  if(idx<0){ alert("Không tìm thấy đơn."); return; }
+  const po=list[idx];
+  _showDeleteConfirm(po.id||po.date, function(){
+    const list2=getPurchases();
+    let i=list2.findIndex(x=>x.id===po.id);
+    if(i<0) i=list2.findIndex(x=>x.date===po.date);
+    if(i<0) return;
+    list2.splice(i,1);
+    savePurchases(list2);
+    closePoDetail();
+    renderPoHistory();
+    renderInventory();
+  });
+}
+
+function _showDeleteConfirm(label, onConfirm){
+  // Xoá banner cũ nếu có
+  const old=document.getElementById("_delConfirmBanner");
+  if(old) old.remove();
+  const banner=document.createElement("div");
+  banner.id="_delConfirmBanner";
+  banner.style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:99999;display:flex;align-items:center;justify-content:center;";
+  banner.innerHTML=`
+    <div style="background:#fff;border-radius:14px;padding:28px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.18);">
+      <div style="font-size:36px;margin-bottom:10px;">🗑️</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:8px;">Xoá đơn nhập hàng?</div>
+      <div style="font-size:13.5px;color:#666;margin-bottom:22px;">Đơn <b>${label}</b> sẽ bị xoá vĩnh viễn và tồn kho sẽ được cập nhật lại.</div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button id="_delCancelBtn" style="background:#f1f3f5;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Huỷ</button>
+        <button id="_delOkBtn" style="background:#e53e3e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">Xoá đơn</button>
+      </div>
+    </div>`;
+  document.body.appendChild(banner);
+  document.getElementById("_delCancelBtn").onclick=function(){ banner.remove(); };
+  document.getElementById("_delOkBtn").onclick=function(){ banner.remove(); onConfirm(); };
+}
+
+function loadPoForEdit(poId,poDate){
+  poId=decodeURIComponent(poId); poDate=decodeURIComponent(poDate);
+  const list=getPurchases();
+  const po=list.find(x=>x.id===poId)||list.find(x=>x.date===poDate);
+  if(!po) return;
+  // Load items vào giỏ
+  const isNew=!!po.items;
+  _poCart=isNew
+    ? po.items.map(it=>({sku:it.sku,name:it.name,brand:it.brand,qty:it.qty,costPrice:it.costPrice||0}))
+    : [{sku:po.sku,name:(PRODUCTS.find(x=>x.sku===po.sku)||{}).name||po.sku,brand:(PRODUCTS.find(x=>x.sku===po.sku)||{}).brand||"",qty:po.qty,costPrice:po.costPrice||0}];
+  _editingPoId=po.id||null;
+  // Điền supplier/note
+  const supEl=document.getElementById("poSupplier");
+  const noteEl=document.getElementById("poNote");
+  if(supEl) supEl.value=po.supplier||"";
+  if(noteEl) noteEl.value=po.note||"";
+  closePoDetail();
+  switchTab("purchases");
+  renderPoCart();
+  // Hiện banner đang chỉnh sửa
+  _showEditBanner(po.id||po.date);
+}
+
+function _showEditBanner(label){
+  let banner=document.getElementById("poEditBanner");
+  if(!banner){
+    banner=document.createElement("div");
+    banner.id="poEditBanner";
+    banner.style="background:#fff3cd;border:1px solid #e0c870;border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:13px;color:#856404;display:flex;justify-content:space-between;align-items:center;";
+    const card=document.querySelector("#tab-purchases .tbl-card");
+    if(card) card.insertBefore(banner,card.firstChild);
+  }
+  banner.innerHTML=`✏️ <b>Đang chỉnh sửa đơn ${label}</b> — sau khi sửa nhấn "💾 Lưu chỉnh sửa" để cập nhật.
+    <button onclick="_cancelEdit()" style="background:none;border:none;cursor:pointer;font-size:18px;color:#856404;">✕</button>`;
+  // Đổi nút tạo đơn → lưu chỉnh sửa
+  const btn=document.querySelector("button[onclick='createPurchaseOrder()']");
+  if(btn){ btn.textContent="💾 Lưu chỉnh sửa"; }
+}
+
+function _cancelEdit(){
+  _editingPoId=null;
+  _poCart=[];
+  const banner=document.getElementById("poEditBanner");
+  if(banner) banner.remove();
+  const btn=document.querySelector("button[onclick='createPurchaseOrder()']");
+  if(btn) btn.textContent="💾 Tạo đơn nhập";
+  renderPoCart();
+}
+
+async function syncInventoryFromSheet(){
+  const url=(document.getElementById("sheetSyncUrl")?.value||"").trim();
+  if(!url||!url.includes("docs.google.com/spreadsheets")){
+    alert("Vui lòng dán đúng URL Google Spreadsheet (dạng https://docs.google.com/spreadsheets/d/…)");
+    return;
+  }
+  // Extract spreadsheet ID
+  const m=url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(!m){alert("Không tìm thấy Spreadsheet ID trong URL.");return;}
+  const sheetId=m[1];
+  const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=1489017077`;
+  const msgEl=document.getElementById("syncMsg");
+  msgEl.style.display="block";
+  msgEl.style.color="var(--muted)";
+  msgEl.textContent="⏳ Đang tải dữ liệu từ Sheet…";
+  try{
+    const resp=await fetch(csvUrl,{credentials:"include"});
+    if(!resp.ok) throw new Error("HTTP "+resp.status);
+    const text=await resp.text();
+    // Parse CSV
+    function parseCSV(str){
+      const rows=[];
+      let row=[],cur="",inQ=false,i=0;
+      while(i<str.length){
+        const c=str[i];
+        if(inQ){
+          if(c==='"'&&str[i+1]==='"'){cur+='"';i+=2;continue;}
+          if(c==='"'){inQ=false;i++;continue;}
+          cur+=c;
+        } else {
+          if(c==='"'){inQ=true;i++;continue;}
+          if(c===','){row.push(cur);cur="";i++;continue;}
+          if(c==='\r'&&str[i+1]==='\n'){row.push(cur);rows.push(row);row=[];cur="";i+=2;continue;}
+          if(c==='\n'){row.push(cur);rows.push(row);row=[];cur="";i++;continue;}
+          cur+=c;
+        }
+        i++;
+      }
+      if(cur||row.length){row.push(cur);rows.push(row);}
+      return rows;
+    }
+    const rows=parseCSV(text).slice(1).filter(r=>r[1]&&r[1].trim());
+    const store=getInvStore();
+    let count=0;
+    rows.forEach(r=>{
+      const sku=r[1].trim();
+      const qty=parseInt(r[4].replace(/[^0-9]/g,""))||0;
+      const cp=parseInt(r[3].replace(/[^0-9]/g,""))||0;
+      const p=PRODUCTS.find(x=>x.sku===sku);
+      if(p){
+        if(!store[sku]) store[sku]={stockInitial:0,costPrice:0};
+        store[sku].stockInitial=qty;
+        if(cp>0&&!store[sku].costPrice) store[sku].costPrice=cp;
+        count++;
+      }
+    });
+    saveInvStore(store);
+    localStorage.setItem(SYNC_URL_KEY,url);
+    msgEl.style.color="var(--green)";
+    msgEl.textContent=`✅ Đã đồng bộ ${count} sản phẩm thành công!`;
+    renderInventory();
+  } catch(e){
+    msgEl.style.color="var(--danger)";
+    msgEl.textContent=`❌ Lỗi: ${e.message}. Hãy đảm bảo đang đăng nhập Google Drive cùng tài khoản.`;
+  }
 }
 
 function saveInvField(sku,field,val){
