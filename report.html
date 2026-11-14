@@ -287,48 +287,84 @@ tr:hover td{background:#fafbf9;}
 
 <script>
 /* ════════════════════════════════════════════════════
+   SERVICE PRICE LOOKUP (giá niêm yết — dùng cho visit từ Sheet không lưu giá lẻ)
+════════════════════════════════════════════════════ */
+const SVC_PRICES={
+  "Chăm sóc da thư giãn (45p)":450000,
+  "Làm sạch chuyên sâu (60p)":799000,
+  "Triệt lông mặt":99000,
+  "Massage khai thông hệ bạch huyết":70000,
+  "Cấp nước biểu bì cho da khô":70000,
+  "Chiếu đèn quang động học (PDT)":120000,
+  "Sebum Soak (loãng dầu)":150000,
+  "Hydra Peel AHA/BHA":220000,
+  "Hydra Peel HA+Vitamin C":220000,
+  "Giải cơ cổ vai gáy (EMS, RF)":180000,
+  "Nâng cơ mặt (EMS, RF)":180000,
+  "Phục hồi da yếu, mẩn đỏ, kích ứng":350000,
+  "Peel làm mịn, tăng sinh tế bào (da nhạy cảm)":400000,
+  "Peel kiểm soát dầu, mụn ẩn (an toàn da nhạy)":400000,
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)":400000,
+  "Peel xử lý dày sừng, nhiều dầu":400000,
+  "Peel kiểm soát dầu & mụn tổng hợp":400000,
+  "Peel xử lý mụn viêm":400000,
+  "Phục hồi HRBV, cân bằng hệ vi sinh":420000,
+  "Peel xử lý thâm mụn, nám, tàn nhang":420000,
+  "Peel xử lý sần vỏ cam, kiểm soát dầu":450000,
+  "Peel làm trắng, đều màu da, xử lý thâm nám":450000,
+  "Peel nóng kích thích lưu thông, da sáng hồng":450000,
+  "Peel lạnh nhả nắng, hạ nhiệt, săn chắc da":450000,
+  "Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)":250000,
+  "Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)":730000,
+  "Enzyme mask phục hồi, thải độc":980000,
+  "Nặn mụn thêm 30 phút":100000,
+  "Chiếu đèn thêm 20 phút":50000,
+  "Gội đầu + Massage cơ bản":70000,
+};
+
+/* ════════════════════════════════════════════════════
    PRODUCTS
 ════════════════════════════════════════════════════ */
 const PRODUCTS=[
-  {sku:"PVN384",brand:"Ivawhite",name:"Whitening Night Fluid 50ml",price:1339000},
-  {sku:"PVN383",brand:"Ivawhite",name:"Whitening Cream 50ml",price:1428000},
-  {sku:"PVN382",brand:"Ivawhite",name:"Intensive Whitening Serum 30ml",price:1518000},
-  {sku:"PVN381",brand:"Ivatherm",name:"Glycolic Acid Cleanser 150ml",price:820000},
-  {sku:"PVN380",brand:"CicaDerm",name:"Repairing Cream Mimosa",price:550000},
-  {sku:"PVN379",brand:"Christina",name:"Elastin Collagen Moisture Cream",price:1212000},
-  {sku:"PVN378",brand:"Mặt nạ",name:"Mặt nạ SRX (1 hộp)",price:420000},
-  {sku:"PVN377",brand:"Mặt nạ",name:"Mặt nạ thạch LA PÉC",price:480000},
-  {sku:"PVN376",brand:"DMK",name:"Enbioment Cleanser 150ml",price:1767000},
-  {sku:"PVN375",brand:"DMK",name:"Beta Gel Serum 30ml",price:2800000},
-  {sku:"PVN374",brand:"DMK",name:"Enbioment Serum 30ml",price:2553000},
-  {sku:"PVN373",brand:"DMK",name:"Beta Gel chiết 5ml",price:420000},
-  {sku:"PVN353",brand:"PAYOT",name:"Kem dưỡng lợi khuẩn",price:1800000},
-  {sku:"PVN351",brand:"PAYOT",name:"Neo Serum tái tạo",price:2900000},
-  {sku:"PVN334",brand:"PAYOT",name:"Nước Tẩy Trang 400ml",price:769000},
-  {sku:"PVN333",brand:"PAYOT",name:"Kem dưỡng Vitamin C3",price:1400000},
-  {sku:"PVN309",brand:"PAYOT",name:"Source Adaptogen Cream",price:1800000},
-  {sku:"PVN308",brand:"PAYOT",name:"Adaptogen Serum",price:1800000},
-  {sku:"PVN306",brand:"PAYOT",name:"Nước Dưỡng Sáng 15ml",price:98000},
-  {sku:"PVN305",brand:"PAYOT",name:"Serum Vitamin C3 30ml",price:1700000},
-  {sku:"PVN304",brand:"PAYOT",name:"Gel Dưỡng Vitamin 50ml",price:1319000},
-  {sku:"PVN301",brand:"PAYOT",name:"Pate Grise Kem Dưỡng 50ml",price:1150000},
-  {sku:"PVN300",brand:"PAYOT",name:"Pate Grise Serum 30ml",price:1600000},
-  {sku:"PVN299",brand:"PAYOT",name:"Pate Grise Nước Dưỡng 125ml",price:600000},
-  {sku:"PVN298",brand:"PAYOT",name:"Pate Grise Gel Rửa Mặt 200ml",price:790000},
-  {sku:"PVN352",brand:"VERSO",name:"Dầu dưỡng số 7",price:5000000},
-  {sku:"PVN350",brand:"VERSO",name:"Vitamin C Serum 30ml",price:2300000},
-  {sku:"PVN349",brand:"VERSO",name:"Night Cream Retinol 8 50ml",price:2900000},
-  {sku:"PVN348",brand:"VERSO",name:"Super Facial Serum 30ml",price:3800000},
-  {sku:"PVN344",brand:"USOLAB",name:"Bio Barrier K Mist 150ml",price:770000},
-  {sku:"PVN340",brand:"USOLAB",name:"Repair Cleanser 150ml",price:528000},
-  {sku:"PVN339",brand:"USOLAB",name:"Tẩy da chết Enzyme 150ml",price:612000},
-  {sku:"PVN338",brand:"USOLAB",name:"Sensitive Purifying Mist 150ml",price:700000},
-  {sku:"PVN337",brand:"USOLAB",name:"Sensitive K Cream 50ml",price:935000},
-  {sku:"PVN336",brand:"USOLAB",name:"Sensitive Sun Block Matte 50ml",price:836000},
-  {sku:"PVN269",brand:"Biotrade",name:"Acnaut Active Cream 15ml",price:380000},
-  {sku:"PVN267",brand:"Gói tư vấn",name:"Gói W.VIP",price:800000},
-  {sku:"PVN266",brand:"Gói tư vấn",name:"Gói W.Premium",price:600000},
-  {sku:"PVN265",brand:"Gói tư vấn",name:"Gói W.Basic",price:500000},
+  {sku:"PVN384",brand:"Ivawhite",name:"Whitening Night Fluid 50ml",price:1339000,costPrice:670000},
+  {sku:"PVN383",brand:"Ivawhite",name:"Whitening Cream 50ml",price:1428000,costPrice:714000},
+  {sku:"PVN382",brand:"Ivawhite",name:"Intensive Whitening Serum 30ml",price:1518000,costPrice:759000},
+  {sku:"PVN381",brand:"Ivatherm",name:"Glycolic Acid Cleanser 150ml",price:820000,costPrice:495000},
+  {sku:"PVN380",brand:"CicaDerm",name:"Repairing Cream Mimosa",price:550000,costPrice:350000},
+  {sku:"PVN379",brand:"Christina",name:"Elastin Collagen Moisture Cream",price:1212000,costPrice:727000},
+  {sku:"PVN378",brand:"Mặt nạ",name:"Mặt nạ SRX (1 hộp)",price:420000,costPrice:273000},
+  {sku:"PVN377",brand:"Mặt nạ",name:"Mặt nạ thạch LA PÉC",price:480000,costPrice:245000},
+  {sku:"PVN376",brand:"DMK",name:"Enbioment Cleanser 150ml",price:1767000,costPrice:899000},
+  {sku:"PVN375",brand:"DMK",name:"Beta Gel Serum 30ml",price:2800000,costPrice:1250000},
+  {sku:"PVN374",brand:"DMK",name:"Enbioment Serum 30ml",price:2553000,costPrice:1532000},
+  {sku:"PVN373",brand:"DMK",name:"Beta Gel chiết 5ml",price:420000,costPrice:189000},
+  {sku:"PVN353",brand:"PAYOT",name:"Kem dưỡng lợi khuẩn",price:1800000,costPrice:765000},
+  {sku:"PVN351",brand:"PAYOT",name:"Neo Serum tái tạo",price:2900000,costPrice:1305000},
+  {sku:"PVN334",brand:"PAYOT",name:"Nước Tẩy Trang 400ml",price:769000,costPrice:396000},
+  {sku:"PVN333",brand:"PAYOT",name:"Kem dưỡng Vitamin C3",price:1400000,costPrice:730000},
+  {sku:"PVN309",brand:"PAYOT",name:"Source Adaptogen Cream",price:1800000,costPrice:726000},
+  {sku:"PVN308",brand:"PAYOT",name:"Adaptogen Serum",price:1800000,costPrice:700000},
+  {sku:"PVN306",brand:"PAYOT",name:"Nước Dưỡng Sáng 15ml",price:98000,costPrice:0},
+  {sku:"PVN305",brand:"PAYOT",name:"Serum Vitamin C3 30ml",price:1700000,costPrice:890000},
+  {sku:"PVN304",brand:"PAYOT",name:"Gel Dưỡng Vitamin 50ml",price:1319000,costPrice:730000},
+  {sku:"PVN301",brand:"PAYOT",name:"Pate Grise Kem Dưỡng 50ml",price:1150000,costPrice:590000},
+  {sku:"PVN300",brand:"PAYOT",name:"Pate Grise Serum 30ml",price:1600000,costPrice:839000},
+  {sku:"PVN299",brand:"PAYOT",name:"Pate Grise Nước Dưỡng 125ml",price:600000,costPrice:305000},
+  {sku:"PVN298",brand:"PAYOT",name:"Pate Grise Gel Rửa Mặt 200ml",price:790000,costPrice:420000},
+  {sku:"PVN352",brand:"VERSO",name:"Dầu dưỡng số 7",price:5000000,costPrice:2250000},
+  {sku:"PVN350",brand:"VERSO",name:"Vitamin C Serum 30ml",price:2300000,costPrice:1265000},
+  {sku:"PVN349",brand:"VERSO",name:"Night Cream Retinol 8 50ml",price:2900000,costPrice:1540000},
+  {sku:"PVN348",brand:"VERSO",name:"Super Facial Serum 30ml",price:3800000,costPrice:2035000},
+  {sku:"PVN344",brand:"USOLAB",name:"Bio Barrier K Mist 150ml",price:770000,costPrice:390000},
+  {sku:"PVN340",brand:"USOLAB",name:"Repair Cleanser 150ml",price:528000,costPrice:264000},
+  {sku:"PVN339",brand:"USOLAB",name:"Tẩy da chết Enzyme 150ml",price:612000,costPrice:315000},
+  {sku:"PVN338",brand:"USOLAB",name:"Sensitive Purifying Mist 150ml",price:700000,costPrice:390000},
+  {sku:"PVN337",brand:"USOLAB",name:"Sensitive K Cream 50ml",price:935000,costPrice:473000},
+  {sku:"PVN336",brand:"USOLAB",name:"Sensitive Sun Block Matte 50ml",price:836000,costPrice:425000},
+  {sku:"PVN269",brand:"Biotrade",name:"Acnaut Active Cream 15ml",price:380000,costPrice:235000},
+  {sku:"PVN267",brand:"Gói tư vấn",name:"Gói W.VIP",price:800000,costPrice:0},
+  {sku:"PVN266",brand:"Gói tư vấn",name:"Gói W.Premium",price:600000,costPrice:0},
+  {sku:"PVN265",brand:"Gói tư vấn",name:"Gói W.Basic",price:500000,costPrice:0},
 ];
 const skuMap={};
 PRODUCTS.forEach(p=>{skuMap[p.sku]=p;skuMap[p.name]=p;});
@@ -523,10 +559,16 @@ function filteredVisits(){
   });
 }
 
-// Parse itemsStr from sheet (format: "• ServiceName\n• ServiceName2")
+// Parse itemsStr — handle cả format: "• name\n• name2" (sheet) và "name1, name2" (local)
 function parseItemsStr(str){
   if(!str) return [];
-  return String(str).split(/\n|•/).map(s=>s.trim()).filter(Boolean).map(name=>({name}));
+  const s=String(str).trim();
+  // Nếu có bullet hoặc newline → split theo đó
+  if(s.includes("•")||s.includes("\n")){
+    return s.split(/\n|•/).map(x=>x.trim()).filter(Boolean).map(name=>({name}));
+  }
+  // Fallback: split theo dấu phẩy
+  return s.split(",").map(x=>x.trim()).filter(Boolean).map(name=>({name}));
 }
 
 /* ════════════════════════════════════════════════════
@@ -741,7 +783,7 @@ function renderInvoices(){
       const svcStr=v.itemsStr?v.itemsStr.replace(/•\s*/g,"").replace(/\n/g,", ").slice(0,80)+(v.itemsStr.length>80?"…":""):(v.buffetName?"Buffet: "+v.buffetName:"—");
       const prodStr=(v.productItems||[]).map(it=>`${it.name||it.sku}${(it.qty||1)>1?" ×"+it.qty:""}`).join(", ")||"";
       const srcBadge=v._src==="sheet"?`<span class="tag gold">Sheet</span>`:`<span class="tag green">App</span>`;
-      return `<tr>
+      return `<tr style="cursor:pointer;" onclick="showBillDetail(${i})" title="Xem chi tiết hoá đơn">
         <td style="color:var(--muted);">${i+1}</td>
         <td style="white-space:nowrap;font-size:12px;">${fmtDate(parseDate(v.date))}</td>
         <td><b>${v.name||"—"}</b></td>
@@ -751,7 +793,7 @@ function renderInvoices(){
         <td style="color:var(--muted);">${v.totalLabor>0?fmt(v.totalLabor):"—"}</td>
         <td style="font-weight:800;color:var(--brand-dark);">${fmt(v.total)}</td>
         <td>${srcBadge}</td>
-        <td><button class="del-btn" onclick="deleteVisit(${i})" title="Xoá hoá đơn này">🗑</button></td>
+        <td><button class="del-btn" onclick="event.stopPropagation();deleteVisit(${i})" title="Xoá hoá đơn này">🗑</button></td>
       </tr>`;
     }).join("");
 }
@@ -820,25 +862,27 @@ function renderInventory(){
   const sold=soldQtyMap();
   document.getElementById("invBody2").innerHTML=PRODUCTS.map(p=>{
     const s=store[p.sku]||{stockInitial:0,costPrice:0};
+    // Dùng costPrice từ file làm default nếu localStorage chưa có
+    const cp = s.costPrice || p.costPrice || 0;
     const soldQty=sold[p.sku]||0;
     const remaining=Math.max(0,(s.stockInitial||0)-soldQty);
-    const stockValue=remaining*(s.costPrice||0);
-    const grossProfit=soldQty*(p.price-(s.costPrice||0));
+    const stockValue=remaining*cp;
+    const grossProfit=soldQty*(p.price-cp);
     const low=s.stockInitial>0&&remaining<=5;
     return `<tr>
       <td><b>${p.name}</b><br><span style="font-size:10.5px;color:var(--muted);">${p.brand}</span></td>
       <td style="font-size:11px;color:var(--muted);">${p.sku}</td>
       <td style="font-weight:700;color:var(--brand-dark);">${fmt(p.price)}</td>
-      <td><input type="number" min="0" placeholder="0" value="${s.costPrice||""}"
+      <td><input type="number" min="0" placeholder="0" value="${s.costPrice||p.costPrice||""}"
         onchange="saveInvField('${p.sku}','costPrice',this.value)"
-        style="border-color:${s.costPrice?'var(--line)':'#e0c870'};"></td>
+        style="border-color:var(--line);"></td>
       <td><input type="number" min="0" placeholder="0" value="${s.stockInitial||""}"
         onchange="saveInvField('${p.sku}','stockInitial',this.value)"></td>
       <td style="text-align:center;font-weight:700;">${soldQty||"—"}</td>
       <td class="${low?"stock-low":"stock-ok"}" style="text-align:center;">${s.stockInitial?remaining+"sp":"—"}</td>
-      <td>${s.stockInitial&&s.costPrice?fmt(stockValue):"—"}</td>
+      <td>${s.stockInitial&&cp?fmt(stockValue):"—"}</td>
       <td style="font-weight:700;${grossProfit>0?"color:var(--green)":soldQty>0?"color:var(--danger)":"color:var(--muted)"}">
-        ${soldQty>0&&s.costPrice?fmt(grossProfit):"—"}</td>
+        ${soldQty>0&&cp?fmt(grossProfit):"—"}</td>
     </tr>`;
   }).join("");
 }
@@ -995,9 +1039,237 @@ function renderPL(){
 }
 
 /* ════════════════════════════════════════════════════
+   BILL DETAIL MODAL
+════════════════════════════════════════════════════ */
+let _currentBillVisit=null;
+
+function showBillDetail(idx){
+  const v=_invoiceCache[idx];
+  if(!v) return;
+  _currentBillVisit=v;
+  const pad=x=>String(x).padStart(2,"0");
+  const d=parseDate(v.date);
+  const dateStr=d?`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`:v.date;
+
+  let rows="";
+  // Dịch vụ ALC/Buffet
+  // items có thể là array đầy đủ (local) hoặc rỗng (sheet) → fallback sang parse itemsStr
+  const items=(v.items&&v.items.length>0) ? v.items : parseItemsStr(v.itemsStr||"");
+  if(v.mode==="buf"&&v.buffetName){
+    rows+=`<div class="bd-section">✨ Liệu trình (Buffet)</div>
+      <div class="bd-row"><span>${v.buffetName}</span><span>${fmt(v.alcTotal||0)}</span></div>`;
+  } else if(items.length>0){
+    rows+=`<div class="bd-section">✨ Liệu trình</div>`;
+    items.forEach(it=>{
+      const p = it.price!=null ? it.price : (SVC_PRICES[it.name]||null);
+      rows+=`<div class="bd-row"><span>${it.name}</span><span>${p!=null?fmt(p):"—"}</span></div>`;
+    });
+    if(v.alcTotal>0){
+      rows+=`<div class="bd-row" style="font-size:12px;color:var(--muted);border-top:1px dashed var(--line);margin-top:2px;padding-top:4px;"><span>Tổng dịch vụ</span><span>${fmt(v.alcTotal)}</span></div>`;
+    }
+  }
+  // Sản phẩm
+  const prodItems=v.productItems||[];
+  if(prodItems.length>0){
+    rows+=`<div class="bd-section">🧴 Sản phẩm</div>`;
+    prodItems.forEach(it=>{
+      rows+=`<div class="bd-row"><span>${it.name||it.sku}${(it.qty||1)>1?` ×${it.qty}`:""}</span><span>${fmt((it.subtotal||it.price*(it.qty||1)))}</span></div>`;
+    });
+  }
+  // Triệt lông
+  const tlItems=v.tlItems||[];
+  if(tlItems.length>0){
+    rows+=`<div class="bd-section">🪄 Triệt lông</div>`;
+    tlItems.forEach(it=>{
+      rows+=`<div class="bd-row"><span>${it.name} <span style="color:#666;font-size:11px">(${it.typeLabel})</span></span><span>${it.priceStr}</span></div>`;
+    });
+  }
+  // Peel Body
+  const peelItems=v.peelItems||[];
+  if(peelItems.length>0){
+    rows+=`<div class="bd-section">✦ Peel Body</div>`;
+    peelItems.forEach(it=>{
+      rows+=`<div class="bd-row"><span>${it.name} <span style="color:#666;font-size:11px">(${it.typeLabel})</span></span><span>${it.priceStr}</span></div>`;
+    });
+  }
+  // Liệu trình gợi ý
+  const ltItems=v.lieutrinhItems||[];
+  if(ltItems.length>0){
+    rows+=`<div class="bd-section">✨ Liệu trình gợi ý</div>`;
+    ltItems.forEach(it=>{
+      rows+=`<div class="bd-row"><span>${it.name} <span style="color:#666;font-size:11px">(${it.typeLabel})</span></span><span>${it.priceStr}</span></div>`;
+    });
+  }
+  if(!rows) rows=`<div style="color:var(--muted);font-size:13px;padding:8px 0">— Không có thông tin chi tiết —</div>`;
+
+  // Membership / VIP
+  if(v.membershipFee>0){
+    rows+=`<div class="bd-row" style="margin-top:4px;"><span>✦ Membership ${v.membershipMonths} tháng</span><span>${fmt(v.membershipFee)}</span></div>`;
+  }
+  if(v.discount>0){
+    rows+=`<div class="bd-row" style="color:var(--green)"><span>🎁 Chiết khấu</span><span>-${fmt(v.discount)}</span></div>`;
+  }
+
+  document.getElementById("bdContent").innerHTML=`
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${dateStr}</div>
+    <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;">
+      <div><span style="font-size:11px;color:var(--muted);">Khách hàng</span><br><b>${v.name||"—"}</b></div>
+      <div><span style="font-size:11px;color:var(--muted);">SĐT</span><br><span style="color:var(--muted)">${v.phone||"—"}</span></div>
+      <div><span style="font-size:11px;color:var(--muted);">Hình thức</span><br><span class="tag muted">${v.mode==="buf"?"Buffet":"Gọi lẻ"}</span></div>
+    </div>
+    ${v.skins&&v.skins.length>0?`<div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Da: ${v.skins.join(" · ")}</div>`:""}
+    <hr style="border:none;border-top:1px dashed var(--line);margin:0 0 10px">
+    ${rows}
+    <hr style="border:none;border-top:2px solid var(--ink);margin:10px 0 6px">
+    <div class="bd-row" style="font-size:16px;font-weight:800;">
+      <span>TỔNG CỘNG</span><span style="color:var(--brand-dark)">${fmt(v.total)}</span>
+    </div>
+    ${v.totalLabor>0?`<div style="font-size:12px;color:var(--muted);margin-top:4px;">Công KTV: ${fmt(v.totalLabor)}</div>`:""}
+    ${v.note?`<div style="font-size:12px;color:var(--muted);margin-top:6px;">📝 ${v.note}</div>`:""}
+  `;
+  document.getElementById("billDetailModal").style.display="flex";
+}
+function printBillFromReport(){
+  const v=_currentBillVisit;
+  if(!v){ alert("Không có dữ liệu hoá đơn."); return; }
+
+  const pad=x=>String(x).padStart(2,"0");
+  const d=parseDate(v.date);
+  const dateStr=d?`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`:v.date;
+  const fmtN=n=>(n||0).toLocaleString("vi-VN")+" đ";
+
+  // Build item rows — dùng cùng format với index.html
+  let rows="";
+  const items=(v.items&&v.items.length>0)?v.items:parseItemsStr(v.itemsStr||"");
+
+  if(v.mode==="buf"&&v.buffetName){
+    rows+=`<tr><td class="item-name" colspan="3">Gói Buffet ${v.buffetName}</td></tr>
+           <tr><td>${fmtN(v.alcTotal||v.total)}</td><td class="c">1</td><td class="r">${fmtN(v.alcTotal||v.total)}</td></tr>
+           <tr class="item-sep"><td colspan="3"><hr></td></tr>`;
+  } else if(items.length>0){
+    // Nếu không có per-item price (visit từ Sheet), gom thành 1 dòng tổng dịch vụ
+    for(const it of items){
+      // Ưu tiên: price từ record → lookup bảng giá → "—"
+      const p = it.price!=null ? it.price : (SVC_PRICES[it.name]||null);
+      const pStr = p!=null ? fmtN(p) : "—";
+      rows+=`<tr><td class="item-name" colspan="3">${it.name}</td></tr>
+             <tr><td>${pStr}</td><td class="c">1</td><td class="r">${pStr}</td></tr>
+             <tr class="item-sep"><td colspan="3"><hr></td></tr>`;
+    }
+  }
+
+  // Triệt lông
+  for(const it of (v.tlItems||[])){
+    rows+=`<tr><td class="item-name" colspan="3">${it.name} <span style="font-size:11px;font-weight:400">(${it.typeLabel})</span></td></tr>
+           <tr><td>${it.priceStr}</td><td class="c">1</td><td class="r">${it.priceStr}</td></tr>
+           <tr class="item-sep"><td colspan="3"><hr></td></tr>`;
+  }
+  // Peel Body
+  for(const it of (v.peelItems||[])){
+    rows+=`<tr><td class="item-name" colspan="3">${it.name} <span style="font-size:11px;font-weight:400">(${it.typeLabel})</span></td></tr>
+           <tr><td>${it.priceStr}</td><td class="c">1</td><td class="r">${it.priceStr}</td></tr>
+           <tr class="item-sep"><td colspan="3"><hr></td></tr>`;
+  }
+  // Liệu trình gợi ý
+  for(const it of (v.lieutrinhItems||[])){
+    rows+=`<tr><td class="item-name" colspan="3">${it.name} <span style="font-size:11px;font-weight:400">(${it.typeLabel})</span></td></tr>
+           <tr><td>${it.priceStr}</td><td class="c">1</td><td class="r">${it.priceStr}</td></tr>
+           <tr class="item-sep"><td colspan="3"><hr></td></tr>`;
+  }
+  // Sản phẩm
+  for(const it of (v.productItems||[])){
+    const sub=(it.subtotal||(it.price*(it.qty||1)));
+    rows+=`<tr><td class="item-name" colspan="3">${it.name||it.sku}${(it.qty||1)>1?" ×"+it.qty:""}</td></tr>
+           <tr><td>${fmtN(it.price)}</td><td class="c">${it.qty||1}</td><td class="r">${fmtN(sub)}</td></tr>
+           <tr class="item-sep"><td colspan="3"><hr></td></tr>`;
+  }
+
+  const subtotal=(v.total||0)+(v.discount||0);
+
+  const content=`
+    <div class="inv-shop">Tên cửa hàng: WeeLAB</div>
+    <div class="inv-info">Chi nhánh: 17A Thuỵ Khuê, Tây Hồ, Hà Nội</div>
+    <div class="inv-info">Điện thoại: 0932016886</div>
+    <hr>
+    <div>Liên số: Liên 1</div>
+    <div>Ngày bán: ${dateStr}</div>
+    <div class="inv-title">HOÁ ĐƠN BÁN HÀNG</div>
+    <div class="inv-cust" style="margin-top:8px;">
+      <p><strong>Khách hàng:</strong> ${v.name||"—"}</p>
+      <p><strong>Điện thoại:</strong> ${v.phone||"—"}</p>
+      ${v.skins&&v.skins.length>0?`<p><strong>Tình trạng da:</strong> ${v.skins.join(" · ")}</p>`:""}
+    </div>
+    <hr>
+    <table style="width:100%;border-collapse:collapse;margin-top:4px;">
+      <thead><tr>
+        <th style="text-align:left;width:52%;font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;">Đơn giá</th>
+        <th style="width:14%;text-align:center;font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;">SL</th>
+        <th style="width:34%;text-align:right;font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;">Thành tiền</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;"><span>Tổng tiền hàng:</span><span>${fmtN(subtotal)}</span></div>
+      ${v.discount>0?`<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;"><span>Chiết khấu:</span><span>${fmtN(v.discount)}</span></div>`:""}
+      <div style="display:flex;justify-content:space-between;padding:6px 0 2px;font-size:14px;font-weight:800;border-top:1px solid #111;margin-top:4px;"><span>Tổng cộng:</span><span>${fmtN(v.total)}</span></div>
+    </div>
+    <div style="text-align:center;font-size:11px;color:#111;margin-top:14px;line-height:1.5;">Cảm ơn bạn đã tin tưởng WeeLAB.<br>Chúc bạn có làn da khoẻ mạnh!</div>
+  `;
+
+  const css=`
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap');
+    body{margin:0;padding:12px;background:#fff;font-family:'Montserrat',sans-serif;color:#111;}
+    *{box-sizing:border-box;}
+    div,p,td,th,span,strong{font-family:'Montserrat',sans-serif;color:#111;font-weight:600;}
+    .inv-shop{font-weight:800;font-size:13.5px;margin-bottom:1px;}
+    .inv-info,.inv-cust p{font-size:12px;margin:1px 0;font-weight:600;}
+    .inv-title{text-align:center;font-weight:800;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;}
+    hr{border:none;border-top:1px dashed #555;margin:8px 0;}
+    .item-name{padding-top:7px;font-weight:700;}
+    .item-sep td{padding:0;line-height:.5;}
+    td{padding:2px 2px;font-size:12.5px;vertical-align:top;font-weight:600;}
+    td.c{text-align:center;} td.r{text-align:right;font-weight:700;}
+    th{font-weight:800;}
+    @media print{@page{margin:8mm;size:80mm auto;} body{padding:4px;}}
+  `;
+
+  const win=window.open("","_blank","width=360,height=640,menubar=no,toolbar=no,location=no");
+  if(!win){ alert("Trình duyệt chặn pop-up. Vui lòng cho phép pop-up cho trang này."); return; }
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoá đơn WeeLAB</title>
+    <style>${css}</style></head><body>${content}
+    <script>window.onload=function(){window.focus();window.print();}<\/script>
+  </body></html>`);
+  win.document.close();
+}
+
+function closeBillDetail(){
+  document.getElementById("billDetailModal").style.display="none";
+}
+
+/* ════════════════════════════════════════════════════
    INIT
 ════════════════════════════════════════════════════ */
 renderOverview();
 </script>
+
+<!-- Bill Detail Modal -->
+<div id="billDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeBillDetail()">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:460px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--line);">
+      <div style="font-weight:800;font-size:15px;color:var(--brand-dark);">📋 Chi tiết hoá đơn</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button id="bdPrintBtn" onclick="printBillFromReport()" style="border:1.5px solid var(--brand);background:var(--brand);color:#fff;border-radius:9px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;">🖨 In bill</button>
+        <button onclick="closeBillDetail()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;">×</button>
+      </div>
+    </div>
+    <div id="bdContent" style="padding:16px 20px;overflow-y:auto;font-family:'Montserrat',sans-serif;font-size:13.5px;line-height:1.6;"></div>
+  </div>
+</div>
+<style>
+.bd-section{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:6px 0 2px;margin-top:4px;border-top:1px dashed var(--line);}
+.bd-section:first-child{border-top:none;margin-top:0;}
+.bd-row{display:flex;justify-content:space-between;padding:3px 0;gap:8px;}
+.bd-row span:last-child{font-weight:700;white-space:nowrap;}
+</style>
 </body>
 </html>
