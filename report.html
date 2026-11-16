@@ -981,20 +981,31 @@ function renderInvoices(){
 function deleteVisit(idx){
   const v=_invoiceCache[idx];
   if(!v) return;
-  const label=v.name||v.phone||"?";
-  const dateLabel=fmtDate(parseDate(v.date));
-  if(!confirm(`Xoá hoá đơn của ${label} ngày ${dateLabel}?\n${v._src==="sheet"?"⚠️ Hoá đơn này từ Sheet — sẽ ẩn trên app nhưng vẫn còn trong Google Sheets. Để xoá hẳn hãy xoá trực tiếp trên Sheet.":""}`)) return;
-  if(v._src==="local"){
+
+  // 1. Xóa khỏi weelab_saved_bills (khớp theo invNum nếu có, fallback phone+cùng ngày)
+  try{
+    const sb=getSavedBills().filter(b=>{
+      if(v.invNum&&b.invNum&&v.invNum===b.invNum) return false;
+      const pd=parseDate(v.date), bd=parseDate(b.date||b.dateDisplay||"");
+      const sameDay=pd&&bd&&pd.getFullYear()===bd.getFullYear()&&pd.getMonth()===bd.getMonth()&&pd.getDate()===bd.getDate();
+      return !((b.phone||"")===(v.phone||"")&&sameDay);
+    });
+    localStorage.setItem(SAVED_BILLS_KEY,JSON.stringify(sb));
+  }catch(e){}
+
+  // 2. Xóa khỏi local customers DB
+  try{
     const db=getDB();
-    if(db[v.phone]){
+    if(v.phone&&db[v.phone]){
       db[v.phone].visits=(db[v.phone].visits||[]).filter(x=>x.date!==v.date);
       localStorage.setItem(DB_KEY,JSON.stringify(db));
     }
-  } else {
-    // Sheet: xoá khỏi bộ nhớ đệm (cache) — sẽ trở lại nếu tải lại từ Sheet
-    sheetVisits=sheetVisits.filter(x=>!(x.phone===v.phone&&x.date===v.date));
-    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),visits:sheetVisits}));
-  }
+  }catch(e){}
+
+  // 3. Xóa khỏi Sheet cache (nếu từ Sheet)
+  sheetVisits=sheetVisits.filter(x=>!(x.phone===v.phone&&x.date===v.date));
+  try{ localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),visits:sheetVisits})); }catch(e){}
+
   renderAll();
 }
 
