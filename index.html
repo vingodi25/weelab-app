@@ -1959,20 +1959,20 @@ function saveAndExport(){
   // Hiện hoá đơn ngay (không chờ sheet)
   showInvoice(r, _invNum, _dateStr);
 
-  // Gửi vào Google Sheet ở nền
+  // Gửi vào Google Sheet ở nền (kèm invNum để ghi vào cột B)
   fetch(url,{
     method:"POST",
     mode:"no-cors",
     headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(r)
+    body:JSON.stringify({...r, invNum:_invNum})
   }).catch(()=>{}); // silent — no-cors không trả lỗi thực sự
 }
 /* ============ HOÁ ĐƠN ============ */
-const INV_CTR_KEY = "weelab_inv_ctr";
+const INV_CTR_KEY = "weelab_w_ctr"; // key mới cho format W000001
 function nextInvoiceNum(){
-  const n = (parseInt(localStorage.getItem(INV_CTR_KEY)||"1000")) + 1;
+  const n = (parseInt(localStorage.getItem(INV_CTR_KEY)||"0")) + 1;
   localStorage.setItem(INV_CTR_KEY, n);
-  return "HD" + String(n).padStart(6,"0");
+  return "W" + String(n).padStart(6,"0");
 }
 
 function showInvoice(r, preInvNum, preDateStr){
