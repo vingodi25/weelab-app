@@ -497,8 +497,10 @@ const URL_KEY    = "weelab_sheet_url";
 const CACHE_KEY  = "weelab_sheet_cache";
 const PO_KEY     = "weelab_purchases";
 const SYNC_URL_KEY = "weelab_sync_sheet_url";
+const SAVED_BILLS_KEY = "weelab_saved_bills";
 
 function getDB(){ return JSON.parse(localStorage.getItem(DB_KEY)||"{}"); }
+function getSavedBills(){ return JSON.parse(localStorage.getItem(SAVED_BILLS_KEY)||"[]"); }
 function getInvStore(){ return JSON.parse(localStorage.getItem(INV_KEY)||"{}"); }
 function saveInvStore(d){ localStorage.setItem(INV_KEY,JSON.stringify(d)); }
 function getFcStore(){ return JSON.parse(localStorage.getItem(FC_KEY)||"{}"); }
@@ -609,6 +611,9 @@ function setDot(state,msg){
 function parseDate(str){
   if(!str) return null;
   const s=String(str).trim();
+  // Thử parse có giờ: "16/11/2026, 15:08:00" hoặc "16/11/2026 15:08"
+  const mt=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[\s,]+(\d{1,2}):(\d{2})/);
+  if(mt) return new Date(+mt[3],+mt[2]-1,+mt[1],+mt[4],+mt[5]);
   const m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if(m) return new Date(+m[3],+m[2]-1,+m[1]);
   const d=new Date(s);
@@ -652,6 +657,54 @@ function allVisits(){
         });
       }
     }
+  }
+  // 3. Enrich all visits with saved bills (adds invNum, full item arrays, correct time)
+  const savedBills=getSavedBills();
+  if(savedBills.length>0){
+    // Index saved bills by phone+"_"+date for fast lookup
+    const billMap={};
+    savedBills.forEach(b=>{ billMap[(b.phone||"")+"_"+(b.date||"")] = b; });
+    // Enrich existing entries
+    const addedKeys=new Set();
+    list.forEach(v=>{
+      const key=(v.phone||"")+"_"+(v.date||"");
+      const b=billMap[key];
+      if(b){
+        if(b.invNum) v.invNum=b.invNum;
+        if(b.items&&b.items.length>0) v.items=b.items;
+        if(b.tlItems&&b.tlItems.length>0) v.tlItems=b.tlItems;
+        if(b.peelItems&&b.peelItems.length>0) v.peelItems=b.peelItems;
+        if(b.lieutrinhItems&&b.lieutrinhItems.length>0) v.lieutrinhItems=b.lieutrinhItems;
+        if(b.productItems&&b.productItems.length>0) v.productItems=b.productItems;
+        if(b.discount) v.discount=b.discount;
+        if(b.alcTotal) v.alcTotal=b.alcTotal;
+        if(b.note) v.note=b.note;
+      }
+      addedKeys.add(key);
+    });
+    // Add saved bills not yet in list (e.g. bills not sent to sheet)
+    savedBills.forEach(b=>{
+      const key=(b.phone||"")+"_"+(b.date||"");
+      if(!addedKeys.has(key)){
+        addedKeys.add(key);
+        list.push({
+          date:b.date,name:b.name||"—",phone:b.phone||"",
+          customerType:b.customerType||"",skins:b.skins||[],
+          mode:b.mode||"alc",buffetName:b.buffetName||"",
+          items:b.items||[],
+          itemsStr:(b.items||[]).map(i=>i.name).join(", "),
+          productItems:b.productItems||[],
+          tlItems:b.tlItems||[],peelItems:b.peelItems||[],
+          lieutrinhItems:b.lieutrinhItems||[],
+          totalTimeMins:b.totalTimeMins||0,totalLabor:b.totalLabor||0,
+          alcTotal:b.alcTotal||0,membershipFee:b.membershipFee||0,
+          membershipMonths:b.membershipMonths||0,vipTier:b.vipTier||"",
+          discount:b.discount||0,total:b.total||0,prodTotal:b.prodTotal||0,
+          invNum:b.invNum||"",note:b.note||"",
+          _src:"saved"
+        });
+      }
+    });
   }
   return list.sort((a,b)=>{
     const da=parseDate(a.date),db2=parseDate(b.date);
@@ -1637,7 +1690,7 @@ function showBillDetail(idx){
   }
 
   document.getElementById("bdContent").innerHTML=`
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">${dateStr}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:2px;">${dateStr}${v.invNum?` · <b style="color:var(--brand-dark)">${v.invNum}</b>`:""}</div>
     <div style="display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;">
       <div><span style="font-size:11px;color:var(--muted);">Khách hàng</span><br><b>${v.name||"—"}</b></div>
       <div><span style="font-size:11px;color:var(--muted);">SĐT</span><br><span style="color:var(--muted)">${v.phone||"—"}</span></div>
@@ -1720,6 +1773,7 @@ function printBillFromReport(){
     <div>Liên số: Liên 1</div>
     <div>Ngày bán: ${dateStr}</div>
     <div class="inv-title">HOÁ ĐƠN BÁN HÀNG</div>
+    ${v.invNum?`<div style="text-align:center;font-size:12px;margin-bottom:4px;">${v.invNum}</div>`:""}
     <div class="inv-cust" style="margin-top:8px;">
       <p><strong>Khách hàng:</strong> ${v.name||"—"}</p>
       <p><strong>Điện thoại:</strong> ${v.phone||"—"}</p>

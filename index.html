@@ -1945,8 +1945,19 @@ function saveAndExport(){
     alcTotal:r.alcTotal||0,prodTotal:r.prodTotal||0});
   saveDB(db);
 
+  // Tạo invNum + dateStr trước, lưu full bill vào weelab_saved_bills
+  const _invNum = nextInvoiceNum();
+  const _now = new Date(), _px = x=>String(x).padStart(2,"0");
+  const _dateStr = `${_px(_now.getDate())}/${_px(_now.getMonth()+1)}/${_now.getFullYear()} ${_px(_now.getHours())}:${_px(_now.getMinutes())}`;
+  try{
+    const _sb = JSON.parse(localStorage.getItem("weelab_saved_bills")||"[]");
+    _sb.unshift({...r, invNum:_invNum, dateDisplay:_dateStr, savedAt:Date.now()});
+    if(_sb.length>500) _sb.length=500;
+    localStorage.setItem("weelab_saved_bills",JSON.stringify(_sb));
+  }catch(e){}
+
   // Hiện hoá đơn ngay (không chờ sheet)
-  showInvoice(r);
+  showInvoice(r, _invNum, _dateStr);
 
   // Gửi vào Google Sheet ở nền
   fetch(url,{
@@ -1964,11 +1975,9 @@ function nextInvoiceNum(){
   return "HD" + String(n).padStart(6,"0");
 }
 
-function showInvoice(r){
-  const invNum = nextInvoiceNum();
-  const now = new Date();
-  const pad = x => String(x).padStart(2,"0");
-  const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+function showInvoice(r, preInvNum, preDateStr){
+  const invNum = preInvNum || nextInvoiceNum();
+  const dateStr = preDateStr || (()=>{const now=new Date(),pad=x=>String(x).padStart(2,"0");return `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;})();
 
   // Build item rows
   let rows = "";
