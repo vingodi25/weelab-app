@@ -366,16 +366,15 @@ tr:hover td{background:#fafbf9;}
 <div class="tab-section" id="tab-pl">
   <div class="stat-cards" id="plCards"></div>
 
-  <!-- Chi phí cố định -->
+  <!-- Chi phí bổ sung -->
   <div class="fc-panel">
-    <h3>🗂️ Nhập chi phí cố định theo tháng</h3>
-    <p class="fc-sub">Nhập cho từng tháng — dữ liệu lưu tự động, dùng để tính lãi thực.</p>
+    <h3>📋 Nhập chi phí bổ sung theo tháng</h3>
+    <p class="fc-sub">Giá cost liệu trình đã bao gồm công KTV, nguyên vật liệu và chi phí vận hành. Chỉ cần nhập thêm 3 khoản dưới đây.</p>
     <select class="fc-month-sel" id="fcMonthSel" onchange="renderFcFields()"></select>
     <div class="fc-grid" id="fcGrid"></div>
-    <div class="fc-total" id="fcTotal">Tổng chi phí cố định tháng này: —</div>
+    <div class="fc-total" id="fcTotal">Tổng chi phí bổ sung tháng này: —</div>
     <div class="fc-note">
-      📌 <b>Chi phí cần nhập để báo cáo chính xác:</b><br>
-      Mặt bằng (thuê nhà/mặt bằng) · Lương nhân viên (lễ tân, sale, kế toán, content — <i>không tính KTV vì đã có "Công KTV" trong bill</i>) · Điện nước · Chi phí nguyên liệu dịch vụ (hóa chất peel, serum, mặt nạ dùng trong liệu trình) · Marketing & quảng cáo (Facebook/TikTok ads, in ấn) · Vật tư tiêu hao (khăn, găng tay, cốc dùng 1 lần) · Khấu hao máy móc thiết bị · Phần mềm & công cụ · Thuế &amp; phí khác.
+      📌 <b>Lợi nhuận = Doanh thu − Giá cost liệu trình − Marketing − Khấu hao − Phần mềm</b>
     </div>
   </div>
 
@@ -388,8 +387,8 @@ tr:hover td{background:#fafbf9;}
     <div class="tbl-scroll">
       <table>
         <thead><tr>
-          <th>Tháng</th><th>Doanh thu</th>
-          <th>Chi phí KTV</th><th>Giá vốn SP</th><th>Chi phí cố định</th>
+          <th>Tháng</th><th>Doanh thu</th><th>Giá cost LT</th>
+          <th>Marketing</th><th>Khấu hao</th><th>Phần mềm</th>
           <th>Tổng chi</th><th>Lợi nhuận</th><th>Tỷ lệ</th>
         </tr></thead>
         <tbody id="plBody"></tbody>
@@ -435,6 +434,54 @@ const SVC_PRICES={
   "Nặn mụn thêm 30 phút":100000,
   "Chiếu đèn thêm 20 phút":50000,
   "Gội đầu + Massage cơ bản":70000,
+};
+
+/* ════════════════════════════════════════════════════
+   SERVICE COSTS (giá vốn dịch vụ — cập nhật từ menu spreadsheet 11/2026)
+════════════════════════════════════════════════════ */
+const SVC_COSTS={
+  // CB
+  "Làm sạch chuyên sâu (60p)":299000,
+  // NC add-ons
+  "Massage khai thông hệ bạch huyết":59500,
+  "Cấp nước biểu bì cho da khô":19757,
+  "Chiếu đèn quang động học (PDT)":54500,
+  "Sebum Soak (loãng dầu)":22300,
+  "Hydra Peel AHA/BHA":24375,
+  "Hydra Peel HA+Vitamin C":24375,
+  "Giải cơ cổ vai gáy (EMS, RF)":58529,
+  "Giải cơ cổ vai gáy công nghệ EMS, RF":58529,
+  "Nâng cơ mặt (EMS, RF)":41029,
+  "Nâng cơ mặt công nghệ EMS, RF":41029,
+  // Peel options
+  "Phục hồi da yếu, mẩn đỏ, kích ứng":61900,
+  "Peel làm mịn, tăng sinh tế bào (da nhạy cảm)":143473,
+  "Peel làm mịn, tăng sinh tế bào cho da nhạy cảm":143473,
+  "Peel kiểm soát dầu, mụn ẩn (an toàn da nhạy)":202497,
+  "Peel kiểm soát dầu, mụn ẩn (an toàn với da nhạy cảm)":202497,
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)":58498,
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm cho da khô":58498,
+  "Peel xử lý dày sừng, nhiều dầu":54165,
+  "Peel kiểm soát dầu & mụn tổng hợp":43848,
+  "Peel nhẹ kiểm soát dầu & mụn tổng hợp":43848,
+  "Peel xử lý mụn viêm":44400,
+  "Phục hồi HRBV, cân bằng hệ vi sinh":45800,
+  "Phục hồi HRBV, cân bằng HVS":45800,
+  "Peel tảo làm sáng, căng bóng da":47520,
+  "Peel xử lý thâm mụn, nám, tàn nhang":44400,
+  "Peel xử lý sần vỏ cam, kiểm soát dầu":58498,
+  "Peel làm trắng, đều màu da, xử lý thâm nám":69545,
+  "Peel nóng kích thích lưu thông, da sáng hồng":98500,
+  "Peel lạnh nhả nắng, hạ nhiệt, săn chắc da":163816,
+  "Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)":91484,
+  "Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)":303435,
+  // E
+  "Enzyme mask phục hồi, thải độc":682492,
+  // PT add-ons
+  "Nặn mụn thêm 30 phút":110000,
+  "Chiếu đèn thêm 20 phút":70000,
+  "Gội đầu + Massage cơ bản":177500,
+  "Gội đầu + Massage cổ vai gáy":177500,
 };
 
 /* ════════════════════════════════════════════════════
@@ -1493,16 +1540,9 @@ function saveInvField(sku,field,val){
    FIXED COSTS
 ════════════════════════════════════════════════════ */
 const FC_CATS=[
-  {key:"rent",    label:"Mặt bằng (thuê nhà/MP)"},
-  {key:"salary",  label:"Lương NV (không tính KTV)"},
-  {key:"utility", label:"Điện nước"},
-  {key:"material",label:"NL dịch vụ (hóa chất, serum dùng trong liệu trình)"},
-  {key:"marketing",label:"Marketing & quảng cáo"},
-  {key:"supplies",label:"Vật tư tiêu hao (khăn, găng tay…)"},
+  {key:"marketing",   label:"Marketing & quảng cáo"},
   {key:"depreciation",label:"Khấu hao máy móc thiết bị"},
-  {key:"software",label:"Phần mềm & công cụ"},
-  {key:"tax",     label:"Thuế & phí"},
-  {key:"other",   label:"Chi phí khác"},
+  {key:"software",    label:"Phần mềm & công cụ"},
 ];
 
 function populateFcMonths(){
@@ -1545,13 +1585,46 @@ function updateFcTotal(mk){
   const store=getFcStore();
   const mc=store[mk]||{};
   const total=FC_CATS.reduce((s,c)=>s+(mc[c.key]||0),0);
-  document.getElementById("fcTotal").textContent=`Tổng chi phí cố định ${monthLabel(mk)}: ${fmt(total)}`;
+  document.getElementById("fcTotal").textContent=`Tổng chi phí bổ sung ${monthLabel(mk)}: ${fmt(total)}`;
 }
 
 function getMonthFcTotal(mk){
   const store=getFcStore();
   const mc=store[mk]||{};
   return FC_CATS.reduce((s,c)=>s+(mc[c.key]||0),0);
+}
+
+/* ════════════════════════════════════════════════════
+   P&L — SVC COST LOOKUP (fuzzy)
+════════════════════════════════════════════════════ */
+// Build lookup arrays once
+const _svcKeys=Object.keys(SVC_COSTS);
+const _norm=s=>s.toLowerCase().replace(/[,\.\(\)]/g," ").replace(/\s+/g," ").trim();
+const _svcNorm=_svcKeys.map(_norm);
+
+function lookupSvcCost(raw){
+  if(!raw) return 0;
+  const name=String(raw);
+  // 1. Exact match
+  if(SVC_COSTS[name]!=null) return SVC_COSTS[name];
+  // 2. Strip mã code cuối: "Tên dịch vụ (P16)" → "Tên dịch vụ"
+  const stripped=name.replace(/\s*\([A-Za-z]+\d*\)\s*$/,"").trim();
+  if(SVC_COSTS[stripped]!=null) return SVC_COSTS[stripped];
+  // 3. Fuzzy: normalize + so sánh contains 2 chiều
+  const nName=_norm(stripped||name);
+  for(let i=0;i<_svcKeys.length;i++){
+    const nk=_svcNorm[i];
+    if(nName===nk||nName.includes(nk)||nk.includes(nName)) return SVC_COSTS[_svcKeys[i]];
+  }
+  // 4. Dùng mã code để tra: NC1, P2, E1...
+  const maMatch=name.match(/\b([A-Z]+\d+)\b/);
+  if(maMatch){
+    const ma=maMatch[1];
+    for(let i=0;i<_svcKeys.length;i++){
+      if(_svcNorm[i].includes(_norm(ma))) return SVC_COSTS[_svcKeys[i]];
+    }
+  }
+  return 0;
 }
 
 /* ════════════════════════════════════════════════════
@@ -1562,40 +1635,50 @@ function renderPL(){
   renderFcFields();
   const store=getInvStore();
 
+  // Helper: tính giá vốn dịch vụ cho 1 visit
+  function getSvcCogs(v){
+    let cogs=0;
+    const allItems=[...(v.items||[]),...(v.tlItems||[]),...(v.peelItems||[]),...(v.lieutrinhItems||[])];
+    if(allItems.length>0){
+      for(const it of allItems){ cogs+=lookupSvcCost(it.name||it.sku||""); }
+    } else if(v.itemsStr){
+      for(const it of parseItemsStr(v.itemsStr)){ cogs+=lookupSvcCost(it.name||""); }
+    }
+    return cogs;
+  }
+
   // Group ALL visits by month
   const months={};
   allVisits().forEach(v=>{
     const d=parseDate(v.date);if(!d) return;
     const mk=monthKey(d);
-    if(!months[mk]) months[mk]={revenue:0,labor:0,prodCogs:0,visits:0};
+    if(!months[mk]) months[mk]={revenue:0,svcCogs:0,visits:0};
     months[mk].revenue+=(v.total||0);
-    months[mk].labor+=(v.totalLabor||0);
+    months[mk].svcCogs+=getSvcCogs(v);
     months[mk].visits++;
-    for(const item of (v.productItems||[])){
-      const p=skuMap[item.name]||skuMap[item.sku];
-      if(!p) continue;
-      const s=store[p.sku]||{};
-      months[mk].prodCogs+=(s.costPrice||0)*(item.qty||1);
-    }
   });
 
+  const fcStore=getFcStore();
   const sortedMonths=Object.keys(months).sort();
   const allRevenue=sortedMonths.map(m=>months[m].revenue);
   const allProfit=sortedMonths.map(m=>{
-    const fc=getMonthFcTotal(m);
-    return months[m].revenue-months[m].labor-months[m].prodCogs-fc;
+    const fc=fcStore[m]||{};
+    const extra=(fc.marketing||0)+(fc.depreciation||0)+(fc.software||0);
+    return months[m].revenue-months[m].svcCogs-extra;
   });
 
   const totalRev=allRevenue.reduce((s,v)=>s+v,0);
-  const totalLabor=sortedMonths.reduce((s,m)=>s+months[m].labor,0);
-  const totalProdCogs=sortedMonths.reduce((s,m)=>s+months[m].prodCogs,0);
-  const totalFc=sortedMonths.reduce((s,m)=>s+getMonthFcTotal(m),0);
-  const totalProfit=totalRev-totalLabor-totalProdCogs-totalFc;
+  const totalSvcCogs=sortedMonths.reduce((s,m)=>s+months[m].svcCogs,0);
+  const totalMarketing=sortedMonths.reduce((s,m)=>s+((fcStore[m]||{}).marketing||0),0);
+  const totalDeprec=sortedMonths.reduce((s,m)=>s+((fcStore[m]||{}).depreciation||0),0);
+  const totalSoftware=sortedMonths.reduce((s,m)=>s+((fcStore[m]||{}).software||0),0);
+  const totalExtra=totalMarketing+totalDeprec+totalSoftware;
+  const totalProfit=totalRev-totalSvcCogs-totalExtra;
 
   document.getElementById("plCards").innerHTML=`
     <div class="scard"><div class="sc-label">💰 Tổng doanh thu</div><div class="sc-val">${fmtShort(totalRev)}</div><div class="sc-sub">${fmt(totalRev)}</div></div>
-    <div class="scard"><div class="sc-label">👩 Chi phí KTV</div><div class="sc-val" style="color:var(--warn);">${fmtShort(totalLabor)}</div><div class="sc-sub">${fmt(totalLabor)}</div></div>
-    <div class="scard"><div class="sc-label">🗂️ Chi phí cố định</div><div class="sc-val" style="color:var(--gold);">${fmtShort(totalFc)}</div><div class="sc-sub">${totalFc===0?"⚠️ Chưa nhập":fmt(totalFc)}</div></div>
+    <div class="scard"><div class="sc-label">🧪 Giá cost liệu trình</div><div class="sc-val" style="color:var(--warn);">${fmtShort(totalSvcCogs)}</div><div class="sc-sub">${totalSvcCogs===0?"⚠️ Chưa có data":fmt(totalSvcCogs)}</div></div>
+    <div class="scard"><div class="sc-label">📢 Chi phí bổ sung</div><div class="sc-val" style="color:var(--gold);">${fmtShort(totalExtra)}</div><div class="sc-sub">${totalExtra===0?"⚠️ Chưa nhập":fmt(totalExtra)}</div></div>
     <div class="scard ${totalProfit>=0?"green":"red"}"><div class="sc-label">📈 Lợi nhuận ước tính</div><div class="sc-val">${fmtShort(totalProfit)}</div><div class="sc-sub">${fmt(totalProfit)}</div></div>`;
 
   if(plChart) plChart.destroy();
@@ -1611,20 +1694,25 @@ function renderPL(){
     options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+": "+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{grid:{display:false}}}}
   });
 
-  document.getElementById("plBody").innerHTML=sortedMonths.length===0?`<tr><td colspan="8" class="empty">Chưa có dữ liệu</td></tr>`:
+  document.getElementById("plBody").innerHTML=sortedMonths.length===0?`<tr><td colspan="9" class="empty">Chưa có dữ liệu</td></tr>`:
     [...sortedMonths].reverse().map(mk=>{
       const m=months[mk];
-      const fc=getMonthFcTotal(mk);
-      const totalCost=m.labor+m.prodCogs+fc;
+      const fc=fcStore[mk]||{};
+      const marketing=fc.marketing||0;
+      const depreciation=fc.depreciation||0;
+      const software=fc.software||0;
+      const totalCost=m.svcCogs+marketing+depreciation+software;
       const profit=m.revenue-totalCost;
       const margin=m.revenue>0?(profit/m.revenue*100).toFixed(1):0;
       const cls=profit>=0?"pl-row-profit":"pl-row-loss";
+      const dash=`<span style="color:var(--muted)">—</span>`;
       return `<tr class="${cls}">
         <td>${monthLabel(mk)}</td>
         <td style="font-weight:700;">${fmt(m.revenue)}</td>
-        <td>${m.labor>0?fmt(m.labor):"—"}</td>
-        <td>${m.prodCogs>0?fmt(m.prodCogs):"—"}</td>
-        <td>${fc>0?fmt(fc):`<span style="color:var(--muted);font-size:11.5px;">chưa nhập</span>`}</td>
+        <td>${m.svcCogs>0?fmt(m.svcCogs):dash}</td>
+        <td>${marketing>0?fmt(marketing):dash}</td>
+        <td>${depreciation>0?fmt(depreciation):dash}</td>
+        <td>${software>0?fmt(software):dash}</td>
         <td>${fmt(totalCost)}</td>
         <td style="font-weight:800;">${fmt(profit)}</td>
         <td>${margin}%</td>

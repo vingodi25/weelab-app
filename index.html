@@ -436,6 +436,11 @@
           <div class="sm-title">Peel Body</div>
           <div class="sm-count" id="smPeelCount" style="display:none">0</div>
         </div>
+        <div class="shopmode" id="smLT" onclick="switchShopMode('lt')">
+          <div class="sm-icon">🌿</div>
+          <div class="sm-title">Liệu trình sẵn</div>
+          <div class="sm-count" id="smLTCount" style="display:none">0</div>
+        </div>
       </div>
     </div>
 
@@ -476,19 +481,22 @@
       <div id="peel-summary2"></div>
       <button class="back-btn" style="margin-top:8px;background:#2a4c5e;color:#fff;border:none;padding:10px 20px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600" onclick="plAddToCart()">➕ Thêm vào bill</button>
     </div>
-    <div class="card" id="serviceSection">
-      <div class="product-nav" style="margin-bottom:10px;">
-        <button class="back-btn" onclick="switchShopMode('product')">🧴 Thêm sản phẩm</button>
-      </div>
-      <!-- LIỆU TRÌNH GỢI Ý -->
-      <div class="fc-section-hdr">✨ Liệu trình gợi ý</div>
-      <div class="fc-price-toggle">
+
+    <!-- LIỆU TRÌNH SẴN SECTION -->
+    <div class="card" id="lieutrinhSection" style="display:none">
+      <div class="fc-price-toggle" style="margin-bottom:10px;">
         Giá:
         <span class="fc-price-btn on" id="fcPriceNY" onclick="fcSetPrice('ny')">Niêm yết</span>
         <span class="fc-price-btn" id="fcPriceVIP" onclick="fcSetPrice('vip')">VIP</span>
       </div>
       <div class="fc-grid" id="fcGrid"></div>
-      <hr class="fc-divider">
+      <p style="font-size:12px;color:#8a8178;margin:10px 0 0">Bấm vào liệu trình để chọn / bỏ chọn — tự động thêm vào bill.</p>
+    </div>
+
+    <div class="card" id="serviceSection">
+      <div class="product-nav" style="margin-bottom:10px;">
+        <button class="back-btn" onclick="switchShopMode('product')">🧴 Thêm sản phẩm</button>
+      </div>
       <h2><span class="step-num">4</span> <span id="t_step3Title"></span></h2>
       <div class="sub" id="t_step3Sub"></div>
       <div class="modes">
@@ -1459,23 +1467,21 @@ function renderBill(){
 
 /* ============ SHOP MODE + PRODUCT PAGE ============ */
 function switchShopMode(mode){
-  // productSection: chỉ hiện khi mode=product
-  document.getElementById("productSection").style.display = mode==="product" ? "block" : "none";
-  // serviceSection: hiện khi mode=service, hair, hoặc peel (luôn hiện trừ khi đang xem sản phẩm)
-  document.getElementById("serviceSection").style.display = mode==="product" ? "none" : "block";
-  // hairSection và peelSection: chỉ hiện đúng mode
-  document.getElementById("hairSection").style.display = mode==="hair" ? "block" : "none";
-  document.getElementById("peelSection").style.display = mode==="peel" ? "block" : "none";
-  // badge on/off
+  document.getElementById("productSection").style.display    = mode==="product" ? "block" : "none";
+  document.getElementById("serviceSection").style.display    = mode==="product" ? "none"  : "block";
+  document.getElementById("hairSection").style.display       = mode==="hair"    ? "block" : "none";
+  document.getElementById("peelSection").style.display       = mode==="peel"    ? "block" : "none";
+  document.getElementById("lieutrinhSection").style.display  = mode==="lt"      ? "block" : "none";
   document.getElementById("smProduct").classList.toggle("on", mode==="product");
   document.getElementById("smService").classList.toggle("on", mode==="service");
-  document.getElementById("smHair").classList.toggle("on", mode==="hair");
-  document.getElementById("smPeel").classList.toggle("on", mode==="peel");
-  // re-render khi switch vào
+  document.getElementById("smHair").classList.toggle("on",    mode==="hair");
+  document.getElementById("smPeel").classList.toggle("on",    mode==="peel");
+  document.getElementById("smLT").classList.toggle("on",      mode==="lt");
   if(mode==="product") renderProductPage();
-  if(mode==="service"){ renderSkins(); renderMenu(); renderFacialCards(); }
-  if(mode==="hair") renderHairTbl2();
-  if(mode==="peel") renderPeelTbl2();
+  if(mode==="service"){ renderSkins(); renderMenu(); }
+  if(mode==="hair")  renderHairTbl2();
+  if(mode==="peel")  renderPeelTbl2();
+  if(mode==="lt")    renderFacialCards();
 }
 
 function productBrands(){
@@ -1573,18 +1579,21 @@ function productCartCount(){
 }
 
 function updateShopModeBadges(){
-  const pc = productCartCount();
-  const sc = [...state.selected].length + (state.lieutrinhCart||[]).length;
-  const hc = (state.tlCart||[]).length;
+  const pc   = productCartCount();
+  const sc   = [...state.selected].length;
+  const hc   = (state.tlCart||[]).length;
   const pelc = (state.peelCart||[]).length;
-  const pcEl = document.getElementById("smProductCount");
-  const scEl = document.getElementById("smServiceCount");
-  const hEl = document.getElementById("smHairCount");
+  const ltc  = (state.lieutrinhCart||[]).length;
+  const pcEl  = document.getElementById("smProductCount");
+  const scEl  = document.getElementById("smServiceCount");
+  const hEl   = document.getElementById("smHairCount");
   const pelEl = document.getElementById("smPeelCount");
-  if(pcEl){ pcEl.textContent=pc; pcEl.style.display=pc>0?"inline-block":"none"; }
-  if(scEl){ scEl.textContent=sc; scEl.style.display=sc>0?"inline-block":"none"; }
-  if(hEl){ hEl.textContent=hc; hEl.style.display=hc>0?"inline-block":"none"; }
+  const ltEl  = document.getElementById("smLTCount");
+  if(pcEl){  pcEl.textContent=pc;   pcEl.style.display=pc>0?"inline-block":"none"; }
+  if(scEl){  scEl.textContent=sc;   scEl.style.display=sc>0?"inline-block":"none"; }
+  if(hEl){   hEl.textContent=hc;    hEl.style.display=hc>0?"inline-block":"none"; }
   if(pelEl){ pelEl.textContent=pelc; pelEl.style.display=pelc>0?"inline-block":"none"; }
+  if(ltEl){  ltEl.textContent=ltc;  ltEl.style.display=ltc>0?"inline-block":"none"; }
 }
 
 /* ============ KHÁCH CŨ (localStorage) ============ */
@@ -1968,11 +1977,26 @@ function saveAndExport(){
   }).catch(()=>{}); // silent — no-cors không trả lỗi thực sự
 }
 /* ============ HOÁ ĐƠN ============ */
-const INV_CTR_KEY = "weelab_w_ctr"; // key mới cho format W000001
+const INV_CTR_KEY = "weelab_w_ctr"; // key cho format W000001
 function nextInvoiceNum(){
   const n = (parseInt(localStorage.getItem(INV_CTR_KEY)||"0")) + 1;
   localStorage.setItem(INV_CTR_KEY, n);
   return "W" + String(n).padStart(6,"0");
+}
+// Phục hồi counter từ weelab_saved_bills khi khởi động
+// (phòng trường hợp localStorage bị xóa nhưng saved_bills vẫn còn)
+function initInvoiceCounter(){
+  try{
+    let max = parseInt(localStorage.getItem(INV_CTR_KEY)||"0");
+    const bills = JSON.parse(localStorage.getItem("weelab_saved_bills")||"[]");
+    for(const b of bills){
+      if(b.invNum && /^W\d+$/.test(b.invNum)){
+        const n = parseInt(b.invNum.slice(1));
+        if(n > max) max = n;
+      }
+    }
+    localStorage.setItem(INV_CTR_KEY, max);
+  }catch(e){}
 }
 
 function showInvoice(r, preInvNum, preDateStr){
@@ -2575,6 +2599,7 @@ function selectVipTier(tier,el){
 }
 
 /* ============ INIT ============ */
+initInvoiceCounter(); // đồng bộ counter từ saved bills
 document.getElementById("cPhone").addEventListener("input",checkReturning);
 document.getElementById("cPhone").addEventListener("blur",()=>validatePhone());
 document.getElementById("cEmail").addEventListener("blur",validateEmail);
