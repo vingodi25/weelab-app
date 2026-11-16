@@ -196,7 +196,7 @@ tr:hover td{background:#fafbf9;}
     <div class="tbl-scroll">
       <table>
         <thead><tr>
-          <th>#</th><th>Ngày giờ</th><th>Khách hàng</th><th>SĐT</th>
+          <th>#</th><th>Ngày giờ</th><th style="white-space:nowrap">Số HD</th><th>Khách hàng</th><th>SĐT</th>
           <th>Hình thức</th><th>Dịch vụ / sản phẩm</th>
           <th>Công KTV</th><th>Tổng thu</th><th>Nguồn</th><th></th>
         </tr></thead>
@@ -658,31 +658,11 @@ function allVisits(){
       }
     }
   }
-  // 3. Enrich all visits with saved bills (adds invNum, full item arrays, correct time)
+  // 3. Saved bills — only add entries not already in list (e.g. bills only-package, not sent to sheet)
+  //    Detail enrichment happens in showBillDetail() via findSavedBill()
   const savedBills=getSavedBills();
   if(savedBills.length>0){
-    // Index saved bills by phone+"_"+date for fast lookup
-    const billMap={};
-    savedBills.forEach(b=>{ billMap[(b.phone||"")+"_"+(b.date||"")] = b; });
-    // Enrich existing entries
-    const addedKeys=new Set();
-    list.forEach(v=>{
-      const key=(v.phone||"")+"_"+(v.date||"");
-      const b=billMap[key];
-      if(b){
-        if(b.invNum) v.invNum=b.invNum;
-        if(b.items&&b.items.length>0) v.items=b.items;
-        if(b.tlItems&&b.tlItems.length>0) v.tlItems=b.tlItems;
-        if(b.peelItems&&b.peelItems.length>0) v.peelItems=b.peelItems;
-        if(b.lieutrinhItems&&b.lieutrinhItems.length>0) v.lieutrinhItems=b.lieutrinhItems;
-        if(b.productItems&&b.productItems.length>0) v.productItems=b.productItems;
-        if(b.discount) v.discount=b.discount;
-        if(b.alcTotal) v.alcTotal=b.alcTotal;
-        if(b.note) v.note=b.note;
-      }
-      addedKeys.add(key);
-    });
-    // Add saved bills not yet in list (e.g. bills not sent to sheet)
+    const addedKeys=new Set(list.map(v=>(v.phone||"")+"_"+(v.date||"")));
     savedBills.forEach(b=>{
       const key=(b.phone||"")+"_"+(b.date||"");
       if(!addedKeys.has(key)){
@@ -735,15 +715,38 @@ function filteredVisits(){
 }
 
 // Parse itemsStr — handle cả format: "• name\n• name2" (sheet) và "name1, name2" (local)
+// Cũng parse được "• Tên (label): 1.650.000đ" → {name, price}
 function parseItemsStr(str){
   if(!str) return [];
   const s=String(str).trim();
-  // Nếu có bullet hoặc newline → split theo đó
   if(s.includes("•")||s.includes("\n")){
-    return s.split(/\n|•/).map(x=>x.trim()).filter(Boolean).map(name=>({name}));
+    return s.split(/\n/).map(x=>x.replace(/^[•\-]\s*/,"").trim()).filter(Boolean).map(raw=>{
+      // "Tên (label): 1.650.000đ" hoặc "Tên: 1.650.000đ"
+      const m=raw.match(/^(.+?):\s*([\d]+(?:\.[\d]{3})*)đ?\s*$/);
+      if(m){
+        const price=parseInt(m[2].replace(/\./g,""),10);
+        return {name:m[1].trim(), price:isNaN(price)?null:price};
+      }
+      return {name:raw, price:null};
+    });
   }
-  // Fallback: split theo dấu phẩy
-  return s.split(",").map(x=>x.trim()).filter(Boolean).map(name=>({name}));
+  return s.split(",").map(x=>x.trim()).filter(Boolean).map(name=>({name,price:null}));
+}
+
+// Tìm saved bill theo phone + cùng ngày (fuzzy — bù cho Sheet reformat date)
+function findSavedBill(phone, dateStr){
+  const bills=getSavedBills();
+  if(!bills.length) return null;
+  const td=parseDate(dateStr);
+  for(const b of bills){
+    if((b.phone||"")!==(phone||"")) continue;
+    const bd=parseDate(b.date||b.dateDisplay||"");
+    if(!td||!bd) continue;
+    if(td.getFullYear()===bd.getFullYear()&&td.getMonth()===bd.getMonth()&&td.getDate()===bd.getDate()){
+      return b;
+    }
+  }
+  return null;
 }
 
 /* ════════════════════════════════════════════════════
@@ -954,7 +957,7 @@ function renderInvoices(){
   let visits=filteredVisits().filter(v=>!q||(v.name||"").toLowerCase().includes(q)||(v.phone||"").includes(q));
   _invoiceCache=visits;
   document.getElementById("invCount").textContent=visits.length;
-  document.getElementById("invBody").innerHTML=visits.length===0?`<tr><td colspan="10" class="empty">Không có hoá đơn nào</td></tr>`:
+  document.getElementById("invBody").innerHTML=visits.length===0?`<tr><td colspan="11" class="empty">Không có hoá đơn nào</td></tr>`:
     visits.map((v,i)=>{
       const svcStr=v.itemsStr?v.itemsStr.replace(/•\s*/g,"").replace(/\n/g,", ").slice(0,80)+(v.itemsStr.length>80?"…":""):(v.buffetName?"Buffet: "+v.buffetName:"—");
       const prodStr=(v.productItems||[]).map(it=>`${it.name||it.sku}${(it.qty||1)>1?" ×"+it.qty:""}`).join(", ")||"";
@@ -962,6 +965,7 @@ function renderInvoices(){
       return `<tr style="cursor:pointer;" onclick="showBillDetail(${i})" title="Xem chi tiết hoá đơn">
         <td style="color:var(--muted);">${i+1}</td>
         <td style="white-space:nowrap;font-size:12px;">${fmtDate(parseDate(v.date))}</td>
+        <td style="font-size:11.5px;color:var(--brand-dark);font-weight:700;white-space:nowrap;">${v.invNum||"—"}</td>
         <td><b>${v.name||"—"}</b></td>
         <td style="color:var(--muted);font-size:12px;">${v.phone||"—"}</td>
         <td><span class="tag muted">${v.mode==="buf"?"Buffet":"Gọi lẻ"}</span></td>
@@ -1625,6 +1629,22 @@ let _currentBillVisit=null;
 function showBillDetail(idx){
   const v=_invoiceCache[idx];
   if(!v) return;
+  // Enrich từ saved bill nếu chưa có dữ liệu có cấu trúc (visit từ Sheet)
+  const hasStructured=(v.items&&v.items.length>0)||(v.tlItems&&v.tlItems.length>0)||
+                       (v.peelItems&&v.peelItems.length>0)||(v.lieutrinhItems&&v.lieutrinhItems.length>0);
+  if(!hasStructured&&v.phone){
+    const sb=findSavedBill(v.phone, v.date);
+    if(sb){
+      if(sb.invNum&&!v.invNum) v.invNum=sb.invNum;
+      if(sb.dateDisplay) v.date=sb.dateDisplay; // lấy giờ chính xác
+      if(sb.items&&sb.items.length>0){v.items=sb.items; v.itemsStr="";}
+      if(sb.tlItems&&sb.tlItems.length>0){v.tlItems=sb.tlItems; v.itemsStr="";}
+      if(sb.peelItems&&sb.peelItems.length>0){v.peelItems=sb.peelItems; v.itemsStr="";}
+      if(sb.lieutrinhItems&&sb.lieutrinhItems.length>0){v.lieutrinhItems=sb.lieutrinhItems; v.itemsStr="";}
+      if(sb.productItems&&sb.productItems.length>0) v.productItems=sb.productItems;
+      if(sb.discount&&!v.discount) v.discount=sb.discount;
+    }
+  }
   _currentBillVisit=v;
   const pad=x=>String(x).padStart(2,"0");
   const d=parseDate(v.date);
