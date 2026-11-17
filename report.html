@@ -85,6 +85,8 @@ tr:hover td{background:#fafbf9;}
 .stock-ok{color:var(--green);}
 .pl-row-profit td{background:var(--green-soft);font-weight:700;color:var(--green);}
 .pl-row-loss td{background:var(--danger-soft);font-weight:700;color:var(--danger);}
+.pl-period-btn{padding:6px 16px;border:1.5px solid var(--line);border-radius:20px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);transition:.15s;}
+.pl-period-btn.on{background:var(--brand-dark);color:#fff;border-color:var(--brand-dark);}
 .empty{text-align:center;padding:36px;color:var(--muted);}
 .tab-section{display:none;}
 .tab-section.show{display:block;}
@@ -378,19 +380,23 @@ tr:hover td{background:#fafbf9;}
     </div>
   </div>
 
+  <!-- Period filter -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+    <button class="pl-period-btn"   id="plBtn-day"   onclick="setPLPeriod('day')">Ngày</button>
+    <button class="pl-period-btn"   id="plBtn-week"  onclick="setPLPeriod('week')">Tuần</button>
+    <button class="pl-period-btn on" id="plBtn-month" onclick="setPLPeriod('month')">Tháng</button>
+    <button class="pl-period-btn"   id="plBtn-year"  onclick="setPLPeriod('year')">Năm</button>
+  </div>
+
   <div class="chart-card">
-    <h3>📊 Doanh thu & Lãi gộp theo tháng</h3>
+    <h3 id="plChartTitle">📊 Doanh thu & Lãi gộp</h3>
     <canvas id="chartPL" height="65"></canvas>
   </div>
   <div class="tbl-card">
-    <div class="tbl-hdr"><h3>Báo cáo lãi lỗ theo tháng</h3></div>
+    <div class="tbl-hdr"><h3 id="plTblTitle">Báo cáo lãi lỗ</h3></div>
     <div class="tbl-scroll">
       <table>
-        <thead><tr>
-          <th>Tháng</th><th>Doanh thu</th><th>Giá cost LT</th>
-          <th>Marketing</th><th>Khấu hao</th><th>Phần mềm</th>
-          <th>Tổng chi</th><th>Lợi nhuận</th><th>Tỷ lệ</th>
-        </tr></thead>
+        <thead id="plHead"></thead>
         <tbody id="plBody"></tbody>
       </table>
     </div>
@@ -1628,64 +1634,145 @@ function lookupSvcCost(raw){
 }
 
 /* ════════════════════════════════════════════════════
+   P&L — PERIOD HELPERS
+════════════════════════════════════════════════════ */
+let plPeriod='month';
+
+function isoWeek(d){
+  const tmp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const dow=tmp.getUTCDay()||7;
+  tmp.setUTCDate(tmp.getUTCDate()+4-dow);
+  const y1=new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+  return Math.ceil(((tmp-y1)/86400000+1)/7);
+}
+
+function plPeriodKey(d){
+  const y=d.getFullYear(),
+        m=String(d.getMonth()+1).padStart(2,'0'),
+        dd=String(d.getDate()).padStart(2,'0');
+  if(plPeriod==='day')   return `${y}-${m}-${dd}`;
+  if(plPeriod==='week')  return `${y}-W${String(isoWeek(d)).padStart(2,'0')}`;
+  if(plPeriod==='year')  return `${y}`;
+  return `${y}-${m}`;
+}
+
+function plPeriodLabel(key){
+  if(plPeriod==='day'){
+    const[y,m,d]=key.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  if(plPeriod==='week'){
+    const[y,w]=key.split('-W');
+    return `Tuần ${parseInt(w)} · ${y}`;
+  }
+  if(plPeriod==='year') return `Năm ${key}`;
+  return monthLabel(key);
+}
+
+// lấy month-key (YYYY-MM) tương ứng với period key (để tra fcStore luôn theo tháng)
+function monthKeysForPeriodKey(key, groupMap){
+  if(plPeriod==='month') return [key];
+  if(plPeriod==='year'){
+    const y=key;
+    return Object.keys(groupMap).filter(k=>k.startsWith(y+'-M')).map(k=>k.slice(2));
+  }
+  // day / week: lấy tháng từ các visit trong group
+  const visits=groupMap[key]||[];
+  const mSet=new Set();
+  visits.forEach(v=>{ const d=parseDate(v.date); if(d) mSet.add(monthKey(d)); });
+  return [...mSet];
+}
+
+// Giá cost dịch vụ 1 visit
+function getSvcCogs(v){
+  let cogs=0;
+  const allItems=[...(v.items||[]),...(v.tlItems||[]),...(v.peelItems||[]),...(v.lieutrinhItems||[])];
+  if(allItems.length>0){
+    for(const it of allItems){ cogs+=lookupSvcCost(it.name||it.sku||""); }
+  } else if(v.itemsStr){
+    for(const it of parseItemsStr(v.itemsStr)){ cogs+=lookupSvcCost(it.name||""); }
+  }
+  return cogs;
+}
+
+function setPLPeriod(p){
+  plPeriod=p;
+  ['day','week','month','year'].forEach(x=>
+    document.getElementById('plBtn-'+x).classList.toggle('on',x===p));
+  renderPL();
+}
+
+/* ════════════════════════════════════════════════════
    P&L
 ════════════════════════════════════════════════════ */
 function renderPL(){
   populateFcMonths();
   renderFcFields();
-  const store=getInvStore();
-
-  // Helper: tính giá vốn dịch vụ cho 1 visit
-  function getSvcCogs(v){
-    let cogs=0;
-    const allItems=[...(v.items||[]),...(v.tlItems||[]),...(v.peelItems||[]),...(v.lieutrinhItems||[])];
-    if(allItems.length>0){
-      for(const it of allItems){ cogs+=lookupSvcCost(it.name||it.sku||""); }
-    } else if(v.itemsStr){
-      for(const it of parseItemsStr(v.itemsStr)){ cogs+=lookupSvcCost(it.name||""); }
-    }
-    return cogs;
-  }
-
-  // Group ALL visits by month
-  const months={};
-  allVisits().forEach(v=>{
-    const d=parseDate(v.date);if(!d) return;
-    const mk=monthKey(d);
-    if(!months[mk]) months[mk]={revenue:0,svcCogs:0,visits:0};
-    months[mk].revenue+=(v.total||0);
-    months[mk].svcCogs+=getSvcCogs(v);
-    months[mk].visits++;
-  });
 
   const fcStore=getFcStore();
-  const sortedMonths=Object.keys(months).sort();
-  const allRevenue=sortedMonths.map(m=>months[m].revenue);
-  const allProfit=sortedMonths.map(m=>{
-    const fc=fcStore[m]||{};
-    const extra=(fc.marketing||0)+(fc.depreciation||0)+(fc.software||0);
-    return months[m].revenue-months[m].svcCogs-extra;
+  const showFC=(plPeriod==='month'||plPeriod==='year');
+  const periodNames={day:'ngày',week:'tuần',month:'tháng',year:'năm'};
+
+  // Group visits by current period
+  const groups={};        // {key: {revenue, svcCogs, visits, _visits[]}}
+  const visits=allVisits();
+  visits.forEach(v=>{
+    const d=parseDate(v.date);if(!d) return;
+    const key=plPeriodKey(d);
+    if(!groups[key]) groups[key]={revenue:0,svcCogs:0,visits:0,_visits:[]};
+    groups[key].revenue+=(v.total||0);
+    groups[key].svcCogs+=getSvcCogs(v);
+    groups[key].visits++;
+    groups[key]._visits.push(v);
+  });
+
+  // For year grouping, also store the year's month-keys to look up fcStore
+  // For month grouping, key IS the month-key
+
+  function getGroupFC(key){
+    if(!showFC) return {marketing:0,depreciation:0,software:0};
+    if(plPeriod==='month'){
+      const fc=fcStore[key]||{};
+      return {marketing:fc.marketing||0,depreciation:fc.depreciation||0,software:fc.software||0};
+    }
+    // year: sum all months in that year
+    let marketing=0,depreciation=0,software=0;
+    Object.keys(fcStore).filter(mk=>mk.startsWith(key+'-')).forEach(mk=>{
+      const fc=fcStore[mk]||{};
+      marketing+=fc.marketing||0;
+      depreciation+=fc.depreciation||0;
+      software+=fc.software||0;
+    });
+    return {marketing,depreciation,software};
+  }
+
+  const sortedKeys=Object.keys(groups).sort();
+  const allRevenue=sortedKeys.map(k=>groups[k].revenue);
+  const allProfit=sortedKeys.map(k=>{
+    const fc=getGroupFC(k);
+    return groups[k].revenue-groups[k].svcCogs-(fc.marketing+fc.depreciation+fc.software);
   });
 
   const totalRev=allRevenue.reduce((s,v)=>s+v,0);
-  const totalSvcCogs=sortedMonths.reduce((s,m)=>s+months[m].svcCogs,0);
-  const totalMarketing=sortedMonths.reduce((s,m)=>s+((fcStore[m]||{}).marketing||0),0);
-  const totalDeprec=sortedMonths.reduce((s,m)=>s+((fcStore[m]||{}).depreciation||0),0);
-  const totalSoftware=sortedMonths.reduce((s,m)=>s+((fcStore[m]||{}).software||0),0);
-  const totalExtra=totalMarketing+totalDeprec+totalSoftware;
+  const totalSvcCogs=sortedKeys.reduce((s,k)=>s+groups[k].svcCogs,0);
+  const totalExtra=sortedKeys.reduce((s,k)=>{const fc=getGroupFC(k);return s+fc.marketing+fc.depreciation+fc.software;},0);
   const totalProfit=totalRev-totalSvcCogs-totalExtra;
+
+  const periodName=periodNames[plPeriod]||'kỳ';
+  document.getElementById("plChartTitle").textContent=`📊 Doanh thu & Lãi gộp theo ${periodName}`;
+  document.getElementById("plTblTitle").textContent=`Báo cáo lãi lỗ theo ${periodName}`;
 
   document.getElementById("plCards").innerHTML=`
     <div class="scard"><div class="sc-label">💰 Tổng doanh thu</div><div class="sc-val">${fmtShort(totalRev)}</div><div class="sc-sub">${fmt(totalRev)}</div></div>
     <div class="scard"><div class="sc-label">🧪 Giá cost liệu trình</div><div class="sc-val" style="color:var(--warn);">${fmtShort(totalSvcCogs)}</div><div class="sc-sub">${totalSvcCogs===0?"⚠️ Chưa có data":fmt(totalSvcCogs)}</div></div>
-    <div class="scard"><div class="sc-label">📢 Chi phí bổ sung</div><div class="sc-val" style="color:var(--gold);">${fmtShort(totalExtra)}</div><div class="sc-sub">${totalExtra===0?"⚠️ Chưa nhập":fmt(totalExtra)}</div></div>
+    ${showFC?`<div class="scard"><div class="sc-label">📢 Chi phí bổ sung</div><div class="sc-val" style="color:var(--gold);">${fmtShort(totalExtra)}</div><div class="sc-sub">${totalExtra===0?"⚠️ Chưa nhập":fmt(totalExtra)}</div></div>`:""}
     <div class="scard ${totalProfit>=0?"green":"red"}"><div class="sc-label">📈 Lợi nhuận ước tính</div><div class="sc-val">${fmtShort(totalProfit)}</div><div class="sc-sub">${fmt(totalProfit)}</div></div>`;
 
   if(plChart) plChart.destroy();
   plChart=new Chart(document.getElementById("chartPL"),{
     type:"bar",
     data:{
-      labels:sortedMonths.map(monthLabel),
+      labels:sortedKeys.map(plPeriodLabel),
       datasets:[
         {label:"Doanh thu",data:allRevenue,backgroundColor:"rgba(86,135,145,.75)",borderRadius:3},
         {label:"Lợi nhuận",data:allProfit,backgroundColor:allProfit.map(v=>v>=0?"rgba(91,138,114,.75)":"rgba(163,20,32,.65)"),borderRadius:3},
@@ -1694,25 +1781,30 @@ function renderPL(){
     options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+": "+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{grid:{display:false}}}}
   });
 
-  document.getElementById("plBody").innerHTML=sortedMonths.length===0?`<tr><td colspan="9" class="empty">Chưa có dữ liệu</td></tr>`:
-    [...sortedMonths].reverse().map(mk=>{
-      const m=months[mk];
-      const fc=fcStore[mk]||{};
-      const marketing=fc.marketing||0;
-      const depreciation=fc.depreciation||0;
-      const software=fc.software||0;
-      const totalCost=m.svcCogs+marketing+depreciation+software;
-      const profit=m.revenue-totalCost;
-      const margin=m.revenue>0?(profit/m.revenue*100).toFixed(1):0;
+  const colCount=showFC?9:6;
+  const dash=`<span style="color:var(--muted)">—</span>`;
+
+  document.getElementById("plHead").innerHTML=`<tr>
+    <th>${plPeriod==='day'?'Ngày':plPeriod==='week'?'Tuần':plPeriod==='year'?'Năm':'Tháng'}</th>
+    <th>Doanh thu</th><th>Giá cost LT</th>
+    ${showFC?`<th>Marketing</th><th>Khấu hao</th><th>Phần mềm</th>`:""}
+    <th>Tổng chi</th><th>Lợi nhuận</th><th>Tỷ lệ</th>
+  </tr>`;
+
+  document.getElementById("plBody").innerHTML=sortedKeys.length===0
+    ?`<tr><td colspan="${colCount}" class="empty">Chưa có dữ liệu</td></tr>`
+    :[...sortedKeys].reverse().map(key=>{
+      const g=groups[key];
+      const fc=getGroupFC(key);
+      const totalCost=g.svcCogs+fc.marketing+fc.depreciation+fc.software;
+      const profit=g.revenue-totalCost;
+      const margin=g.revenue>0?(profit/g.revenue*100).toFixed(1):0;
       const cls=profit>=0?"pl-row-profit":"pl-row-loss";
-      const dash=`<span style="color:var(--muted)">—</span>`;
       return `<tr class="${cls}">
-        <td>${monthLabel(mk)}</td>
-        <td style="font-weight:700;">${fmt(m.revenue)}</td>
-        <td>${m.svcCogs>0?fmt(m.svcCogs):dash}</td>
-        <td>${marketing>0?fmt(marketing):dash}</td>
-        <td>${depreciation>0?fmt(depreciation):dash}</td>
-        <td>${software>0?fmt(software):dash}</td>
+        <td>${plPeriodLabel(key)}</td>
+        <td style="font-weight:700;">${fmt(g.revenue)}</td>
+        <td>${g.svcCogs>0?fmt(g.svcCogs):dash}</td>
+        ${showFC?`<td>${fc.marketing>0?fmt(fc.marketing):dash}</td><td>${fc.depreciation>0?fmt(fc.depreciation):dash}</td><td>${fc.software>0?fmt(fc.software):dash}</td>`:""}
         <td>${fmt(totalCost)}</td>
         <td style="font-weight:800;">${fmt(profit)}</td>
         <td>${margin}%</td>
