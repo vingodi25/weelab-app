@@ -370,13 +370,13 @@ tr:hover td{background:#fafbf9;}
 
   <!-- Chi phí bổ sung -->
   <div class="fc-panel">
-    <h3>📋 Nhập chi phí bổ sung theo tháng</h3>
-    <p class="fc-sub">Giá cost liệu trình đã bao gồm công KTV, nguyên vật liệu và chi phí vận hành. Chỉ cần nhập thêm 3 khoản dưới đây.</p>
+    <h3>📋 Nhập chi phí theo tháng</h3>
+    <p class="fc-sub">Nhập đầy đủ 6 khoản chi phí dưới đây. Giá cost liệu trình (đã bao gồm nguyên vật liệu + công KTV) được tính riêng từ dữ liệu dịch vụ.</p>
     <select class="fc-month-sel" id="fcMonthSel" onchange="renderFcFields()"></select>
     <div class="fc-grid" id="fcGrid"></div>
     <div class="fc-total" id="fcTotal">Tổng chi phí bổ sung tháng này: —</div>
     <div class="fc-note">
-      📌 <b>Lợi nhuận = Doanh thu − Giá cost liệu trình − Marketing − Khấu hao − Phần mềm</b>
+      📌 <b>Lợi nhuận = Doanh thu − Giá cost liệu trình − Tiền nhà/điện nước − Lương/thưởng − Quảng cáo − Phần mềm − Chi phí khác − Công cụ</b>
     </div>
   </div>
 
@@ -446,48 +446,73 @@ const SVC_PRICES={
    SERVICE COSTS (giá vốn dịch vụ — cập nhật từ menu spreadsheet 11/2026)
 ════════════════════════════════════════════════════ */
 const SVC_COSTS={
-  // CB
+  // CB — Làm sạch chuyên sâu (nguồn: Cost ghi nhận lãi lỗ, cập nhật 11/2026)
   "Làm sạch chuyên sâu (60p)":299000,
-  // NC add-ons
-  "Massage khai thông hệ bạch huyết":59500,
-  "Cấp nước biểu bì cho da khô":19757,
-  "Chiếu đèn quang động học (PDT)":54500,
-  "Sebum Soak (loãng dầu)":22300,
-  "Hydra Peel AHA/BHA":24375,
-  "Hydra Peel HA+Vitamin C":24375,
-  "Giải cơ cổ vai gáy (EMS, RF)":58529,
-  "Giải cơ cổ vai gáy công nghệ EMS, RF":58529,
-  "Nâng cơ mặt (EMS, RF)":41029,
-  "Nâng cơ mặt công nghệ EMS, RF":41029,
-  // Peel options
-  "Phục hồi da yếu, mẩn đỏ, kích ứng":61900,
-  "Peel làm mịn, tăng sinh tế bào (da nhạy cảm)":143473,
-  "Peel làm mịn, tăng sinh tế bào cho da nhạy cảm":143473,
-  "Peel kiểm soát dầu, mụn ẩn (an toàn da nhạy)":202497,
-  "Peel kiểm soát dầu, mụn ẩn (an toàn với da nhạy cảm)":202497,
-  "Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)":58498,
-  "Peel làm mịn, giảm nhăn, tăng cường ẩm cho da khô":58498,
-  "Peel xử lý dày sừng, nhiều dầu":54165,
-  "Peel kiểm soát dầu & mụn tổng hợp":43848,
-  "Peel nhẹ kiểm soát dầu & mụn tổng hợp":43848,
-  "Peel xử lý mụn viêm":44400,
-  "Phục hồi HRBV, cân bằng hệ vi sinh":45800,
-  "Phục hồi HRBV, cân bằng HVS":45800,
-  "Peel tảo làm sáng, căng bóng da":47520,
-  "Peel xử lý thâm mụn, nám, tàn nhang":44400,
+  // NC1 — Massage khai thông hệ bạch huyết
+  "Massage khai thông hệ bạch huyết":7000,
+  // NC2 — Cấp nước biểu bì cho da khô
+  "Cấp nước biểu bì cho da khô":2257,
+  // NC3 — Chiếu đèn quang động học
+  "Chiếu đèn quang động học (PDT)":2000,
+  "Chiếu đèn quang động học":2000,
+  // NC4 — Sebum Soak
+  "Sebum Soak (loãng dầu)":4800,
+  // NC5 — Hydra Peel AHA/BHA
+  "Hydra Peel AHA/BHA":10375,
+  // NC6 — Hydra Peel HA+Vitamin C
+  "Hydra Peel HA+Vitamin C":10375,
+  // NC7 — Giải cơ cổ vai gáy EMS, RF
+  "Giải cơ cổ vai gáy (EMS, RF)":6029,
+  "Giải cơ cổ vai gáy công nghệ EMS, RF":6029,
+  // NC8 — Nâng cơ mặt EMS, RF
+  "Nâng cơ mặt (EMS, RF)":6029,
+  "Nâng cơ mặt công nghệ EMS, RF":6029,
+  // P1 — Phục hồi da yếu, mẩn đỏ, kích ứng
+  "Phục hồi da yếu, mẩn đỏ, kích ứng":26900,
+  // P2 — Peel làm mịn, tăng sinh tế bào (da nhạy cảm)
+  "Peel làm mịn, tăng sinh tế bào (da nhạy cảm)":125973,
+  "Peel làm mịn, tăng sinh tế bào cho da nhạy cảm":125973,
+  // P3 — Peel kiểm soát dầu, mụn ẩn
+  "Peel kiểm soát dầu, mụn ẩn (an toàn da nhạy)":184997,
+  "Peel kiểm soát dầu, mụn ẩn (an toàn với da nhạy cảm)":184997,
+  // P4 — Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)":40998,
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm cho da khô":40998,
+  // P5 — Peel xử lý dày sừng, nhiều dầu
+  "Peel xử lý dày sừng, nhiều dầu":36665,
+  // P6 — Peel nhẹ kiểm soát dầu & mụn tổng hợp
+  "Peel kiểm soát dầu & mụn tổng hợp":21348,
+  "Peel nhẹ kiểm soát dầu & mụn tổng hợp":21348,
+  // P7 — Peel xử lý mụn viêm
+  "Peel xử lý mụn viêm":26900,
+  // P8 — Phục hồi HRBV, cân bằng HVS
+  "Phục hồi HRBV, cân bằng hệ vi sinh":18632,
+  "Phục hồi HRBV, cân bằng HVS":18632,
+  // P9 — Peel xử lý thâm mụn, nám, tàn nhang
+  "Peel xử lý thâm mụn, nám, tàn nhang":26900,
+  // P10 — Peel xử lý sần vỏ cam (không có trong sheet cost mới — giữ nguyên)
   "Peel xử lý sần vỏ cam, kiểm soát dầu":58498,
-  "Peel làm trắng, đều màu da, xử lý thâm nám":69545,
-  "Peel nóng kích thích lưu thông, da sáng hồng":98500,
-  "Peel lạnh nhả nắng, hạ nhiệt, săn chắc da":163816,
-  "Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)":91484,
-  "Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)":303435,
-  // E
-  "Enzyme mask phục hồi, thải độc":682492,
-  // PT add-ons
-  "Nặn mụn thêm 30 phút":110000,
-  "Chiếu đèn thêm 20 phút":70000,
-  "Gội đầu + Massage cơ bản":177500,
-  "Gội đầu + Massage cổ vai gáy":177500,
+  // P11 — Peel làm trắng, đều màu da, xử lý thâm nám
+  "Peel làm trắng, đều màu da, xử lý thâm nám":52045,
+  // P12 — Peel nóng kích thích lưu thông, da sáng hồng
+  "Peel nóng kích thích lưu thông, da sáng hồng":81000,
+  // P13 — Peel lạnh nhả nắng, hạ nhiệt, săn chắc da
+  "Peel lạnh nhả nắng, hạ nhiệt, săn chắc da":139316,
+  // P14 — Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)
+  "Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)":73984,
+  // P15 — Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)
+  "Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)":285935,
+  // P16 — Peel tảo làm sáng, căng bóng da
+  "Peel tảo làm sáng, căng bóng da":29944,
+  // E1 — Enzyme mask phục hồi, thải độc
+  "Enzyme mask phục hồi, thải độc":524992,
+  // PT1 — Nặn mụn thêm 30 phút
+  "Nặn mụn thêm 30 phút":5000,
+  // PT2 — Chiếu đèn thêm 20 phút
+  "Chiếu đèn thêm 20 phút":0,
+  // PT3 — Gội đầu + Massage cổ vai gáy
+  "Gội đầu + Massage cơ bản":10000,
+  "Gội đầu + Massage cổ vai gáy":10000,
 };
 
 /* ════════════════════════════════════════════════════
@@ -1546,9 +1571,12 @@ function saveInvField(sku,field,val){
    FIXED COSTS
 ════════════════════════════════════════════════════ */
 const FC_CATS=[
-  {key:"marketing",   label:"Marketing & quảng cáo"},
-  {key:"depreciation",label:"Khấu hao máy móc thiết bị"},
-  {key:"software",    label:"Phần mềm & công cụ"},
+  {key:"rent_utility", label:"Chi phí cố định tiền nhà + điện nước"},
+  {key:"salary",       label:"Chi phí lương/thưởng nhân sự"},
+  {key:"marketing",    label:"Chi phí quảng cáo"},
+  {key:"software",     label:"Chi phí phần mềm"},
+  {key:"other",        label:"Chi phí khác"},
+  {key:"tools",        label:"Phần mềm, công cụ"},
 ];
 
 function populateFcMonths(){
@@ -1730,32 +1758,33 @@ function renderPL(){
   // For month grouping, key IS the month-key
 
   function getGroupFC(key){
-    if(!showFC) return {marketing:0,depreciation:0,software:0};
+    const empty=Object.fromEntries(FC_CATS.map(c=>[c.key,0]));
+    if(!showFC) return empty;
     if(plPeriod==='month'){
       const fc=fcStore[key]||{};
-      return {marketing:fc.marketing||0,depreciation:fc.depreciation||0,software:fc.software||0};
+      return Object.fromEntries(FC_CATS.map(c=>[c.key,fc[c.key]||0]));
     }
     // year: sum all months in that year
-    let marketing=0,depreciation=0,software=0;
+    const acc=Object.fromEntries(FC_CATS.map(c=>[c.key,0]));
     Object.keys(fcStore).filter(mk=>mk.startsWith(key+'-')).forEach(mk=>{
       const fc=fcStore[mk]||{};
-      marketing+=fc.marketing||0;
-      depreciation+=fc.depreciation||0;
-      software+=fc.software||0;
+      FC_CATS.forEach(c=>{ acc[c.key]+=(fc[c.key]||0); });
     });
-    return {marketing,depreciation,software};
+    return acc;
   }
+
+  function fcTotal(fc){ return FC_CATS.reduce((s,c)=>s+(fc[c.key]||0),0); }
 
   const sortedKeys=Object.keys(groups).sort();
   const allRevenue=sortedKeys.map(k=>groups[k].revenue);
   const allProfit=sortedKeys.map(k=>{
     const fc=getGroupFC(k);
-    return groups[k].revenue-groups[k].svcCogs-(fc.marketing+fc.depreciation+fc.software);
+    return groups[k].revenue-groups[k].svcCogs-fcTotal(fc);
   });
 
   const totalRev=allRevenue.reduce((s,v)=>s+v,0);
   const totalSvcCogs=sortedKeys.reduce((s,k)=>s+groups[k].svcCogs,0);
-  const totalExtra=sortedKeys.reduce((s,k)=>{const fc=getGroupFC(k);return s+fc.marketing+fc.depreciation+fc.software;},0);
+  const totalExtra=sortedKeys.reduce((s,k)=>s+fcTotal(getGroupFC(k)),0);
   const totalProfit=totalRev-totalSvcCogs-totalExtra;
 
   const periodName=periodNames[plPeriod]||'kỳ';
@@ -1781,13 +1810,15 @@ function renderPL(){
     options:{plugins:{tooltip:{callbacks:{label:c=>c.dataset.label+": "+fmt(c.raw)}}},scales:{y:{ticks:{callback:v=>fmtShort(v)},grid:{color:"rgba(0,0,0,.05)"}},x:{grid:{display:false}}}}
   });
 
-  const colCount=showFC?9:6;
+  // Short labels for table headers
+  const FC_SHORT={rent_utility:"Nhà/ĐN",salary:"Lương",marketing:"QC",software:"PM",other:"Khác",tools:"Công cụ"};
+  const colCount=showFC?(3+FC_CATS.length+3):6;
   const dash=`<span style="color:var(--muted)">—</span>`;
 
   document.getElementById("plHead").innerHTML=`<tr>
     <th>${plPeriod==='day'?'Ngày':plPeriod==='week'?'Tuần':plPeriod==='year'?'Năm':'Tháng'}</th>
     <th>Doanh thu</th><th>Giá cost LT</th>
-    ${showFC?`<th>Marketing</th><th>Khấu hao</th><th>Phần mềm</th>`:""}
+    ${showFC?FC_CATS.map(c=>`<th>${FC_SHORT[c.key]||c.label}</th>`).join(''):""}
     <th>Tổng chi</th><th>Lợi nhuận</th><th>Tỷ lệ</th>
   </tr>`;
 
@@ -1796,7 +1827,7 @@ function renderPL(){
     :[...sortedKeys].reverse().map(key=>{
       const g=groups[key];
       const fc=getGroupFC(key);
-      const totalCost=g.svcCogs+fc.marketing+fc.depreciation+fc.software;
+      const totalCost=g.svcCogs+fcTotal(fc);
       const profit=g.revenue-totalCost;
       const margin=g.revenue>0?(profit/g.revenue*100).toFixed(1):0;
       const cls=profit>=0?"pl-row-profit":"pl-row-loss";
@@ -1804,7 +1835,7 @@ function renderPL(){
         <td>${plPeriodLabel(key)}</td>
         <td style="font-weight:700;">${fmt(g.revenue)}</td>
         <td>${g.svcCogs>0?fmt(g.svcCogs):dash}</td>
-        ${showFC?`<td>${fc.marketing>0?fmt(fc.marketing):dash}</td><td>${fc.depreciation>0?fmt(fc.depreciation):dash}</td><td>${fc.software>0?fmt(fc.software):dash}</td>`:""}
+        ${showFC?FC_CATS.map(c=>`<td>${fc[c.key]>0?fmt(fc[c.key]):dash}</td>`).join(''):""}
         <td>${fmt(totalCost)}</td>
         <td style="font-weight:800;">${fmt(profit)}</td>
         <td>${margin}%</td>
