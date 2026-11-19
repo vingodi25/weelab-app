@@ -130,10 +130,11 @@ tr:hover td{background:#fafbf9;}
     <div class="dot" id="sheetsDot"></div>
     <span id="sheetsStatusTxt">Chưa kết nối Google Sheets</span>
   </div>
+  <button class="btn-sm" onclick="loadFromCSV()" style="background:var(--brand);color:#fff;">🔄 Làm mới dữ liệu</button>
   <input class="sheets-url-input" id="sheetsUrlInput" type="text"
-    placeholder="Dán URL Web App (Apps Script) vào đây…"
+    placeholder="(Tuỳ chọn) Dán URL Apps Script để kết nối thêm…"
     oninput="saveUrlDraft(this.value)">
-  <button class="btn-sm" onclick="connectSheets()">🔗 Kết nối & tải dữ liệu</button>
+  <button class="btn-sm" onclick="connectSheets()">🔗 Kết nối Apps Script</button>
   <span class="sheets-info" id="sheetsInfo"></span>
 </div>
 
@@ -577,6 +578,9 @@ const PO_KEY     = "weelab_purchases";
 const SYNC_URL_KEY = "weelab_sync_sheet_url";
 const SAVED_BILLS_KEY = "weelab_saved_bills";
 
+// URL trực tiếp đến sheet database chính (1Ecl...) — nguồn số hoá đơn chính xác
+const BILLS_CSV_URL = "https://docs.google.com/spreadsheets/d/1Ecl--XNJHyvtApdrVzp7EtXkz8K_P7pcw0tpAi9Jvho/export?format=csv&gid=769573903";
+
 function getDB(){ return JSON.parse(localStorage.getItem(DB_KEY)||"{}"); }
 function getSavedBills(){ return JSON.parse(localStorage.getItem(SAVED_BILLS_KEY)||"[]"); }
 function getInvStore(){ return JSON.parse(localStorage.getItem(INV_KEY)||"{}"); }
@@ -664,10 +668,112 @@ function setDot(state,msg){
   txt.textContent=msg||"";
 }
 
-// Load cache on start
+/* ════════════════════════════════════════════════════
+   CSV LOADER — đọc trực tiếp từ sheet database chính
+════════════════════════════════════════════════════ */
+function _parseCSVFull(text){
+  // RFC-4180: xử lý quoted fields có dấu phẩy và xuống dòng bên trong
+  const rows=[];let curRow=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i],nx=text[i+1];
+    if(c==='"'){
+      if(inQ&&nx==='"'){cur+='"';i++;}
+      else{inQ=!inQ;}
+    }else if(c===','&&!inQ){curRow.push(cur);cur='';}
+    else if((c==='\n'||c==='\r')&&!inQ){
+      if(c==='\r'&&nx==='\n')i++;
+      curRow.push(cur);cur='';
+      if(curRow.some(x=>x.trim()))rows.push(curRow);
+      curRow=[];
+    }else{cur+=c;}
+  }
+  if(cur||curRow.length){curRow.push(cur);if(curRow.some(x=>x.trim()))rows.push(curRow);}
+  return rows;
+}
+
+function _parseMoney(s){
+  if(!s) return 0;
+  return parseInt(String(s).replace(/[^\d]/g,""))||0;
+}
+
+function _parseCsvDate(s){
+  if(!s) return null;
+  s=String(s).trim();
+  // "HH:MM:SS D/M/YYYY" hoặc "H:MM:SS D/M/YYYY"
+  const m1=s.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m1) return new Date(+m1[5],+m1[4]-1,+m1[3],+m1[1],+m1[2]);
+  // "D/M/YYYY"
+  const m2=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m2) return new Date(+m2[3],+m2[2]-1,+m2[1]);
+  return null;
+}
+
+function loadFromCSV(){
+  setDot("loading","Đang tải database hoá đơn…");
+  fetch(BILLS_CSV_URL)
+    .then(r=>{
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      return r.text();
+    })
+    .then(text=>{
+      const rows=_parseCSVFull(text);
+      const visits=[];
+      const pad=x=>String(x).padStart(2,"0");
+      for(let i=1;i<rows.length;i++){
+        const r=rows[i];
+        if(!r[0]||!r[0].trim()) continue;
+        const d=_parseCsvDate(r[0]);
+        if(!d) continue;
+        const dateStr=`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        visits.push({
+          date:        dateStr,
+          invNum:      (r[1]||"").trim(),
+          name:        (r[2]||"").trim(),
+          phone:       (r[3]||"").replace(/^'/,"").trim(),
+          customerType:(r[6]||"").trim(),
+          skins:        r[7]?String(r[7]).split(" | ").filter(Boolean):[],
+          mode:        (r[9]||"")==="Buffet"?"buf":"alc",
+          buffetName:  (r[10]||"").trim(),
+          itemsStr:    (r[11]||"").trim(),
+          totalTimeMins:_parseMoney(r[13]),
+          totalLabor:  _parseMoney(r[14]),
+          membershipFee:_parseMoney(r[15]),
+          vipTier:     (r[18]||"").trim(),
+          vipTopup:    _parseMoney(r[19]),
+          total:       _parseMoney(r[21]),
+        });
+      }
+      sheetVisits=visits;
+      sheetLoaded=true;
+      localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),visits:sheetVisits}));
+      setDot("ok","Đã tải · "+visits.length+" bill từ database");
+      document.getElementById("sheetsInfo").textContent="(cập nhật: "+new Date().toLocaleTimeString("vi-VN")+")";
+      renderCurrentTab();
+    })
+    .catch(err=>{
+      // Fallback: thử load cache cũ
+      const cache=localStorage.getItem(CACHE_KEY);
+      if(cache){
+        try{
+          const c=JSON.parse(cache);
+          if(c.visits&&c.visits.length>0){
+            sheetVisits=c.visits;sheetLoaded=true;
+            const age=Math.round((Date.now()-c.ts)/60000);
+            setDot("ok","Cache · "+c.visits.length+" bill ("+age+"ph trước)");
+            renderCurrentTab();return;
+          }
+        }catch(e){}
+      }
+      setDot("err","Không tải được — đảm bảo đang đăng nhập Google Drive.");
+      renderCurrentTab();
+    });
+}
+
+// Load cache on start → rồi tự động fetch CSV mới
 (function initSheets(){
   const savedUrl=localStorage.getItem(URL_KEY)||"";
   if(savedUrl) document.getElementById("sheetsUrlInput").value=savedUrl;
+  // Hiển thị cache ngay lập tức trong khi load mới
   const cache=localStorage.getItem(CACHE_KEY);
   if(cache){
     try{
@@ -676,11 +782,12 @@ function setDot(state,msg){
         sheetVisits=c.visits;
         sheetLoaded=true;
         const age=Math.round((Date.now()-c.ts)/60000);
-        setDot("ok","Dùng cache · "+sheetVisits.length+" bill (cập nhật "+age+"ph trước)");
-        document.getElementById("sheetsInfo").textContent="Nhấn 'Kết nối & tải dữ liệu' để làm mới";
+        setDot("ok","Cache · "+sheetVisits.length+" bill ("+age+"ph trước) — đang làm mới…");
       }
-    } catch(e){}
+    }catch(e){}
   }
+  // Luôn fetch CSV mới khi mở trang
+  loadFromCSV();
 })();
 
 /* ════════════════════════════════════════════════════
