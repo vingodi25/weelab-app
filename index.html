@@ -1292,6 +1292,27 @@ function billItems(){
 function alcTotal(){ // tổng tính theo giá chuẩn của loại khách hiện tại (lẻ hoặc member)
   return billItems().reduce((s,m)=>s+priceFor(m),0);
 }
+
+// Phần được trừ từ thẻ VIP: dịch vụ làm da mặt + liệu trình gợi ý + buổi lẻ triệt/peel
+function vipDeductibleTotal(){
+  const isBuf=state.mode==="buf";
+  const buf=isBuf?BUFFET.find(b=>b.id===state.buffet):null;
+  const faceAmt=isBuf?(buf?buf.price:0):alcTotal();
+  const ltAmt=(state.lieutrinhCart||[]).reduce((s,x)=>s+x.price,0);
+  // Triệt lẻ: không có 'Gói' trong typeLabel
+  const tlLeAmt=(state.tlCart||[]).filter(x=>!x.typeLabel.includes('Gói')).reduce((s,x)=>s+x.price,0);
+  // Peel lẻ: không có 'Combo' trong typeLabel
+  const peelLeAmt=(state.peelCart||[]).filter(x=>!x.typeLabel.includes('Combo')).reduce((s,x)=>s+x.price,0);
+  return faceAmt+ltAmt+tlLeAmt+peelLeAmt;
+}
+
+// Phần phải trả tiền mặt dù là khách VIP: sản phẩm + gói triệt + gói peel body
+function nonVipTotal(){
+  const prodAmt=productCartTotal();
+  const tlGoiAmt=(state.tlCart||[]).filter(x=>x.typeLabel.includes('Gói')).reduce((s,x)=>s+x.price,0);
+  const peelComboAmt=(state.peelCart||[]).filter(x=>x.typeLabel.includes('Combo')).reduce((s,x)=>s+x.price,0);
+  return prodAmt+tlGoiAmt+peelComboAmt;
+}
 function totalTimeMins(){
   // tổng thời gian = cộng thời gian các món đã tick (áp dụng cho cả gọi lẻ và buffet)
   return billItems().reduce((s,m)=>s+(m.time||0),0);
@@ -1401,24 +1422,26 @@ function renderBill(){
     html+=`<div class="billline"><span class="bn">💎 Nạp thẻ VIP ${state.vipCard.name}</span><span class="bp">${fmt(state.vipCard.price)}</span></div>`;
     grand = state.vipCard.price + (state.membership ? state.membership.fee : 0);
   } else if(state.vipCard && !state.vipCard.newReg){
-    // Khách VIP cũ: trừ từ thẻ, xử lý 3 trường hợp
-    const svcDeduct = isBuf ? (buf ? buf.price : 0) : alcTotal();
-    const cardBal = state.vipCard.balance || 0;
+    // Khách VIP cũ: trừ thẻ cho dịch vụ mặt + liệu trình + lẻ triệt/peel
+    // Sản phẩm + gói triệt/peel phải trả tiền mặt
+    const svcDeduct = vipDeductibleTotal();
+    const cashReq   = nonVipTotal();
+    const cardBal   = state.vipCard.balance || 0;
     const memberFeeLocal = state.membership ? state.membership.fee : 0;
+    if(cashReq > 0){
+      html+=`<div class="billline"><span class="bn">💵 Trả tiền mặt (gói/sản phẩm)</span><span class="bp">${fmt(cashReq)}</span></div>`;
+    }
     if(cardBal === 0){
-      // Thẻ hết tiền — thu full tiền dịch vụ
       html+=`<div class="billline" style="color:var(--danger,#a31420)"><span class="bn">⚠️ Thẻ hết tiền, vui lòng nạp thêm</span><span class="bp">${fmt(svcDeduct)}</span></div>`;
-      grand = svcDeduct + memberFeeLocal;
+      grand = svcDeduct + cashReq + memberFeeLocal;
     } else if(cardBal >= svcDeduct){
-      // Thẻ đủ tiền — không thu tiền mặt
       html+=`<div class="billline" style="color:var(--gold)"><span class="bn">💎 Thanh toán từ thẻ VIP ${state.vipCard.name}</span><span class="bp">-${fmt(svcDeduct)}</span></div>`;
-      grand = 0 + memberFeeLocal;
+      grand = cashReq + memberFeeLocal;
     } else {
-      // Thẻ thiếu — trừ hết thẻ, thu thêm phần chênh lệch
       const shortfall = svcDeduct - cardBal;
       html+=`<div class="billline" style="color:var(--gold)"><span class="bn">💎 Trừ từ thẻ VIP ${state.vipCard.name}</span><span class="bp">-${fmt(cardBal)}</span></div>`;
       html+=`<div class="billline" style="color:var(--danger,#a31420)"><span class="bn">⚠️ Thanh toán thêm phần thiếu</span><span class="bp">${fmt(shortfall)}</span></div>`;
-      grand = shortfall + memberFeeLocal;
+      grand = shortfall + cashReq + memberFeeLocal;
     }
   }
 
@@ -1437,7 +1460,7 @@ function renderBill(){
   const vipNote=document.getElementById("vipBalanceNote");
   if(vipNote){
     if(state.vipCard && state.customerType==="vip"){
-      const svcCost = isBuf ? (buf ? buf.price : 0) : alcTotal();
+      const svcCost = vipDeductibleTotal();
       const cardBal = state.vipCard.balance || 0;
       if(cardBal === 0){
         vipNote.innerHTML = `⚠️ <b style="color:var(--danger,#a31420)">Thẻ hết tiền, vui lòng nạp thêm</b>`;
@@ -1851,11 +1874,13 @@ function currentRecord(){
   if(isNewVip){
     grandTotal = Math.max(0, vipFee + prodTotal + memberFee - discountAmt);
   } else if(isReturningVip){
-    const cardBal = state.vipCard.balance || 0;
-    if(cardBal >= svcTotal){
-      grandTotal = Math.max(0, prodTotal + memberFee - discountAmt);
+    const cardBal   = state.vipCard.balance || 0;
+    const vipDeduct = vipDeductibleTotal();
+    const cashReq   = nonVipTotal();
+    if(cardBal >= vipDeduct){
+      grandTotal = Math.max(0, cashReq + memberFee - discountAmt);
     } else {
-      grandTotal = Math.max(0, (svcTotal - cardBal) + prodTotal + memberFee - discountAmt);
+      grandTotal = Math.max(0, (vipDeduct - cardBal) + cashReq + memberFee - discountAmt);
     }
   } else {
     const tlTotal=(state.tlCart||[]).reduce((s,x)=>s+x.price,0);
@@ -1863,7 +1888,7 @@ function currentRecord(){
     const lieutrinhTotal=(state.lieutrinhCart||[]).reduce((s,x)=>s+x.price,0);
     grandTotal = Math.max(0, svcTotal + prodTotal + tlTotal + peelTotal + lieutrinhTotal + memberFee - discountAmt);
   }
-  const vipBalanceAfter = state.vipCard ? state.vipCard.balance - svcTotal : 0;
+  const vipBalanceAfter = state.vipCard ? state.vipCard.balance - vipDeductibleTotal() : 0;
   const prodCost = productCartCost();
   const productItems = Object.values(state.productCart||{}).map(item=>({
     sku:item.name, name:item.fullName||item.name, price:item.price,
@@ -2196,7 +2221,7 @@ const TL_HAIR_AREAS=[
     {id:'tl_fullface',name:'Mặt đầy đủ',single:199000,pkg:1199000},
   ]},
   {group:'Thân trên',areas:[
-    {id:'tl_nach',name:'Nách',single:199000,pkg:869000},
+    {id:'tl_nach',name:'Nách',single:99000,pkg:869000},
     {id:'tl_halfarm',name:'½ Tay',single:199000,pkg:1199000},
     {id:'tl_fullarm',name:'Tay đầy đủ',single:299000,pkg:1669000},
     {id:'tl_chest',name:'Ngực',single:199000,pkg:1199000},
@@ -2514,7 +2539,7 @@ function resetAll(){
 
 /* ============ VIP TIER DATA ============ */
 const VIP_TIERS = {
-  glow:     {name:"GLOW",     price:5000000,  cashback:500000,  balance:5500000,  expDays:45},
+  glow:     {name:"GLOW",     price:5000000,  cashback:500000,  balance:5500000,  expDays:null},
   radiant:  {name:"RADIANT",  price:10000000, cashback:1000000, balance:11000000, expDays:null},
   luminous: {name:"LUMINOUS", price:20000000, cashback:2500000, balance:22500000, expDays:null},
 };
@@ -2694,7 +2719,7 @@ renderBill();
         <div class="vtier-price">5.000.000đ</div>
         <div class="vtier-cashback">+ Hoàn 500.000đ vào thẻ</div>
         <div class="vtier-balance">Số dư thẻ: 5.500.000đ</div>
-        <div class="vtier-note">⏱ Hiệu lực 45 ngày</div>
+        <div class="vtier-note">Không giới hạn thời gian</div>
       </div>
       <div class="vtier" onclick="selectVipTier('radiant',this)">
         <div class="vtier-name">✦✦ RADIANT</div>

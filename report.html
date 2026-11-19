@@ -89,6 +89,8 @@ tr:hover td{background:#fafbf9;}
 .pl-period-btn.on{background:var(--brand-dark);color:#fff;border-color:var(--brand-dark);}
 .empty{text-align:center;padding:36px;color:var(--muted);}
 .tab-section{display:none;}
+.vip-hist{display:none;border-top:1px solid #ede6dc;}
+.vip-hist.show{display:block;}
 .tab-section.show{display:block;}
 .badge-num{display:inline-block;background:var(--brand);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:12px;margin-left:5px;}
 
@@ -145,6 +147,7 @@ tr:hover td{background:#fafbf9;}
   <button class="tab"     onclick="switchTab('customers')">👤 Khách hàng</button>
   <button class="tab"     onclick="switchTab('inventory')">📦 Sản phẩm & Kho</button>
   <button class="tab"     onclick="switchTab('purchases')">📥 Nhập hàng</button>
+  <button class="tab"     onclick="switchTab('vip')">💎 Thẻ VIP</button>
   <button class="tab"     onclick="switchTab('pl')">💰 Lãi lỗ</button>
 </div>
 
@@ -362,6 +365,18 @@ tr:hover td{background:#fafbf9;}
   <div style="background:#fff;border-radius:16px;max-width:620px;margin:40px auto;padding:28px 28px 24px;position:relative;" onclick="event.stopPropagation()">
     <button onclick="closePoDetail()" style="position:absolute;top:16px;right:18px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);">✕</button>
     <div id="poDetailContent"></div>
+  </div>
+</div>
+
+<!-- ═══ VIP ═══ -->
+<div class="tab-section" id="tab-vip">
+  <div class="stat-cards" id="vipSummaryCards" style="margin-bottom:16px;"></div>
+  <div class="tbl-card">
+    <div class="tbl-hdr">
+      <h3>Khách hàng thẻ VIP <span class="badge-num" id="vipCustCount">0</span></h3>
+      <input class="search-box" type="text" placeholder="🔍 Tìm tên, SĐT…" oninput="renderVip()" id="vipSearch">
+    </div>
+    <div id="vipBody" style="padding:4px 0;"></div>
   </div>
 </div>
 
@@ -738,9 +753,10 @@ function loadFromCSV(){
           totalTimeMins:_parseMoney(r[13]),
           totalLabor:  _parseMoney(r[14]),
           membershipFee:_parseMoney(r[15]),
-          vipTier:     (r[18]||"").trim(),
-          vipTopup:    _parseMoney(r[19]),
-          total:       _parseMoney(r[21]),
+          vipTier:        (r[18]||"").trim(),
+          vipTopup:       _parseMoney(r[19]),
+          vipBalanceAfter:_parseMoney(r[20]),
+          total:          _parseMoney(r[21]),
         });
       }
       sheetVisits=visits;
@@ -985,7 +1001,7 @@ let revenueChart=null,plChart=null;
 ════════════════════════════════════════════════════ */
 function switchTab(tab){
   currentTab=tab;
-  const tabs=["overview","invoices","customers","inventory","purchases","pl"];
+  const tabs=["overview","invoices","customers","inventory","purchases","vip","pl"];
   document.querySelectorAll(".tab").forEach((el,i)=>el.classList.toggle("on",tabs[i]===tab));
   document.querySelectorAll(".tab-section").forEach(el=>el.classList.toggle("show",el.id==="tab-"+tab));
   renderCurrentTab();
@@ -997,6 +1013,7 @@ function renderCurrentTab(){
   else if(currentTab==="customers") renderCustomers();
   else if(currentTab==="inventory") renderInventory();
   else if(currentTab==="purchases") renderPurchases();
+  else if(currentTab==="vip") renderVip();
   else if(currentTab==="pl") renderPL();
 }
 
@@ -1874,6 +1891,189 @@ function calcLaborFromStr(str){
     total+=lookupSvcLabor(name);
   }
   return total;
+}
+
+/* ════════════════════════════════════════════════════
+   VIP CUSTOMERS
+════════════════════════════════════════════════════ */
+const VIP_TIER_LABELS={glow:"GLOW",radiant:"RADIANT",luminous:"LUMINOUS"};
+const VIP_TIER_BALANCE={glow:5500000,radiant:11000000,luminous:22500000};
+const VIP_TIER_COLOR={glow:"#b87a2e",radiant:"#6868a8",luminous:"#a0761a"};
+
+function buildVipCustomers(){
+  // Lấy toàn bộ bill, không lọc theo kỳ
+  const visits=[...sheetVisits].map(v=>{
+    const labor=v.totalLabor||calcLaborFromStr(v.itemsStr);
+    return {...v,totalLabor:labor,_src:"sheet"};
+  });
+  // Thêm saved bills nếu có
+  const savedBills=getSavedBills();
+  const sheetKeys=new Set(sheetVisits.map(v=>v.phone+"_"+v.date));
+  savedBills.forEach(b=>{
+    const key=(b.phone||"")+"_"+(b.date||"");
+    if(!sheetKeys.has(key)&&b.vipTier){
+      visits.push({...b,_src:"saved"});
+    }
+  });
+
+  const map={};
+  // Sắp xếp theo số bill tăng dần để tính số dư chạy đúng thứ tự
+  visits.sort((a,b)=>{
+    const na=a.invNum&&/^W\d+$/i.test(a.invNum)?parseInt(a.invNum.slice(1)):0;
+    const nb=b.invNum&&/^W\d+$/i.test(b.invNum)?parseInt(b.invNum.slice(1)):0;
+    if(na&&nb) return na-nb;
+    if(na) return -1; if(nb) return 1;
+    const da=parseDate(a.date),db=parseDate(b.date);
+    return (da?.getTime()||0)-(db?.getTime()||0);
+  });
+
+  visits.forEach(v=>{
+    if(!v.vipTier) return;
+    const key=v.phone||v.name||"?";
+    if(!map[key]){
+      map[key]={
+        name:v.name||"—",phone:v.phone||"—",
+        tier:v.vipTier,
+        sessions:[],
+        currentBalance:0,
+        totalTopup:0,
+        totalSpent:0,
+      };
+    }
+    const c=map[key];
+    // Cập nhật tier (dùng tier mới nhất)
+    if(v.vipTier) c.tier=v.vipTier;
+    // Nạp thẻ
+    if(v.vipTopup>0) c.totalTopup+=v.vipTopup;
+    // Số dư sau buổi (dùng giá trị trực tiếp từ sheet nếu có)
+    if(v.vipBalanceAfter!==undefined && v.vipBalanceAfter!==null){
+      c.currentBalance=v.vipBalanceAfter;
+    }
+    // Tiền dịch vụ buổi đó (tổng bill trừ tiền nạp thẻ nếu là buổi đăng ký)
+    const sessionTotal = v.vipTopup>0 ? 0 : (v.total||0);
+    if(sessionTotal>0) c.totalSpent+=sessionTotal;
+    c.sessions.push({
+      date:v.date, invNum:v.invNum||"",
+      name:v.name, total:v.total||0,
+      vipTopup:v.vipTopup||0,
+      vipBalanceAfter:v.vipBalanceAfter,
+      itemsStr:v.itemsStr||"",
+      _src:v._src||"sheet",
+    });
+  });
+
+  return Object.values(map).sort((a,b)=>{
+    // Sắp xếp: nhiều tiền trong thẻ trước
+    return (b.currentBalance||0)-(a.currentBalance||0);
+  });
+}
+
+function renderVip(){
+  const q=(document.getElementById("vipSearch")?.value||"").toLowerCase();
+  let custs=buildVipCustomers();
+  if(q) custs=custs.filter(c=>
+    c.name.toLowerCase().includes(q)||c.phone.includes(q)
+  );
+
+  document.getElementById("vipCustCount").textContent=custs.length;
+
+  // Summary cards
+  const totalBal=custs.reduce((s,c)=>s+(c.currentBalance||0),0);
+  const totalTopup=custs.reduce((s,c)=>s+(c.totalTopup||0),0);
+  document.getElementById("vipSummaryCards").innerHTML=`
+    <div class="stat-card"><div class="sc-label">Tổng khách VIP</div><div class="sc-val">${custs.length}</div></div>
+    <div class="stat-card"><div class="sc-label">Tổng số dư trong thẻ</div><div class="sc-val" style="color:#b87a2e">${fmt(totalBal)}</div></div>
+    <div class="stat-card"><div class="sc-label">Tổng đã nạp thẻ</div><div class="sc-val">${fmt(totalTopup)}</div></div>
+  `;
+
+  if(!custs.length){
+    document.getElementById("vipBody").innerHTML=`<div style="padding:24px;text-align:center;color:var(--muted);">Chưa có khách hàng VIP nào</div>`;
+    return;
+  }
+
+  document.getElementById("vipBody").innerHTML=custs.map((c,ci)=>{
+    const tierKey=(c.tier||"").toLowerCase();
+    const tierLabel=VIP_TIER_LABELS[tierKey]||(c.tier||"VIP").toUpperCase();
+    const tierColor=VIP_TIER_COLOR[tierKey]||"#8b1a3b";
+    const bal=c.currentBalance||0;
+    const balColor=bal>0?"var(--brand-dark)":"var(--danger,#a31420)";
+    const balMax=VIP_TIER_BALANCE[tierKey]||0;
+    const balPct=balMax>0?Math.max(0,Math.min(100,Math.round(bal/balMax*100))):0;
+
+    // Sessions — newest first for display
+    const sessions=[...c.sessions].reverse();
+    const sessionRows=sessions.map(s=>{
+      const isTopup=s.vipTopup>0;
+      const balAfterStr=s.vipBalanceAfter!=null&&s.vipBalanceAfter!==undefined
+        ? `<span style="font-size:11px;color:var(--muted);">Còn: <b>${fmt(Math.max(0,s.vipBalanceAfter))}</b></span>`
+        : "";
+      return `<tr style="border-bottom:1px solid #f0eae2;">
+        <td style="padding:7px 10px;font-size:12px;color:var(--muted);white-space:nowrap;">${s.date||"—"}</td>
+        <td style="padding:7px 10px;font-size:12px;">${s.invNum?`<span style="font-weight:600;color:var(--brand-dark);">${s.invNum}</span>`:"—"}</td>
+        <td style="padding:7px 10px;font-size:12px;max-width:200px;color:#555;">${s.itemsStr?s.itemsStr.replace(/\n/g,"<br>").slice(0,120)+(s.itemsStr.length>120?"…":""):"—"}</td>
+        <td style="padding:7px 10px;font-size:12px;text-align:right;font-weight:700;">
+          ${isTopup
+            ? `<span style="color:var(--green,#2d7a3a);">+${fmt(s.vipTopup)} <small style="font-weight:400">nạp thẻ</small></span>`
+            : `<span style="color:var(--brand-dark);">${fmt(s.total)}</span>`
+          }
+        </td>
+        <td style="padding:7px 10px;font-size:12px;text-align:right;">${balAfterStr}</td>
+      </tr>`;
+    }).join("");
+
+    return `
+    <div class="vip-cust-card" id="vipCard${ci}" style="margin:0 0 14px;background:#fff;border-radius:14px;border:1.5px solid #e7e0d6;overflow:hidden;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;background:#faf8f5;"
+           onclick="document.getElementById('vipHist${ci}').classList.toggle('show')">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-weight:800;font-size:15px;">${c.name}</span>
+            <span style="background:${tierColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.5px;">✦ ${tierLabel}</span>
+          </div>
+          <div style="color:var(--muted);font-size:12px;margin-top:3px;">📱 ${c.phone} &nbsp;·&nbsp; ${c.sessions.length} buổi</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--muted);">Số dư thẻ</div>
+          <div style="font-size:17px;font-weight:800;color:${balColor};">${fmt(bal)}</div>
+          ${balMax>0?`<div style="margin-top:5px;width:90px;height:5px;background:#ecdfd3;border-radius:3px;overflow:hidden;"><div style="width:${balPct}%;height:100%;background:${tierColor};border-radius:3px;"></div></div>`:""}
+        </div>
+      </div>
+      <!-- Thống kê nhanh -->
+      <div style="display:flex;gap:0;border-top:1px solid #ede6dc;border-bottom:1px solid #ede6dc;background:#fff;">
+        <div style="flex:1;text-align:center;padding:9px 6px;border-right:1px solid #ede6dc;">
+          <div style="font-size:10px;color:var(--muted);">Tổng nạp</div>
+          <div style="font-size:13px;font-weight:700;color:var(--green,#2d7a3a);">${fmt(c.totalTopup)}</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:9px 6px;border-right:1px solid #ede6dc;">
+          <div style="font-size:10px;color:var(--muted);">Đã sử dụng</div>
+          <div style="font-size:13px;font-weight:700;color:var(--brand-dark);">${fmt(c.totalSpent)}</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:9px 6px;">
+          <div style="font-size:10px;color:var(--muted);">Số buổi</div>
+          <div style="font-size:13px;font-weight:700;">${c.sessions.filter(s=>!s.vipTopup||s.vipTopup===0).length}</div>
+        </div>
+      </div>
+      <!-- Lịch sử (ẩn/hiện) -->
+      <div class="vip-hist" id="vipHist${ci}">
+        <div style="padding:8px 18px 4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">Lịch sử sử dụng thẻ</div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;min-width:460px;">
+            <thead>
+              <tr style="background:#f5f1ea;">
+                <th style="padding:6px 10px;font-size:11px;text-align:left;color:var(--muted);">Ngày giờ</th>
+                <th style="padding:6px 10px;font-size:11px;text-align:left;color:var(--muted);">Hoá đơn</th>
+                <th style="padding:6px 10px;font-size:11px;text-align:left;color:var(--muted);">Dịch vụ</th>
+                <th style="padding:6px 10px;font-size:11px;text-align:right;color:var(--muted);">Tiền bill</th>
+                <th style="padding:6px 10px;font-size:11px;text-align:right;color:var(--muted);">Số dư sau</th>
+              </tr>
+            </thead>
+            <tbody>${sessionRows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
 }
 
 /* ════════════════════════════════════════════════════
