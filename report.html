@@ -814,7 +814,11 @@ function monthLabel(key){ const[y,m]=key.split("-"); return "T"+parseInt(m)+"/"+
 ════════════════════════════════════════════════════ */
 function allVisits(){
   // 1. Sheet visits (source of truth for historical data)
-  const list=sheetVisits.map(v=>({...v,_src:"sheet"}));
+  // Nếu totalLabor=0 và có itemsStr → tự tính công từ bảng SVC_LABOR
+  const list=sheetVisits.map(v=>{
+    const labor=v.totalLabor||calcLaborFromStr(v.itemsStr);
+    return {...v,totalLabor:labor,_src:"sheet"};
+  });
   // 2. Local visits — only add if NOT already in sheet (deduplicate by phone+date string)
   const sheetKeys=new Set(sheetVisits.map(v=>v.phone+"_"+v.date));
   const db=getDB();
@@ -872,6 +876,11 @@ function allVisits(){
     });
   }
   return list.sort((a,b)=>{
+    // Primary: invoice number W000039 → W000038 → ... (mới nhất trước)
+    const na=a.invNum&&/^W\d+$/i.test(a.invNum)?parseInt(a.invNum.slice(1)):0;
+    const nb=b.invNum&&/^W\d+$/i.test(b.invNum)?parseInt(b.invNum.slice(1)):0;
+    if(nb!==na) return nb-na;
+    // Fallback: theo ngày
     const da=parseDate(a.date),db2=parseDate(b.date);
     return (db2?.getTime()||0)-(da?.getTime()||0);
   });
@@ -1766,6 +1775,105 @@ function lookupSvcCost(raw){
     }
   }
   return 0;
+}
+
+/* ════════════════════════════════════════════════════
+   LABOR COSTS — Công KTV (nguồn: Bảng công KTV, cập nhật 11/2026)
+════════════════════════════════════════════════════ */
+const SVC_LABOR={
+  // CB
+  "Làm sạch chuyên sâu (60p)":38000,
+  "Chăm sóc cơ bản (trọn 60p)":38000,
+  // NC add-ons
+  "Massage khai thông hệ bạch huyết":5000,
+  "Cấp nước biểu bì cho da khô":2000,
+  "Chiếu đèn quang động học (PDT)":2000,
+  "Chiếu đèn quang động học":2000,
+  "Sebum Soak (loãng dầu)":3000,
+  "Hydra Peel AHA/BHA":5000,
+  "Hydra Peel HA+Vitamin C":5000,
+  "Giải cơ cổ vai gáy (EMS, RF)":5000,
+  "Giải cơ cổ vai gáy công nghệ EMS, RF":5000,
+  "Nâng cơ mặt (EMS, RF)":5000,
+  "Nâng cơ mặt công nghệ EMS, RF":5000,
+  // Peel — tất cả 5,000 trừ P15=10,000
+  "Phục hồi da yếu, mẩn đỏ, kích ứng":5000,
+  "Peel làm mịn, tăng sinh tế bào (da nhạy cảm)":5000,
+  "Peel làm mịn, tăng sinh tế bào cho da nhạy cảm":5000,
+  "Peel kiểm soát dầu, mụn ẩn (an toàn da nhạy)":5000,
+  "Peel kiểm soát dầu, mụn ẩn (an toàn với da nhạy cảm)":5000,
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm (da khô)":5000,
+  "Peel làm mịn, giảm nhăn, tăng cường ẩm cho da khô":5000,
+  "Peel xử lý dày sừng, nhiều dầu":5000,
+  "Peel kiểm soát dầu & mụn tổng hợp":5000,
+  "Peel nhẹ kiểm soát dầu & mụn tổng hợp":5000,
+  "Peel xử lý mụn viêm":5000,
+  "Phục hồi HRBV, cân bằng hệ vi sinh":5000,
+  "Phục hồi HRBV, cân bằng HVS":5000,
+  "Peel xử lý thâm mụn, nám, tàn nhang":5000,
+  "Peel xử lý sần vỏ cam, kiểm soát dầu":5000,
+  "Peel làm trắng, đều màu da, xử lý thâm nám":5000,
+  "Peel nóng kích thích lưu thông, da sáng hồng":5000,
+  "Peel lạnh nhả nắng, hạ nhiệt, săn chắc da":5000,
+  "Peel kiềm xử lý mụn, sẹo, thâm (theo điểm)":5000,
+  "Peel kiềm xử lý mụn, sẹo, thâm (toàn mặt)":10000,
+  "Peel tảo làm sáng, căng bóng da":5000,
+  // Enzyme
+  "Enzyme mask phục hồi, thải độc":20000,
+  // PT add-ons
+  "Nặn mụn thêm 30 phút":5000,
+  "Chiếu đèn thêm 20 phút":0,
+  "Gội đầu + Massage cơ bản":10000,
+  "Gội đầu + Massage cổ vai gáy":10000,
+  // Liệu trình set sẵn
+  "Lo-Li (Lighting)":40000,
+  "Glowii":40000,
+  "Babii":40000,
+  "Khoẻ (Re)":40000,
+  "Chillout Breakout":40000,
+  "Red Blemish Clear":40000,
+  "Nano Luminous":50000,
+  "Micro Luminous":80000,
+  "Soothes":40000,
+  "Enzyme Heal":60000,
+};
+
+const _laborKeys=Object.keys(SVC_LABOR);
+const _laborNorm=_laborKeys.map(_norm);
+
+function lookupSvcLabor(raw){
+  if(!raw) return 0;
+  const name=String(raw).trim();
+  // 1. Exact match
+  if(SVC_LABOR[name]!=null) return SVC_LABOR[name];
+  // 2. Strip "(Liệu trình ...)" và "(VIP)" suffix
+  const noLt=name
+    .replace(/\s*\(Liệu trình[^)]*\)\s*/gi,"")
+    .replace(/\s*\(VIP\)\s*/gi,"")
+    .replace(/\s*\(niêm yết\)\s*/gi,"")
+    .trim();
+  if(SVC_LABOR[noLt]!=null) return SVC_LABOR[noLt];
+  // 3. Strip ": XXXđ" price suffix
+  const noPx=noLt.replace(/:\s*[\d.,]+\.?\d*\s*đ\s*$/i,"").trim();
+  if(SVC_LABOR[noPx]!=null) return SVC_LABOR[noPx];
+  // 4. Fuzzy normalize
+  const nName=_norm(noPx||name);
+  for(let i=0;i<_laborKeys.length;i++){
+    const nk=_laborNorm[i];
+    if(nName===nk||nName.includes(nk)||nk.includes(nName)) return SVC_LABOR[_laborKeys[i]];
+  }
+  return 0;
+}
+
+function calcLaborFromStr(str){
+  if(!str) return 0;
+  const items=str.split(/[•\n;]/).map(s=>s.trim()).filter(Boolean);
+  let total=0;
+  for(const item of items){
+    const name=item.replace(/:\s*[\d.,]+\.?\d*\s*đ\s*$/i,"").trim();
+    total+=lookupSvcLabor(name);
+  }
+  return total;
 }
 
 /* ════════════════════════════════════════════════════

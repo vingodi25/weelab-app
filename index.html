@@ -876,16 +876,16 @@ const GROUPS = [
 
 /* Buffet: gói → nhóm món được phép */
 const FACIAL_TREATMENTS=[
-  {id:'loli',  name:'Lo-Li (Lighting)',    dur:"—",        list:1150000, vip:899000,  skin:'Da mụn tổng hợp, dày sừng trung bình'},
-  {id:'glowii',name:'Glowii',              dur:"90'–120'", list:1350000, vip:1200000, skin:'Da dầu, dày sừng, mụn ẩn, da xỉn màu'},
-  {id:'babii',  name:'Babii',              dur:"90'",       list:1500000, vip:1250000, skin:'Da căng thẳng, xỉn màu, thiếu nước'},
-  {id:'khoe',  name:'Khoẻ (Re)',           dur:"90'–120'", list:1350000, vip:1200000, skin:'Da dầu mụn, thâm tổng hợp'},
-  {id:'chill', name:'Chillout Breakout',   dur:"90'–120'", list:1250000, vip:1050000, skin:'Da yếu, nhạy cảm, sức đề kháng kém'},
-  {id:'nano',  name:'Nano Luminous',       dur:"120'",      list:1650000, vip:1450000, skin:'Da bít tắc, khô sần, sạm màu'},
-  {id:'micro', name:'Micro Luminous',      dur:"120'",      list:6000000, vip:5000000, skin:'Da thiếu sức sống, lỗ chân lông to'},
-  {id:'redbl',     name:'Red Blemish Clear', dur:"—",        list:1350000, vip:1100000, skin:'Da mụn viêm, thâm đỏ, không đều màu'},
-  {id:'enzymeheal',name:'Enzyme Heal',      dur:"90'–120'", list:1950000, vip:1650000, skin:'Mọi loại da. Da sạm màu, nhiều độc tố, da yếu, nhạy cảm'},
-  {id:'soothes',   name:'Soothes',          dur:"90'",      list:1350000, vip:1200000, skin:'Da khô yếu, nhạy cảm, mất cân bằng hệ vi sinh (ít mụn)'},
+  {id:'loli',      name:'Lo-Li (Lighting)',    dur:"—",        list:1150000, vip:899000,  labor:40000, skin:'Da mụn tổng hợp, dày sừng trung bình'},
+  {id:'glowii',    name:'Glowii',              dur:"90'–120'", list:1350000, vip:1200000, labor:40000, skin:'Da dầu, dày sừng, mụn ẩn, da xỉn màu'},
+  {id:'babii',     name:'Babii',               dur:"90'",      list:1500000, vip:1250000, labor:40000, skin:'Da căng thẳng, xỉn màu, thiếu nước'},
+  {id:'khoe',      name:'Khoẻ (Re)',           dur:"90'–120'", list:1350000, vip:1200000, labor:40000, skin:'Da dầu mụn, thâm tổng hợp'},
+  {id:'chill',     name:'Chillout Breakout',   dur:"90'–120'", list:1250000, vip:1050000, labor:40000, skin:'Da yếu, nhạy cảm, sức đề kháng kém'},
+  {id:'nano',      name:'Nano Luminous',       dur:"120'",     list:1650000, vip:1450000, labor:50000, skin:'Da bít tắc, khô sần, sạm màu'},
+  {id:'micro',     name:'Micro Luminous',      dur:"120'",     list:6000000, vip:5000000, labor:80000, skin:'Da thiếu sức sống, lỗ chân lông to'},
+  {id:'redbl',     name:'Red Blemish Clear',   dur:"—",        list:1350000, vip:1100000, labor:40000, skin:'Da mụn viêm, thâm đỏ, không đều màu'},
+  {id:'enzymeheal',name:'Enzyme Heal',         dur:"90'–120'", list:1950000, vip:1650000, labor:60000, skin:'Mọi loại da. Da sạm màu, nhiều độc tố, da yếu, nhạy cảm'},
+  {id:'soothes',   name:'Soothes',             dur:"90'",      list:1350000, vip:1200000, labor:40000, skin:'Da khô yếu, nhạy cảm, mất cân bằng hệ vi sinh (ít mụn)'},
 ];
 const BUFFET = [
   {id:"thanhkhiet", name:"Thanh khiết", name_en:"Purity", price:1099000, groups:["CB","NC"],
@@ -1890,7 +1890,11 @@ function currentRecord(){
     prodTotal:prodTotal,
     prodCost:prodCost,
     totalTimeMins:totalTimeMins(),
-    totalLabor:items.reduce((s,m)=>s+(m.labor||0),0),
+    totalLabor:items.reduce((s,m)=>s+(m.labor||0),0)
+             +(state.lieutrinhCart||[]).reduce((s,x)=>{
+               const t=FACIAL_TREATMENTS.find(f=>f.id===x.id);
+               return s+(t?t.labor||0:0);
+             },0),
     membershipMonths:state.membership?state.membership.months:0,
     membershipFee:memberFee,
     vipTier:state.vipCard?state.vipCard.tier:"",
@@ -1983,19 +1987,36 @@ function nextInvoiceNum(){
   localStorage.setItem(INV_CTR_KEY, n);
   return "W" + String(n).padStart(6,"0");
 }
-// Phục hồi counter từ weelab_saved_bills khi khởi động
-// (phòng trường hợp localStorage bị xóa nhưng saved_bills vẫn còn)
+// Phục hồi counter — ưu tiên Google Sheet (nguồn chính xác nhất cho đa thiết bị)
 function initInvoiceCounter(){
+  // Bước 1: lấy max từ localStorage + saved_bills
   try{
-    let max = parseInt(localStorage.getItem(INV_CTR_KEY)||"0");
+    let localMax = parseInt(localStorage.getItem(INV_CTR_KEY)||"0");
     const bills = JSON.parse(localStorage.getItem("weelab_saved_bills")||"[]");
     for(const b of bills){
-      if(b.invNum && /^W\d+$/.test(b.invNum)){
+      if(b.invNum && /^W\d+$/i.test(b.invNum)){
         const n = parseInt(b.invNum.slice(1));
-        if(n > max) max = n;
+        if(n > localMax) localMax = n;
       }
     }
-    localStorage.setItem(INV_CTR_KEY, max);
+    localStorage.setItem(INV_CTR_KEY, localMax);
+  }catch(e){}
+
+  // Bước 2: fetch max từ Sheet (async, non-blocking) — cập nhật counter nếu Sheet cao hơn
+  try{
+    const url = getSheetUrl() + "?action=getMaxInvoice";
+    fetch(url)
+      .then(r=>r.json())
+      .then(data=>{
+        if(data && data.ok && typeof data.max === "number"){
+          const sheetMax = data.max;
+          const localMax = parseInt(localStorage.getItem(INV_CTR_KEY)||"0");
+          if(sheetMax > localMax){
+            localStorage.setItem(INV_CTR_KEY, sheetMax);
+          }
+        }
+      })
+      .catch(()=>{}); // offline → dùng giá trị local
   }catch(e){}
 }
 
@@ -2175,6 +2196,7 @@ const TL_HAIR_AREAS=[
     {id:'tl_fullface',name:'Mặt đầy đủ',single:199000,pkg:1199000},
   ]},
   {group:'Thân trên',areas:[
+    {id:'tl_nach',name:'Nách',single:199000,pkg:869000},
     {id:'tl_halfarm',name:'½ Tay',single:199000,pkg:1199000},
     {id:'tl_fullarm',name:'Tay đầy đủ',single:299000,pkg:1669000},
     {id:'tl_chest',name:'Ngực',single:199000,pkg:1199000},
