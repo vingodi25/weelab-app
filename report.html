@@ -810,8 +810,8 @@ function loadFromCSV(){
   }
   // Luôn fetch CSV mới khi mở trang
   loadFromCSV();
-  // Load VIP card data
-  loadVipCards();
+  // Load VIP card data (defer to after all consts are initialized)
+  setTimeout(loadVipCards, 0);
 })();
 
 /* ════════════════════════════════════════════════════
