@@ -441,6 +441,11 @@
           <div class="sm-title">Liệu trình sẵn</div>
           <div class="sm-count" id="smLTCount" style="display:none">0</div>
         </div>
+        <div class="shopmode" id="smCombo" onclick="switchShopMode('combo')">
+          <div class="sm-icon">🎁</div>
+          <div class="sm-title">Mua Combo</div>
+          <div class="sm-count" id="smComboCount" style="display:none">0</div>
+        </div>
       </div>
     </div>
 
@@ -452,6 +457,31 @@
       </div>
       <div id="brandFilters" class="brand-filters"></div>
       <div id="productGrid" class="product-grid"></div>
+    </div>
+
+    <!-- COMBO SECTION -->
+    <div class="card" id="comboSection" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <button class="combo-tab-btn on" id="comboTabBuy" onclick="setComboTab('buy')" style="flex:1;min-width:120px;padding:9px 14px;border:2px solid var(--brand);background:var(--brand);color:#fff;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">🎁 Mua gói mới</button>
+        <button class="combo-tab-btn" id="comboTabUse" onclick="setComboTab('use')" style="flex:1;min-width:120px;padding:9px 14px;border:2px solid var(--brand);background:#fff;color:var(--brand);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">✅ Dùng buổi có sẵn</button>
+      </div>
+
+      <!-- MUA GÓI MỚI -->
+      <div id="comboBuyPanel">
+        <p style="font-size:12px;color:#8a8178;margin:0 0 12px">Chọn loại combo → chọn gói → tự động thêm vào hoá đơn.</p>
+        <div id="comboPkgGrid" style="display:flex;flex-direction:column;gap:14px;"></div>
+      </div>
+
+      <!-- DÙNG BUỔI CÓ SẴN -->
+      <div id="comboUsePanel" style="display:none">
+        <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+          <input type="tel" id="comboSearchPhone" placeholder="Nhập số điện thoại khách…"
+            style="flex:1;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;"
+            onkeydown="if(event.key==='Enter') searchComboCustomer()">
+          <button onclick="searchComboCustomer()" style="padding:9px 16px;background:var(--brand);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">Tìm</button>
+        </div>
+        <div id="comboCustomerResult"></div>
+      </div>
     </div>
 
     <!-- STEP 4 (HÌNH THỨC) — service section -->
@@ -1014,6 +1044,8 @@ let state = {
   tlCart:[],             // [{name, typeLabel, price}]
   peelCart:[],           // [{name, typeLabel, price}]
   lieutrinhCart:[],      // [{id, name, price}]
+  comboCart:[],          // [{id, name, pkgLabel, sessions, price}] — khi mua gói mới
+  comboUse:null,         // {rowIdx, phone, custName, comboType, comboName, totalSessions, usedBefore, sessionsLeft} — khi dùng buổi
 };
 const fmt = n => tr("fmtCurrency")(n);
 const byId = id => MENU.find(m=>m.id===id);
@@ -1342,7 +1374,7 @@ function renderBill(){
   }
 
   const prodItems = Object.values(state.productCart||{});
-  if(items.length===0 && !isBuf && prodItems.length===0 && !(state.tlCart||[]).length && !(state.peelCart||[]).length && !(state.lieutrinhCart||[]).length){
+  if(items.length===0 && !isBuf && prodItems.length===0 && !(state.tlCart||[]).length && !(state.peelCart||[]).length && !(state.lieutrinhCart||[]).length && !(state.comboCart||[]).length && !state.comboUse){
     lines.innerHTML=`<div class="empty">${tr("billEmpty")}</div>`;
     document.getElementById("grandTotal").textContent=fmt(0);
     document.getElementById("savingNote").textContent="";
@@ -1379,6 +1411,18 @@ function renderBill(){
       html+=`<div class="billline"><span class="bn">${item.name} <span style="color:#444;font-size:11px">(${item.typeLabel})</span></span><span class="bp">${item.priceStr} <button onclick="removeLieutrinhCart(${i})" style="border:none;background:none;cursor:pointer;color:#c0563f;font-size:14px;padding:0 2px">×</button></span></div>`;
     });
   }
+  // — Mua Combo section —
+  if((state.comboCart||[]).length>0){
+    html+=`<div class="bill-section-hdr">🎁 Mua Combo Facial</div>`;
+    state.comboCart.forEach((item,i)=>{
+      html+=`<div class="billline"><span class="bn">${item.name} <span style="color:#444;font-size:11px">(${item.pkgLabel})</span></span><span class="bp">${fmt(item.price)} <button onclick="removeComboCartItem(${i})" style="border:none;background:none;cursor:pointer;color:#c0563f;font-size:14px;padding:0 2px">×</button></span></div>`;
+    });
+  }
+  if(state.comboUse){
+    const cu=state.comboUse;
+    html+=`<div class="bill-section-hdr">✅ Dùng buổi Combo</div>`;
+    html+=`<div class="billline"><span class="bn">${cu.comboType} <span style="color:#444;font-size:11px">(${cu.comboName} · buổi ${cu.usedBefore+1}/${cu.totalSessions})</span></span><span class="bp" style="color:var(--brand);font-weight:700;">Đã mua trước <button onclick="state.comboUse=null;renderBill()" style="border:none;background:none;cursor:pointer;color:#c0563f;font-size:14px;padding:0 2px">×</button></span></div>`;
+  }
   // — Liệu trình section —
   if(items.length>0||isBuf){
     if(prodItems.length>0 || (state.tlCart||[]).length>0 || (state.peelCart||[]).length>0){
@@ -1409,7 +1453,8 @@ function renderBill(){
   const tlTotal=(state.tlCart||[]).reduce((s,x)=>s+x.price,0);
   const peelTotal=(state.peelCart||[]).reduce((s,x)=>s+x.price,0);
   const lieutrinhTotal=(state.lieutrinhCart||[]).reduce((s,x)=>s+x.price,0);
-  grand+=tlTotal+peelTotal+lieutrinhTotal;
+  const comboTotal=(state.comboCart||[]).reduce((s,x)=>s+x.price,0);
+  grand+=tlTotal+peelTotal+lieutrinhTotal+comboTotal;
   // Membership fee
   if(state.membership){
     html+=`<div class="billline"><span class="bn">✦ Membership ${state.membership.months} tháng</span><span class="bp">${fmt(state.membership.fee)}</span></div>`;
@@ -1491,20 +1536,23 @@ function renderBill(){
 /* ============ SHOP MODE + PRODUCT PAGE ============ */
 function switchShopMode(mode){
   document.getElementById("productSection").style.display    = mode==="product" ? "block" : "none";
-  document.getElementById("serviceSection").style.display    = mode==="product" ? "none"  : "block";
+  document.getElementById("serviceSection").style.display    = mode==="product" ? "none"  : (mode==="combo" ? "none" : "block");
   document.getElementById("hairSection").style.display       = mode==="hair"    ? "block" : "none";
   document.getElementById("peelSection").style.display       = mode==="peel"    ? "block" : "none";
   document.getElementById("lieutrinhSection").style.display  = mode==="lt"      ? "block" : "none";
+  document.getElementById("comboSection").style.display      = mode==="combo"   ? "block" : "none";
   document.getElementById("smProduct").classList.toggle("on", mode==="product");
   document.getElementById("smService").classList.toggle("on", mode==="service");
   document.getElementById("smHair").classList.toggle("on",    mode==="hair");
   document.getElementById("smPeel").classList.toggle("on",    mode==="peel");
   document.getElementById("smLT").classList.toggle("on",      mode==="lt");
+  document.getElementById("smCombo").classList.toggle("on",   mode==="combo");
   if(mode==="product") renderProductPage();
   if(mode==="service"){ renderSkins(); renderMenu(); }
   if(mode==="hair")  renderHairTbl2();
   if(mode==="peel")  renderPeelTbl2();
   if(mode==="lt")    renderFacialCards();
+  if(mode==="combo") renderComboSection();
 }
 
 function productBrands(){
@@ -1886,7 +1934,8 @@ function currentRecord(){
     const tlTotal=(state.tlCart||[]).reduce((s,x)=>s+x.price,0);
     const peelTotal=(state.peelCart||[]).reduce((s,x)=>s+x.price,0);
     const lieutrinhTotal=(state.lieutrinhCart||[]).reduce((s,x)=>s+x.price,0);
-    grandTotal = Math.max(0, svcTotal + prodTotal + tlTotal + peelTotal + lieutrinhTotal + memberFee - discountAmt);
+    const comboTotal=(state.comboCart||[]).reduce((s,x)=>s+x.price,0);
+    grandTotal = Math.max(0, svcTotal + prodTotal + tlTotal + peelTotal + lieutrinhTotal + comboTotal + memberFee - discountAmt);
   }
   const vipBalanceAfter = state.vipCard ? state.vipCard.balance - vipDeductibleTotal() : 0;
   const prodCost = productCartCost();
@@ -1928,6 +1977,8 @@ function currentRecord(){
     discount:discountAmt,
     total:grandTotal,
     date:new Date().toLocaleString("vi-VN"),
+    comboItems:(state.comboCart||[]).map(c=>({id:c.id,comboType:c.comboType,name:c.name,pkgLabel:c.pkgLabel,sessions:c.sessions,price:c.price})),
+    comboUse:state.comboUse ? {...state.comboUse} : null,
   };
 }
 /* ============ GOOGLE SHEET (Web App URL) ============ */
@@ -1962,7 +2013,7 @@ function saveAndExport(){
   const emailOk=validateEmail();
   if(!phoneOk){ document.getElementById("cPhone").focus(); return; }
   if(!emailOk){ document.getElementById("cEmail").focus(); return; }
-  const hasAnything = r.items.length>0 || r.mode==="buf" || (r.productItems&&r.productItems.length>0) || (state.tlCart&&state.tlCart.length>0) || (state.peelCart&&state.peelCart.length>0) || (state.lieutrinhCart&&state.lieutrinhCart.length>0);
+  const hasAnything = r.items.length>0 || r.mode==="buf" || (r.productItems&&r.productItems.length>0) || (state.tlCart&&state.tlCart.length>0) || (state.peelCart&&state.peelCart.length>0) || (state.lieutrinhCart&&state.lieutrinhCart.length>0) || (state.comboCart&&state.comboCart.length>0) || !!state.comboUse;
   if(!hasAnything){ alert(tr("alertNoItems")); return; }
 
   const url=getSheetUrl();
@@ -2123,9 +2174,28 @@ function showInvoice(r, preInvNum, preDateStr){
                <div class="sumrow"><span>Số dư thẻ còn lại:</span><span>${fmt(Math.max(0,bal))}</span></div>`;
   }
 
+  // Combo items in invoice
+  if(r.comboItems && r.comboItems.length>0){
+    rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#111;padding-top:8px;">🎁 Mua Combo Facial</td></tr>`;
+    for(const item of r.comboItems){
+      const pStr = item.price.toLocaleString("vi-VN")+"đ";
+      rows += `<tr><td class="item-name" colspan="3">${item.name} <span style="font-size:11px;font-weight:400">(${item.pkgLabel})</span></td></tr>
+               <tr><td>${pStr}</td><td class="c">1</td><td class="r">${pStr}</td></tr>
+               <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    }
+  }
+  if(r.comboUse){
+    const cu=r.comboUse;
+    rows += `<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#111;padding-top:8px;">✅ Dùng buổi Combo</td></tr>`;
+    rows += `<tr><td class="item-name" colspan="3">${cu.comboType} — Buổi ${cu.usedBefore+1}/${cu.totalSessions}</td></tr>
+             <tr><td style="font-size:11px;color:#555;">(Đã thanh toán trước)</td><td class="c">1</td><td class="r">0đ</td></tr>
+             <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+  }
+
   const tlTotal2=(r.tlItems||[]).reduce((s,x)=>s+x.price,0);
   const peelTotal2=(r.peelItems||[]).reduce((s,x)=>s+x.price,0);
   const lieutrinhTotal2=(r.lieutrinhItems||[]).reduce((s,x)=>s+x.price,0);
+  const comboTotal2=(r.comboItems||[]).reduce((s,x)=>s+x.price,0);
   const subtotal = r.total + (r.discount||0);
 
   document.getElementById("invoiceContent").innerHTML = `
@@ -2496,6 +2566,188 @@ renderHairTbl2();
 renderPeelTbl2();
 renderFacialCards();
 
+/* ============ COMBO FACIAL ============ */
+const COMBO_CSV_URL = "https://docs.google.com/spreadsheets/d/1Ecl--XNJHyvtApdrVzp7EtXkz8K_P7pcw0tpAi9Jvho/export?format=csv&gid=619574142";
+const COMBO_PACKAGES = [
+  {
+    id:"csdk", icon:"🌸", name:"Chăm sóc da thư giãn",
+    single:450000,
+    pkgs:[
+      {id:"csdk-5",  label:"5 buổi (tặng 1B = 6 buổi)",  sessions:6,  price:1980000},
+      {id:"csdk-10", label:"10 buổi (tặng 2B = 12 buổi)", sessions:12, price:3980000},
+    ]
+  },
+  {
+    id:"lscd", icon:"🔬", name:"Làm sạch chuyên sâu",
+    single:799000,
+    pkgs:[
+      {id:"lscd-5",  label:"5 buổi (+1B = 6 buổi)",  sessions:6,  price:2495000},
+      {id:"lscd-10", label:"10 buổi (+2B = 12 buổi)", sessions:12, price:4990000},
+    ]
+  },
+  {
+    id:"emsk", icon:"✨", name:"Enzyme Maskque",
+    single:1950000,
+    pkgs:[
+      {id:"emsk-3", label:"3 buổi",                    sessions:3,  price:4950000},
+      {id:"emsk-5", label:"5 buổi (+1B = 6 buổi)",    sessions:6,  price:8000000},
+    ]
+  }
+];
+
+function renderComboSection(){
+  renderComboPkgGrid();
+  setComboTab(document.getElementById("comboTabBuy").classList.contains("on") ? "buy" : "use");
+}
+
+function setComboTab(tab){
+  const isBuy = tab==="buy";
+  document.getElementById("comboBuyPanel").style.display  = isBuy ? "block" : "none";
+  document.getElementById("comboUsePanel").style.display  = isBuy ? "none"  : "block";
+  const btnBuy = document.getElementById("comboTabBuy");
+  const btnUse = document.getElementById("comboTabUse");
+  btnBuy.style.background = isBuy ? "var(--brand)" : "#fff";
+  btnBuy.style.color      = isBuy ? "#fff"          : "var(--brand)";
+  btnUse.style.background = isBuy ? "#fff"          : "var(--brand)";
+  btnUse.style.color      = isBuy ? "var(--brand)"  : "#fff";
+  btnBuy.classList.toggle("on", isBuy);
+  btnUse.classList.toggle("on", !isBuy);
+}
+
+function renderComboPkgGrid(){
+  const grid = document.getElementById("comboPkgGrid");
+  if(!grid) return;
+  const fmt2 = n=>n.toLocaleString("vi-VN")+"đ";
+  // Flatten thành danh sách card riêng lẻ, giống fc-card
+  const cards = [];
+  COMBO_PACKAGES.forEach(ct=>{
+    ct.pkgs.forEach(p=>{
+      const sel = (state.comboCart||[]).some(c=>c.id===p.id);
+      const perSession = Math.round(p.price/p.sessions/1000);
+      cards.push(`<div class="fc-card${sel?" selected":""}" onclick="selectComboPkg('${ct.id}','${p.id}')">
+        <div class="fc-name">${p.label}</div>
+        <div class="fc-dur">${ct.icon} ${ct.name}</div>
+        <div class="fc-skin">Lẻ 1 buổi: ${fmt2(ct.single)}</div>
+        <div class="fc-price">${fmt2(p.price)}</div>
+        <div class="fc-price-vip">${perSession}k / buổi</div>
+      </div>`);
+    });
+  });
+  grid.innerHTML = `<div class="fc-grid">${cards.join("")}</div>`;
+}
+
+function selectComboPkg(ctId, pkgId){
+  const ct = COMBO_PACKAGES.find(c=>c.id===ctId);
+  const pkg = ct ? ct.pkgs.find(p=>p.id===pkgId) : null;
+  if(!ct || !pkg) return;
+  if(!state.comboCart) state.comboCart = [];
+  // Toggle: nếu đã có thì bỏ, chưa có thì thêm
+  const idx = state.comboCart.findIndex(c=>c.id===pkgId);
+  if(idx>=0){
+    state.comboCart.splice(idx,1);
+  } else {
+    state.comboCart.push({id:pkgId, comboType:ctId, name:ct.name, pkgLabel:pkg.label, sessions:pkg.sessions, price:pkg.price});
+  }
+  // Update combo count badge
+  const cnt = state.comboCart.length;
+  const badge = document.getElementById("smComboCount");
+  if(badge){ badge.style.display = cnt>0?"flex":"none"; badge.textContent=cnt; }
+  renderComboPkgGrid();
+  renderBill();
+}
+
+function removeComboCartItem(idx){
+  if(state.comboCart) state.comboCart.splice(idx,1);
+  const cnt = state.comboCart.length;
+  const badge = document.getElementById("smComboCount");
+  if(badge){ badge.style.display = cnt>0?"flex":"none"; badge.textContent=cnt; }
+  renderComboPkgGrid();
+  renderBill();
+}
+
+// ── Dùng buổi có sẵn ────────────────────────────────────────────
+let _comboCSVCache = null;
+async function loadComboCSV(){
+  if(_comboCSVCache) return _comboCSVCache;
+  try{
+    const res = await fetch(COMBO_CSV_URL);
+    const txt = await res.text();
+    const rows = txt.trim().split("\n").map(r=>r.split(",").map(c=>c.replace(/^"|"$/g,"").trim()));
+    _comboCSVCache = rows;
+    return rows;
+  }catch(e){ return null; }
+}
+
+async function searchComboCustomer(){
+  const phone = (document.getElementById("comboSearchPhone").value||"").trim().replace(/\D/g,"");
+  const el = document.getElementById("comboCustomerResult");
+  if(!phone){ el.innerHTML=`<p style="color:#c0563f;font-size:13px;">Vui lòng nhập số điện thoại.</p>`; return; }
+  el.innerHTML=`<p style="color:#8a8178;font-size:13px;">Đang tải dữ liệu…</p>`;
+  _comboCSVCache = null; // luôn fetch mới
+  const rows = await loadComboCSV();
+  if(!rows){ el.innerHTML=`<p style="color:#c0563f;font-size:13px;">Không tải được dữ liệu. Kiểm tra kết nối.</p>`; return; }
+  // header: row[0]
+  // Columns: Ngày mua | Tên khách | SĐT | Loại combo | Gói | Tổng buổi | Buổi đã dùng | Giá combo | Số HĐ
+  const data = rows.slice(1).map((r,i)=>({
+    rowIdx:i+2, // 1-based, +1 for header
+    date:r[0]||"", custName:r[1]||"", phone:(r[2]||"").replace(/\D/g,""),
+    comboType:r[3]||"", comboName:r[4]||"", totalSessions:parseInt(r[5])||0,
+    usedSessions:parseInt(r[6])||0, price:r[7]||"", invNum:r[8]||""
+  })).filter(d=>d.phone===phone || d.phone.endsWith(phone) || phone.endsWith(d.phone));
+
+  if(!data.length){
+    el.innerHTML=`<p style="color:#8a8178;font-size:13px;">Không tìm thấy gói combo nào cho số này.</p>`;
+    return;
+  }
+  const fmt2 = n=>n.toLocaleString?n.toLocaleString("vi-VN")+"đ":n;
+  el.innerHTML = data.map((d,i)=>{
+    const left = d.totalSessions - d.usedSessions;
+    const done = left<=0;
+    const isSel = state.comboUse && state.comboUse.rowIdx===d.rowIdx;
+    return `<div onclick="${done?"":"selectComboSession("+i+")"}"
+      style="border:2px solid ${isSel?"var(--brand)":(done?"#ddd":"#e8ddd5")};border-radius:10px;padding:11px 14px;margin-bottom:10px;cursor:${done?"default":"pointer"};background:${isSel?"#fff9f5":(done?"#f8f8f8":"#fff")};opacity:${done?0.6:1};">
+      <div style="font-weight:700;font-size:14px;color:var(--brand-dark);">${d.custName||"Khách"} — ${d.comboType}</div>
+      <div style="font-size:13px;color:#555;margin-top:2px;">Gói: ${d.comboName}</div>
+      <div style="font-size:13px;margin-top:4px;">
+        <span style="color:${left>0?"#2a7a4a":"#c0563f"};font-weight:700;">Còn lại: ${left} buổi</span>
+        <span style="color:#8a8178;margin-left:10px;">/ Tổng: ${d.totalSessions} buổi</span>
+      </div>
+      ${d.date?`<div style="font-size:11px;color:#aaa;margin-top:3px;">Mua ngày: ${d.date} · HĐ: ${d.invNum}</div>`:""}
+      ${done?`<div style="font-size:12px;color:#c0563f;margin-top:4px;">✗ Đã hết buổi</div>`:""}
+      ${isSel?`<div style="font-size:12px;color:var(--brand);margin-top:4px;font-weight:700;">✓ Đã chọn — sẽ trừ 1 buổi khi thanh toán</div>`:""}
+    </div>`;
+  }).join("");
+  // Lưu data vào closure để selectComboSession dùng
+  window._comboSearchResults = data;
+}
+
+function selectComboSession(i){
+  const data = window._comboSearchResults;
+  if(!data || !data[i]) return;
+  const d = data[i];
+  const left = d.totalSessions - d.usedSessions;
+  if(left<=0) return;
+  if(state.comboUse && state.comboUse.rowIdx===d.rowIdx){
+    state.comboUse = null; // deselect
+  } else {
+    state.comboUse = {
+      rowIdx:d.rowIdx, phone:d.phone, custName:d.custName,
+      comboType:d.comboType, comboName:d.comboName,
+      totalSessions:d.totalSessions, usedBefore:d.usedSessions,
+      sessionsLeft:left-1
+    };
+    // Tự điền tên + SĐT khách nếu chưa có
+    if(!document.getElementById("cPhone").value && d.phone)
+      document.getElementById("cPhone").value = d.phone;
+    if(!document.getElementById("cName").value && d.custName)
+      document.getElementById("cName").value = d.custName;
+  }
+  // Re-render result list
+  const el = document.getElementById("comboCustomerResult");
+  if(el && window._comboSearchResults) searchComboCustomer();
+  renderBill();
+}
+
 
 async function downloadInvoice(){
   const content = document.getElementById("invoiceContent");
@@ -2522,7 +2774,7 @@ function resetAll(){
   document.getElementById("cPhoneWarn").style.display="none";
   document.getElementById("cEmailWarn").style.display="none";
   state={mode:"alc",buffet:null,skins:[],selected:new Set(),customerType:"retail",
-    dob:"",membership:null,vipCard:null,shopMode:"service",productCart:{},tlCart:[],peelCart:[],lieutrinhCart:[]};
+    dob:"",membership:null,vipCard:null,shopMode:"service",productCart:{},tlCart:[],peelCart:[],lieutrinhCart:[],comboCart:[],comboUse:null};
   document.getElementById("cDob").value="";
   document.getElementById("returningBox").style.display="none";
   document.getElementById("birthdayOverlay").style.display="none";
