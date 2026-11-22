@@ -2572,25 +2572,31 @@ const COMBO_PACKAGES = [
   {
     id:"csdk", icon:"🌸", name:"Chăm sóc da thư giãn",
     single:450000,
+    grad:"linear-gradient(145deg,#fff0f4 0%,#fcdde6 60%,#f8c8d8 100%)",
+    pillColor:"#c0567a",
     pkgs:[
-      {id:"csdk-5",  label:"5 buổi (tặng 1B = 6 buổi)",  sessions:6,  price:1980000},
-      {id:"csdk-10", label:"10 buổi (tặng 2B = 12 buổi)", sessions:12, price:3980000},
+      {id:"csdk-5",  label:"5 buổi",  sessions:5,  gift:"🎁 Tặng 1 lần gội đầu",                                        price:1980000},
+      {id:"csdk-10", label:"10 buổi", sessions:12, gift:"🎁 Tặng 2 buổi chăm sóc da thư giãn + 2 lần gội đầu",          price:3980000},
     ]
   },
   {
     id:"lscd", icon:"🔬", name:"Làm sạch chuyên sâu",
     single:799000,
+    grad:"linear-gradient(145deg,#eef8fa 0%,#c9e8ef 60%,#a8d8e2 100%)",
+    pillColor:"#2a7a8c",
     pkgs:[
-      {id:"lscd-5",  label:"5 buổi (+1B = 6 buổi)",  sessions:6,  price:2495000},
-      {id:"lscd-10", label:"10 buổi (+2B = 12 buổi)", sessions:12, price:4990000},
+      {id:"lscd-5",  label:"5 buổi",  sessions:5,  gift:"🎁 Tặng 1 lần Sebum Soak",                                     price:2495000},
+      {id:"lscd-10", label:"10 buổi", sessions:12, gift:"🎁 Tặng 2 buổi Làm sạch chuyên sâu + 2 lần Sebum Soak + 2 lần chiếu đèn", price:4990000},
     ]
   },
   {
-    id:"emsk", icon:"✨", name:"Enzyme Maskque",
+    id:"emheal", icon:"✨", name:"Enzyme Heal",
     single:1950000,
+    grad:"linear-gradient(145deg,#fdf8ec 0%,#f5e8c0 60%,#edd89a 100%)",
+    pillColor:"#9a7420",
     pkgs:[
-      {id:"emsk-3", label:"3 buổi",                    sessions:3,  price:4950000},
-      {id:"emsk-5", label:"5 buổi (+1B = 6 buổi)",    sessions:6,  price:8000000},
+      {id:"emheal-3", label:"3 buổi", sessions:3,  gift:"🎁 Tặng 1 lần gội đầu",                                        price:4950000},
+      {id:"emheal-5", label:"5 buổi", sessions:6,  gift:"🎁 Tặng 1 buổi Enzyme Heal + 5 lần gội đầu",                  price:8000000},
     ]
   }
 ];
@@ -2624,16 +2630,28 @@ function renderComboPkgGrid(){
     ct.pkgs.forEach(p=>{
       const sel = (state.comboCart||[]).some(c=>c.id===p.id);
       const perSession = Math.round(p.price/p.sessions/1000);
-      cards.push(`<div class="fc-card${sel?" selected":""}" onclick="selectComboPkg('${ct.id}','${p.id}')">
-        <div class="fc-name">${p.label}</div>
-        <div class="fc-dur">${ct.icon} ${ct.name}</div>
-        <div class="fc-skin">Lẻ 1 buổi: ${fmt2(ct.single)}</div>
-        <div class="fc-price">${fmt2(p.price)}</div>
-        <div class="fc-price-vip">${perSession}k / buổi</div>
+      const is10 = p.label.startsWith("10");
+      const selBorder = sel ? "border:2.5px solid "+ct.pillColor+";" : "";
+      // Mỗi phần quà xuống dòng riêng
+      const giftLines = p.gift.replace("🎁 ","").split(" + ")
+        .map(g=>`<div style="line-height:1.5;">🎁 ${g}</div>`).join("");
+      cards.push(`<div class="fc-card${sel?" selected":""}" onclick="selectComboPkg('${ct.id}','${p.id}')"
+        style="background:${ct.grad};${selBorder}border-color:${sel?ct.pillColor:"#ddd"};display:flex;flex-direction:column;">
+        <div class="fc-name" style="color:#1a1a1a;">${ct.icon} ${ct.name}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <span style="background:${ct.pillColor};color:#fff;font-size:12px;font-weight:800;padding:3px 11px;border-radius:20px;">${p.label}</span>
+          ${is10?`<span style="font-size:10px;color:#666;font-style:italic;">dùng chung tối đa 2 người</span>`:""}
+        </div>
+        <div class="fc-skin" style="color:#444;flex:1;">${giftLines}</div>
+        <div style="border-top:1px solid rgba(0,0,0,0.07);margin-top:8px;padding-top:7px;">
+          <div style="font-size:11px;color:#888;margin-bottom:3px;">Lẻ 1 buổi: ${fmt2(ct.single)}</div>
+          <div style="font-size:20px;font-weight:900;color:${ct.pillColor};letter-spacing:-0.5px;line-height:1.2;">${fmt2(p.price)}</div>
+          <div class="fc-price-vip" style="color:${ct.pillColor};opacity:0.75;">${perSession}k / buổi</div>
+        </div>
       </div>`);
     });
   });
-  grid.innerHTML = `<div class="fc-grid">${cards.join("")}</div>`;
+  grid.innerHTML = `<div class="fc-grid" style="align-items:stretch;">${cards.join("")}</div>`;
 }
 
 function selectComboPkg(ctId, pkgId){
