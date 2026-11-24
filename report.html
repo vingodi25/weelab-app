@@ -1736,13 +1736,38 @@ function showBillDetail(idx){
   const bd=document.getElementById("bdContent");
   if(!modal||!bd) return;
 
-  const items=(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•"));
-  const itemsHtml=items.map(line=>{
-    const clean=line.replace(/^•\s*/,"").trim();
-    const m=clean.match(/^(.*?)\s*—\s*([\d.,]+)đ?\s*$/);
-    if(m) return `<div class="bd-row"><span>${m[1].trim()}</span><b>${m[2]}đ</b></div>`;
-    return `<div class="bd-row"><span>${clean}</span></div>`;
-  }).join("");
+  // Parse items — ưu tiên arrays (saved bills), fallback sang itemsStr (sheet bills)
+  const hasArrayData=(v.items&&v.items.length>0)||(v.productItems&&v.productItems.length>0)
+                    ||(v.tlItems&&v.tlItems.length>0)||(v.peelItems&&v.peelItems.length>0)
+                    ||(v.lieutrinhItems&&v.lieutrinhItems.length>0)||(v.comboItems&&v.comboItems.length>0)
+                    ||v.comboUse||(v.mode==="buf"&&v.buffetName);
+  window._detailHasData=hasArrayData;
+  // Dùng cho cả detail panel và print (đánh dấu để printBillFromReport dùng lại)
+  const itemsHtml=(()=>{
+    if(hasArrayData){
+      // Bill từ localStorage — dùng arrays trực tiếp
+      let h="";
+      const fv=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
+      (v.productItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.qty>1?" ×"+x.qty:""}</span><b>${fv(x.subtotal||x.price)}</b></div>`; });
+      if(v.mode==="buf"&&v.buffetName){ h+=`<div class="bd-row"><span>${v.buffetName}</span><b>${fv(v.total)}</b></div>`; }
+      else{ (v.items||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}</span><b>${fv(x.price)}</b></div>`; }); }
+      (v.tlItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.typeLabel?" ("+x.typeLabel+")":""}</span><b>${x.priceStr||fv(x.price)}</b></div>`; });
+      (v.peelItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.typeLabel?" ("+x.typeLabel+")":""}</span><b>${x.priceStr||fv(x.price)}</b></div>`; });
+      (v.lieutrinhItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.typeLabel?" ("+x.typeLabel+")":""}</span><b>${x.priceStr||fv(x.price)}</b></div>`; });
+      (v.comboItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.pkgLabel?" ("+x.pkgLabel+")":""}</span><b>${fv(x.price)}</b></div>`; });
+      if(v.comboUse){ h+=`<div class="bd-row"><span>${v.comboUse.comboType} (Buổi ${(v.comboUse.usedBefore||0)+1}/${v.comboUse.totalSessions})</span><b>0đ</b></div>`; }
+      return h;
+    } else {
+      // Bill từ sheet — parse itemsStr
+      return (v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•")).map(line=>{
+        const clean=line.replace(/^•\s*/,"").replace(/\[(SP|Combo|LT|Triệt|Peel|Buffet|Dùng buổi)\]\s*/,"").trim();
+        const m=clean.match(/^(.*?)\s*—\s*([\d.,]+)đ?\s*$/);
+        if(m) return `<div class="bd-row"><span>${m[1].trim()}</span><b>${m[2]}đ</b></div>`;
+        return `<div class="bd-row"><span>${clean}</span></div>`;
+      }).join("");
+    }
+  })();
+  const items=hasArrayData?[1]:(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•")); // truthy check only
 
   bd.innerHTML=`
     <div class="bd-section">
@@ -1784,7 +1809,7 @@ function printBillFromReport(){
   const v=window._detailVisit;
   if(!v){alert("Không có dữ liệu để in.");return;}
 
-  // ── Format date "HH:MM:SS D/M/YYYY" → "DD/MM/YYYY HH:MM" ─────
+  // ── Format date ──────────────────────────────────────────────
   const dateStr=(()=>{
     const raw=String(v.date||"").trim();
     const m=raw.match(/(\d{1,2}):(\d{2}):\d{2}\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
@@ -1792,122 +1817,181 @@ function printBillFromReport(){
     return raw;
   })();
 
-  // ── Skin conditions ───────────────────────────────────────────
+  // ── Tình trạng da ────────────────────────────────────────────
   const skinsStr=(()=>{
-    const s=v.skins||v.skinStr||"";
+    const s=v.skins||"";
     if(Array.isArray(s)) return s.join(" · ");
     return String(s).replace(/\s*\|\s*/g," · ").trim();
   })();
 
-  // ── Parse items từ itemsStr thành rows ────────────────────────
+  // ── Hàm format tiền (dùng toLocaleString vi-VN) ──────────────
   const fmtMoney=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
-  const parsePrice=str=>parseInt((String(str||"")).replace(/[^\d]/g,""))||0;
-
-  const lines=(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•"));
-  const products =lines.filter(l=>l.includes("[SP]"));
-  const combos   =lines.filter(l=>l.includes("[Combo]")||l.includes("[Dùng buổi]"));
-  const triets   =lines.filter(l=>l.includes("[Triệt]"));
-  const peels    =lines.filter(l=>l.includes("[Peel]"));
-  const lts      =lines.filter(l=>l.includes("[LT]"));
-  const buffets  =lines.filter(l=>l.includes("[Buffet]"));
-  const services =lines.filter(l=>!l.includes("[SP]")&&!l.includes("[Combo]")&&!l.includes("[Dùng buổi]")&&!l.includes("[Triệt]")&&!l.includes("[Peel]")&&!l.includes("[LT]")&&!l.includes("[Buffet]"));
-
-  const makeRows=(items,label)=>{
-    if(!items.length) return "";
-    let r="";
-    if(label) r+=`<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">${label}</td></tr>`;
-    items.forEach(line=>{
-      const clean=line.replace(/^•\s*/,"").replace(/\[(SP|Combo|LT|Triệt|Peel|Buffet|Dùng buổi)\]\s*/,"").trim();
-      const m=clean.match(/^(.*?)\s*—\s*([\d.,]+)\s*$/);
-      const name=m?m[1].trim():clean;
-      const price=m?parsePrice(m[2]):0;
-      r+=`<tr><td class="item-name" colspan="3">${name}</td></tr>
-          <tr><td>${price>0?fmtMoney(price):"—"}</td><td class="c">1</td><td class="r">${price>0?fmtMoney(price):"—"}</td></tr>
-          <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
-    });
-    return r;
+  const sectionHdr=label=>`<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">${label}</td></tr>`;
+  const makeItem=(name,priceStr,qty)=>{
+    const q=qty||1;
+    return `<tr><td class="item-name" colspan="3">${name}</td></tr>
+            <tr><td>${priceStr}</td><td class="c">${q}</td><td class="r">${priceStr}</td></tr>
+            <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
   };
 
+  // ── Build rows — y hệt showInvoice() trong index.html ────────
   let rows="";
-  if(products.length) rows+=makeRows(products,"🧴 Sản phẩm");
-  if(services.length||buffets.length){
-    if(products.length) rows+=`<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">✨ Liệu trình</td></tr>`;
-    rows+=makeRows(services,"");
-    rows+=makeRows(buffets,"");
+  const hasArrays=(v.items&&v.items.length)||(v.productItems&&v.productItems.length)
+                 ||(v.tlItems&&v.tlItems.length)||(v.peelItems&&v.peelItems.length)
+                 ||(v.lieutrinhItems&&v.lieutrinhItems.length)||(v.comboItems&&v.comboItems.length)
+                 ||v.comboUse||(v.mode==="buf"&&v.buffetName);
+
+  if(hasArrays){
+    // ── Bill từ localStorage: dùng arrays trực tiếp ──
+    // Sản phẩm
+    if(v.productItems&&v.productItems.length){
+      rows+=sectionHdr("🧴 Sản phẩm");
+      for(const x of v.productItems){
+        const p=fmtMoney(x.subtotal||x.price);
+        rows+=makeItem(x.name,p,x.qty||1);
+      }
+    }
+    // Dịch vụ facial / buffet
+    if((v.items&&v.items.length)||(v.mode==="buf"&&v.buffetName)){
+      if(v.productItems&&v.productItems.length) rows+=sectionHdr("✨ Liệu trình");
+      if(v.mode==="buf"&&v.buffetName){
+        rows+=makeItem(v.buffetName,fmtMoney(v.total||0),1);
+      } else {
+        for(const x of (v.items||[])){
+          const hasDisc=x.listPrice&&x.listPrice>x.price;
+          const pCell=hasDisc
+            ?`<span style="text-decoration:line-through;color:#888;font-size:11px;">${fmtMoney(x.listPrice)}</span> ${fmtMoney(x.price)}`
+            :fmtMoney(x.price);
+          rows+=`<tr><td class="item-name" colspan="3">${x.name}</td></tr>
+                 <tr><td>${pCell}</td><td class="c">1</td><td class="r">${fmtMoney(x.price)}</td></tr>
+                 <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+        }
+      }
+    }
+    // Triệt lông
+    if(v.tlItems&&v.tlItems.length){
+      rows+=sectionHdr("🪄 Triệt lông");
+      for(const x of v.tlItems){
+        const p=x.priceStr||fmtMoney(x.price);
+        const lbl=x.typeLabel?` <span style="font-size:11px;font-weight:400">(${x.typeLabel})</span>`:"";
+        rows+=makeItem(x.name+lbl,p,1);
+      }
+    }
+    // Peel Body
+    if(v.peelItems&&v.peelItems.length){
+      rows+=sectionHdr("✦ Peel Body");
+      for(const x of v.peelItems){
+        const p=x.priceStr||fmtMoney(x.price);
+        const lbl=x.typeLabel?` <span style="font-size:11px;font-weight:400">(${x.typeLabel})</span>`:"";
+        rows+=makeItem(x.name+lbl,p,1);
+      }
+    }
+    // Liệu trình gợi ý
+    if(v.lieutrinhItems&&v.lieutrinhItems.length){
+      rows+=sectionHdr("✨ Liệu trình gợi ý");
+      for(const x of v.lieutrinhItems){
+        const p=x.priceStr||fmtMoney(x.price);
+        const lbl=x.typeLabel?` <span style="font-size:11px;font-weight:400">(${x.typeLabel})</span>`:"";
+        rows+=makeItem(x.name+lbl,p,1);
+      }
+    }
+    // Combo mua
+    if(v.comboItems&&v.comboItems.length){
+      rows+=sectionHdr("🎁 Mua Combo Facial");
+      for(const x of v.comboItems){
+        const p=fmtMoney(x.price);
+        const lbl=x.pkgLabel?` <span style="font-size:11px;font-weight:400">(${x.pkgLabel})</span>`:"";
+        rows+=makeItem(x.name+lbl,p,1);
+      }
+    }
+    // Dùng buổi Combo
+    if(v.comboUse){
+      const cu=v.comboUse;
+      rows+=sectionHdr("✅ Dùng buổi Combo");
+      rows+=makeItem(`${cu.comboType||"Combo"} — Buổi ${(cu.usedBefore||0)+1}/${cu.totalSessions||"?"}`,`<span style="font-size:11px;color:#555;">(Đã thanh toán trước)</span> 0đ`,1);
+    }
+  } else {
+    // ── Bill từ Sheet: parse itemsStr ──
+    const lines=(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•"));
+    for(const line of lines){
+      const clean=line.replace(/^•\s*/,"").replace(/\[(SP|Combo|LT|Triệt|Peel|Buffet|Dùng buổi)\]\s*/,"").trim();
+      // Tìm giá ở cuối chuỗi (số kèm dấu chấm, trước đ)
+      const pm=clean.match(/([\d]+(?:[.,]\d+)*)đ?\s*$/);
+      if(pm){
+        const priceNum=parseInt(pm[1].replace(/[.,]/g,""))||0;
+        const idx=clean.lastIndexOf(pm[1]);
+        const name=clean.substring(0,idx).replace(/[\s–—\-]+$/,"").trim();
+        rows+=makeItem(name,fmtMoney(priceNum),1);
+      } else {
+        rows+=`<tr><td class="item-name" colspan="3">${clean}</td></tr>
+               <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+      }
+    }
   }
-  if(triets.length) rows+=makeRows(triets,"🪄 Triệt lông");
-  if(peels.length)  rows+=makeRows(peels,"✦ Peel Body");
-  if(lts.length)    rows+=makeRows(lts,"✨ Liệu trình gợi ý");
-  if(combos.length) rows+=makeRows(combos,"🎁 Combo");
 
   const total=v.total||0;
   const css=`
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
     body{margin:0;padding:12px;background:#fff;font-family:'Montserrat',sans-serif;}
     *{box-sizing:border-box;}
-    .invoice{font-family:'Montserrat',sans-serif;font-size:12.5px;color:#111;line-height:1.6;}
-    .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;color:#111;}
-    .inv-info{font-size:12px;color:#111;}
+    .invoice{font-size:12.5px;color:#111;line-height:1.6;}
+    .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;}
+    .inv-info{font-size:12px;}
     .inv-sep{border:none;border-top:1px dashed #aaa;margin:8px 0;}
-    .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;color:#111;}
-    .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#111;}
-    .inv-cust p{margin:1px 0;font-size:12.5px;color:#111;}
+    .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;}
+    .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;}
+    .inv-cust p{margin:1px 0;font-size:12.5px;}
     .inv-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
-    .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;color:#111;}
-    .inv-tbl th:last-child,.r{text-align:right;}
-    .inv-tbl th:nth-child(2),.c{text-align:center;}
-    .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;color:#111;}
-    .item-name{padding-top:7px;font-weight:600;color:#111;}
+    .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;}
+    .inv-tbl th:nth-child(1){text-align:left;width:52%;}
+    .inv-tbl th:nth-child(2){text-align:center;width:14%;}
+    .inv-tbl th:nth-child(3){text-align:right;width:34%;}
+    .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;}
+    .c{text-align:center;}.r{text-align:right;}
+    .item-name{padding-top:7px;font-weight:600;}
     .item-sep td{padding:0;line-height:.5;}
     .inv-summary{padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;}
-    .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;color:#111;}
-    .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;color:#111;}
-    .inv-footer{text-align:center;font-size:11px;color:#111;margin-top:14px;line-height:1.5;}
+    .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;}
+    .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;}
+    .inv-footer{text-align:center;font-size:11px;margin-top:14px;line-height:1.5;color:#555;}
     hr{border:none;border-top:1px dashed #aaa;margin:8px 0;}
-    @media print{button{display:none;}@page{margin:8mm;size:80mm auto;}}
+    @media print{@page{margin:8mm;size:80mm auto;}}
   `;
 
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoá đơn WeeLAB</title>
-    <style>${css}</style></head><body>
-    <div class="invoice">
-      <div class="inv-shop">Tên cửa hàng: WeeLAB</div>
-      <div class="inv-info">Chi nhánh: 17A Thuỵ Khuê, Tây Hồ, Hà Nội</div>
-      <div class="inv-info">Điện thoại: 0932016886</div>
-      <hr class="inv-sep">
-      <div>Liên số: Liên 1</div>
-      <div>Ngày bán: ${dateStr}</div>
-      <div class="inv-title">HOÁ ĐƠN BÁN HÀNG</div>
-      <div class="inv-hdnum">${v.invNum||"—"}</div>
-      <div class="inv-cust">
-        <p><strong>Khách hàng:</strong> ${v.name||"—"}</p>
-        <p><strong>Điện thoại:</strong> ${v.phone||"—"}</p>
-        ${skinsStr?`<p><strong>Tình trạng da:</strong> ${skinsStr}</p>`:""}
-      </div>
-      <hr class="inv-sep">
-      <table class="inv-tbl">
-        <thead><tr>
-          <th style="text-align:left;width:52%;">Đơn giá</th>
-          <th style="width:14%;">SL</th>
-          <th style="width:34%;text-align:right;">Thành tiền</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      <div class="inv-summary">
-        <div class="sumrow"><span>Tổng tiền hàng:</span><span>${fmtMoney(total)}</span></div>
-        ${(v.vipTopup||0)>0?`<div class="sumrow"><span>Nạp thẻ VIP:</span><span>${fmtMoney(v.vipTopup)}</span></div>`:""}
-        ${(v.membershipFee||0)>0?`<div class="sumrow"><span>Phí Membership:</span><span>${fmtMoney(v.membershipFee)}</span></div>`:""}
-        <div class="sumrow"><span>Chiết khấu:</span><span>0</span></div>
-        <div class="sumrow grand"><span>Tổng cộng:</span><span>${fmtMoney(total)}</span></div>
-      </div>
-      <div class="inv-footer">Cảm ơn bạn đã tin tưởng WeeLAB.<br>Chúc bạn có làn da khoẻ mạnh!</div>
+  <style>${css}</style></head><body><div class="invoice">
+    <div class="inv-shop">Tên cửa hàng: WeeLAB</div>
+    <div class="inv-info">Chi nhánh: 17A Thuỵ Khuê, Tây Hồ, Hà Nội</div>
+    <div class="inv-info">Điện thoại: 0932016886</div>
+    <hr class="inv-sep">
+    <div>Liên số: Liên 1</div>
+    <div>Ngày bán: ${dateStr}</div>
+    <div class="inv-title">HOÁ ĐƠN BÁN HÀNG</div>
+    <div class="inv-hdnum">${v.invNum||"—"}</div>
+    <div class="inv-cust">
+      <p><strong>Khách hàng:</strong> ${v.name||"—"}</p>
+      <p><strong>Điện thoại:</strong> ${v.phone||"—"}</p>
+      ${skinsStr?`<p><strong>Tình trạng da:</strong> ${skinsStr}</p>`:""}
     </div>
-    <script>window.onload=function(){window.focus();window.print();}<\/script>
+    <hr class="inv-sep">
+    <table class="inv-tbl"><thead><tr>
+      <th>Tên dịch vụ / sản phẩm</th><th>SL</th><th>Thành tiền</th>
+    </tr></thead><tbody>${rows}</tbody></table>
+    <div class="inv-summary">
+      <div class="sumrow"><span>Tổng tiền hàng:</span><span>${fmtMoney(total)}</span></div>
+      ${(v.vipTopup||0)>0?`<div class="sumrow"><span>Nạp thẻ VIP:</span><span>${fmtMoney(v.vipTopup)}</span></div>`:""}
+      ${(v.membershipFee||0)>0?`<div class="sumrow"><span>Phí Membership:</span><span>${fmtMoney(v.membershipFee)}</span></div>`:""}
+      <div class="sumrow"><span>Chiết khấu:</span><span>0</span></div>
+      <div class="sumrow grand"><span>Tổng cộng:</span><span>${fmtMoney(total)}</span></div>
+    </div>
+    <div class="inv-footer">Cảm ơn bạn đã tin tưởng WeeLAB.<br>Chúc bạn có làn da khoẻ mạnh!</div>
+  </div>
+  <script>window.onload=function(){window.focus();window.print();}<\/script>
   </body></html>`;
 
-  const win=window.open("","_blank","width=360,height=640,menubar=no,toolbar=no,location=no");
-  if(!win){alert("Trình duyệt chặn pop-up. Vui lòng cho phép pop-up cho trang này.");return;}
-  win.document.write(html);
-  win.document.close();
+  const win=window.open("","_blank","width=380,height=680,menubar=no,toolbar=no,location=no");
+  if(!win){alert("Trình duyệt chặn pop-up. Vui lòng cho phép pop-up.");return;}
+  win.document.write(html);win.document.close();
 }
 
 // ── START ──
