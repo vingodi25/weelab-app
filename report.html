@@ -1379,9 +1379,9 @@ let _cardJSONPDone=false;
 function loadVipCards(){
   const statusEl=document.getElementById("vipLoadStatus");
   if(statusEl) statusEl.textContent="⏳ Đang tải dữ liệu thẻ…";
-  const url=getSheetUrl();
+  const url=(localStorage.getItem(URL_KEY)||"").trim();
   if(!url){
-    if(statusEl) statusEl.textContent="❌ Chưa cấu hình URL Apps Script.";
+    if(statusEl) statusEl.textContent="❌ Chưa cấu hình URL Apps Script — dán URL vào ô 'Kết nối'.";
     return;
   }
   _cardJSONPDone=false;
@@ -1403,9 +1403,15 @@ function loadVipCards(){
       _loadVipFromCache(statusEl);
     }
   };
-  const tid=setTimeout(function(){ if(!_cardJSONPDone){ _loadVipFromCache(statusEl); } },15000);
+  const tid=setTimeout(function(){
+    if(!_cardJSONPDone){
+      console.warn("[VIP] getCardData timeout — Apps Script chưa deploy action này?");
+      _loadVipFromCache(statusEl);
+    }
+  },10000);
   sc=document.createElement("script");
   sc.src=url+"?action=getCardData&callback="+cbName;
+  console.log("[VIP] Loading cards from:",sc.src);
   sc.onerror=function(){ clearTimeout(tid); if(!_cardJSONPDone){ _loadVipFromCache(statusEl); } };
   document.head.appendChild(sc);
 }
@@ -1777,49 +1783,131 @@ function closeBillDetail(){
 function printBillFromReport(){
   const v=window._detailVisit;
   if(!v){alert("Không có dữ liệu để in.");return;}
-  const items=(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•"));
-  const itemRows=items.map(line=>{
-    const clean=line.replace(/^•\s*/,"").trim();
-    const m=clean.match(/^(.*?)\s*—\s*([\d.,]+)đ?\s*$/);
-    if(m) return `<tr><td style="padding:4px 0;">${m[1].trim()}</td><td style="text-align:right;padding:4px 0;font-weight:600;">${Number(m[2].replace(/[.,]/g,"")).toLocaleString("vi-VN")}đ</td></tr>`;
-    return `<tr><td colspan="2" style="padding:4px 0;">${clean}</td></tr>`;
-  }).join("");
 
-  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <style>
-    body{font-family:'Courier New',monospace;font-size:12px;max-width:300px;margin:20px auto;padding:0 10px;}
-    h2{text-align:center;font-size:15px;margin-bottom:4px;}
-    .sub{text-align:center;font-size:11px;color:#666;margin-bottom:12px;}
-    .sep{border-top:1px dashed #000;margin:8px 0;}
-    table{width:100%;}
-    .total-row td{font-weight:800;font-size:14px;border-top:1px solid #000;padding-top:6px;}
-    .footer{text-align:center;font-size:11px;margin-top:12px;color:#666;}
-    @media print{button{display:none;}}
-  </style>
-  </head><body>
-  <h2>WeeLAB</h2>
-  <div class="sub">Chăm sóc da chuyên sâu<br>${v.date||""}</div>
-  <div class="sep"></div>
-  <table>
-    <tr><td>Khách:</td><td style="text-align:right;font-weight:700;">${v.name||"—"}</td></tr>
-    <tr><td>SĐT:</td><td style="text-align:right;">${v.phone||"—"}</td></tr>
-    <tr><td>Số HĐ:</td><td style="text-align:right;">${v.invNum||"—"}</td></tr>
-  </table>
-  <div class="sep"></div>
-  <table>${itemRows}</table>
-  <div class="sep"></div>
-  <table>
-    ${v.totalLabor>0?`<tr><td>Công KTV:</td><td style="text-align:right;">${Number(v.totalLabor).toLocaleString("vi-VN")}đ</td></tr>`:""}
-    ${v.vipTopup>0?`<tr><td>Nạp thẻ VIP:</td><td style="text-align:right;">${Number(v.vipTopup).toLocaleString("vi-VN")}đ</td></tr>`:""}
-    ${v.membershipFee>0?`<tr><td>Phí Membership:</td><td style="text-align:right;">${Number(v.membershipFee).toLocaleString("vi-VN")}đ</td></tr>`:""}
-    <tr class="total-row"><td>TỔNG CỘNG</td><td style="text-align:right;">${Number(v.total||0).toLocaleString("vi-VN")}đ</td></tr>
-  </table>
-  <div class="footer">Cảm ơn quý khách đã tin tưởng WeeLAB!<br>Hẹn gặp lại 💚</div>
-  <br><button onclick="window.print()">🖨 In hoá đơn</button>
+  // ── Format date "HH:MM:SS D/M/YYYY" → "DD/MM/YYYY HH:MM" ─────
+  const dateStr=(()=>{
+    const raw=String(v.date||"").trim();
+    const m=raw.match(/(\d{1,2}):(\d{2}):\d{2}\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m) return `${String(m[3]).padStart(2,"0")}/${String(m[4]).padStart(2,"0")}/${m[5]} ${m[1]}:${m[2]}`;
+    return raw;
+  })();
+
+  // ── Skin conditions ───────────────────────────────────────────
+  const skinsStr=(()=>{
+    const s=v.skins||v.skinStr||"";
+    if(Array.isArray(s)) return s.join(" · ");
+    return String(s).replace(/\s*\|\s*/g," · ").trim();
+  })();
+
+  // ── Parse items từ itemsStr thành rows ────────────────────────
+  const fmtMoney=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
+  const parsePrice=str=>parseInt((String(str||"")).replace(/[^\d]/g,""))||0;
+
+  const lines=(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•"));
+  const products =lines.filter(l=>l.includes("[SP]"));
+  const combos   =lines.filter(l=>l.includes("[Combo]")||l.includes("[Dùng buổi]"));
+  const triets   =lines.filter(l=>l.includes("[Triệt]"));
+  const peels    =lines.filter(l=>l.includes("[Peel]"));
+  const lts      =lines.filter(l=>l.includes("[LT]"));
+  const buffets  =lines.filter(l=>l.includes("[Buffet]"));
+  const services =lines.filter(l=>!l.includes("[SP]")&&!l.includes("[Combo]")&&!l.includes("[Dùng buổi]")&&!l.includes("[Triệt]")&&!l.includes("[Peel]")&&!l.includes("[LT]")&&!l.includes("[Buffet]"));
+
+  const makeRows=(items,label)=>{
+    if(!items.length) return "";
+    let r="";
+    if(label) r+=`<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">${label}</td></tr>`;
+    items.forEach(line=>{
+      const clean=line.replace(/^•\s*/,"").replace(/\[(SP|Combo|LT|Triệt|Peel|Buffet|Dùng buổi)\]\s*/,"").trim();
+      const m=clean.match(/^(.*?)\s*—\s*([\d.,]+)\s*$/);
+      const name=m?m[1].trim():clean;
+      const price=m?parsePrice(m[2]):0;
+      r+=`<tr><td class="item-name" colspan="3">${name}</td></tr>
+          <tr><td>${price>0?fmtMoney(price):"—"}</td><td class="c">1</td><td class="r">${price>0?fmtMoney(price):"—"}</td></tr>
+          <tr class="item-sep"><td colspan="3"><hr class="inv-sep"></td></tr>`;
+    });
+    return r;
+  };
+
+  let rows="";
+  if(products.length) rows+=makeRows(products,"🧴 Sản phẩm");
+  if(services.length||buffets.length){
+    if(products.length) rows+=`<tr><td colspan="3" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#888;padding-top:8px;">✨ Liệu trình</td></tr>`;
+    rows+=makeRows(services,"");
+    rows+=makeRows(buffets,"");
+  }
+  if(triets.length) rows+=makeRows(triets,"🪄 Triệt lông");
+  if(peels.length)  rows+=makeRows(peels,"✦ Peel Body");
+  if(lts.length)    rows+=makeRows(lts,"✨ Liệu trình gợi ý");
+  if(combos.length) rows+=makeRows(combos,"🎁 Combo");
+
+  const total=v.total||0;
+  const css=`
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+    body{margin:0;padding:12px;background:#fff;font-family:'Montserrat',sans-serif;}
+    *{box-sizing:border-box;}
+    .invoice{font-family:'Montserrat',sans-serif;font-size:12.5px;color:#111;line-height:1.6;}
+    .inv-shop{font-weight:700;font-size:13.5px;margin-bottom:1px;color:#111;}
+    .inv-info{font-size:12px;color:#111;}
+    .inv-sep{border:none;border-top:1px dashed #aaa;margin:8px 0;}
+    .inv-title{text-align:center;font-weight:700;font-size:14.5px;letter-spacing:.5px;margin:10px 0 2px;color:#111;}
+    .inv-hdnum{text-align:center;font-size:12px;margin-bottom:12px;color:#111;}
+    .inv-cust p{margin:1px 0;font-size:12.5px;color:#111;}
+    .inv-tbl{width:100%;border-collapse:collapse;margin-top:4px;}
+    .inv-tbl th{font-weight:700;border-top:1px dashed #aaa;border-bottom:1px dashed #aaa;padding:5px 2px;font-size:12px;color:#111;}
+    .inv-tbl th:last-child,.r{text-align:right;}
+    .inv-tbl th:nth-child(2),.c{text-align:center;}
+    .inv-tbl td{padding:2px 2px;font-size:12.5px;vertical-align:top;color:#111;}
+    .item-name{padding-top:7px;font-weight:600;color:#111;}
+    .item-sep td{padding:0;line-height:.5;}
+    .inv-summary{padding-top:6px;border-top:1px dashed #aaa;margin-top:4px;}
+    .sumrow{display:flex;justify-content:space-between;padding:2px 0;font-size:12.5px;color:#111;}
+    .sumrow.grand{font-weight:800;font-size:14px;border-top:1px solid #111;padding-top:6px;margin-top:4px;color:#111;}
+    .inv-footer{text-align:center;font-size:11px;color:#111;margin-top:14px;line-height:1.5;}
+    hr{border:none;border-top:1px dashed #aaa;margin:8px 0;}
+    @media print{button{display:none;}@page{margin:8mm;size:80mm auto;}}
+  `;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hoá đơn WeeLAB</title>
+    <style>${css}</style></head><body>
+    <div class="invoice">
+      <div class="inv-shop">Tên cửa hàng: WeeLAB</div>
+      <div class="inv-info">Chi nhánh: 17A Thuỵ Khuê, Tây Hồ, Hà Nội</div>
+      <div class="inv-info">Điện thoại: 0932016886</div>
+      <hr class="inv-sep">
+      <div>Liên số: Liên 1</div>
+      <div>Ngày bán: ${dateStr}</div>
+      <div class="inv-title">HOÁ ĐƠN BÁN HÀNG</div>
+      <div class="inv-hdnum">${v.invNum||"—"}</div>
+      <div class="inv-cust">
+        <p><strong>Khách hàng:</strong> ${v.name||"—"}</p>
+        <p><strong>Điện thoại:</strong> ${v.phone||"—"}</p>
+        ${skinsStr?`<p><strong>Tình trạng da:</strong> ${skinsStr}</p>`:""}
+      </div>
+      <hr class="inv-sep">
+      <table class="inv-tbl">
+        <thead><tr>
+          <th style="text-align:left;width:52%;">Đơn giá</th>
+          <th style="width:14%;">SL</th>
+          <th style="width:34%;text-align:right;">Thành tiền</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div class="inv-summary">
+        <div class="sumrow"><span>Tổng tiền hàng:</span><span>${fmtMoney(total)}</span></div>
+        ${(v.vipTopup||0)>0?`<div class="sumrow"><span>Nạp thẻ VIP:</span><span>${fmtMoney(v.vipTopup)}</span></div>`:""}
+        ${(v.membershipFee||0)>0?`<div class="sumrow"><span>Phí Membership:</span><span>${fmtMoney(v.membershipFee)}</span></div>`:""}
+        <div class="sumrow"><span>Chiết khấu:</span><span>0</span></div>
+        <div class="sumrow grand"><span>Tổng cộng:</span><span>${fmtMoney(total)}</span></div>
+      </div>
+      <div class="inv-footer">Cảm ơn bạn đã tin tưởng WeeLAB.<br>Chúc bạn có làn da khoẻ mạnh!</div>
+    </div>
+    <script>window.onload=function(){window.focus();window.print();}<\/script>
   </body></html>`;
 
-  const win=window.open("","_blank","width=360,height=600");
-  if(win){win.document.write(html);win.document.close();setTimeout(()=>win.print(),500);}
+  const win=window.open("","_blank","width=360,height=640,menubar=no,toolbar=no,location=no");
+  if(!win){alert("Trình duyệt chặn pop-up. Vui lòng cho phép pop-up cho trang này.");return;}
+  win.document.write(html);
+  win.document.close();
 }
 
 // ── START ──
