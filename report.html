@@ -1881,15 +1881,18 @@ function printBillFromReport(){
 
   // ── Build rows — y hệt showInvoice() trong index.html ────────
   let rows="";
-  const hasArrays=(v.items&&v.items.length)||(v.productItems&&v.productItems.length)
-                 ||(v.tlItems&&v.tlItems.length)||(v.peelItems&&v.peelItems.length)
-                 ||(v.lieutrinhItems&&v.lieutrinhItems.length)||(v.comboItems&&v.comboItems.length)
+  const hasArrays=(Array.isArray(v.items)&&v.items.length>0)
+                 ||(Array.isArray(v.productItems)&&v.productItems.length>0)
+                 ||(Array.isArray(v.tlItems)&&v.tlItems.length>0)
+                 ||(Array.isArray(v.peelItems)&&v.peelItems.length>0)
+                 ||(Array.isArray(v.lieutrinhItems)&&v.lieutrinhItems.length>0)
+                 ||(Array.isArray(v.comboItems)&&v.comboItems.length>0)
                  ||v.comboUse||(v.mode==="buf"&&v.buffetName);
 
   if(hasArrays){
     // ── Bill từ localStorage: dùng arrays trực tiếp ──
     // Sản phẩm
-    if(v.productItems&&v.productItems.length){
+    if(Array.isArray(v.productItems)&&v.productItems.length){
       rows+=sectionHdr("🧴 Sản phẩm");
       for(const x of v.productItems){
         const p=fmtMoney(x.subtotal||x.price);
@@ -1897,12 +1900,12 @@ function printBillFromReport(){
       }
     }
     // Dịch vụ facial / buffet
-    if((v.items&&v.items.length)||(v.mode==="buf"&&v.buffetName)){
-      if(v.productItems&&v.productItems.length) rows+=sectionHdr("✨ Liệu trình");
+    if((Array.isArray(v.items)&&v.items.length)||(v.mode==="buf"&&v.buffetName)){
+      if(Array.isArray(v.productItems)&&v.productItems.length) rows+=sectionHdr("✨ Liệu trình");
       if(v.mode==="buf"&&v.buffetName){
         rows+=makeItem(v.buffetName,fmtMoney(v.total||0),1);
       } else {
-        for(const x of (v.items||[])){
+        for(const x of (Array.isArray(v.items)?v.items:[])){
           const hasDisc=x.listPrice&&x.listPrice>x.price;
           const pCell=hasDisc
             ?`<span style="text-decoration:line-through;color:#888;font-size:11px;">${fmtMoney(x.listPrice)}</span> ${fmtMoney(x.price)}`
@@ -1914,7 +1917,7 @@ function printBillFromReport(){
       }
     }
     // Triệt lông
-    if(v.tlItems&&v.tlItems.length){
+    if(Array.isArray(v.tlItems)&&v.tlItems.length){
       rows+=sectionHdr("🪄 Triệt lông");
       for(const x of v.tlItems){
         const p=x.priceStr||fmtMoney(x.price);
@@ -1923,7 +1926,7 @@ function printBillFromReport(){
       }
     }
     // Peel Body
-    if(v.peelItems&&v.peelItems.length){
+    if(Array.isArray(v.peelItems)&&v.peelItems.length){
       rows+=sectionHdr("✦ Peel Body");
       for(const x of v.peelItems){
         const p=x.priceStr||fmtMoney(x.price);
@@ -1932,7 +1935,7 @@ function printBillFromReport(){
       }
     }
     // Liệu trình gợi ý
-    if(v.lieutrinhItems&&v.lieutrinhItems.length){
+    if(Array.isArray(v.lieutrinhItems)&&v.lieutrinhItems.length){
       rows+=sectionHdr("✨ Liệu trình gợi ý");
       for(const x of v.lieutrinhItems){
         const p=x.priceStr||fmtMoney(x.price);
@@ -1941,7 +1944,7 @@ function printBillFromReport(){
       }
     }
     // Combo mua
-    if(v.comboItems&&v.comboItems.length){
+    if(Array.isArray(v.comboItems)&&v.comboItems.length){
       rows+=sectionHdr("🎁 Mua Combo Facial");
       for(const x of v.comboItems){
         const p=fmtMoney(x.price);
