@@ -1018,7 +1018,14 @@ function renderInvoices(){
   const q=(document.getElementById("invSearch")?.value||"").toLowerCase();
   let visits=filteredVisits()
     .filter(v=>!q||(v.name||"").toLowerCase().includes(q)||(v.phone||"").includes(q)||(v.invNum||"").toLowerCase().includes(q))
-    .sort((a,b)=>(parseDate(b.date)||0)-(parseDate(a.date)||0)); // BUG 1 FIX
+    .sort((a,b)=>{
+      const dt=(parseDate(b.date)||0)-(parseDate(a.date)||0);
+      if(dt!==0) return dt;
+      // Cùng ngày: sort theo số HĐ giảm dần (W000076 > W000075)
+      const na=parseInt((a.invNum||"").replace(/\D/g,""))||0;
+      const nb=parseInt((b.invNum||"").replace(/\D/g,""))||0;
+      return nb-na;
+    });
   window._currentVisits=visits;
   document.getElementById("invCount").textContent=visits.length;
   document.getElementById("invBody").innerHTML=visits.map((v,i)=>{
@@ -1730,11 +1737,12 @@ function renderDoanhSo(){
 //  BILL DETAIL MODAL
 // ═══════════════════════════════════════════════════════
 function showBillDetail(idx){
+  try{
   const v=(window._currentVisits||[])[idx];
-  if(!v) return;
+  if(!v){console.warn("showBillDetail: v undefined, idx="+idx+", visits="+(window._currentVisits||[]).length);return;}
   const modal=document.getElementById("billDetailModal");
   const bd=document.getElementById("bdContent");
-  if(!modal||!bd) return;
+  if(!modal||!bd){console.error("showBillDetail: modal or bd not found");return;}
 
   // Parse items — ưu tiên arrays (saved bills), fallback sang itemsStr (sheet bills)
   const hasArrayData=(v.items&&v.items.length>0)||(v.productItems&&v.productItems.length>0)
@@ -1791,13 +1799,14 @@ function showBillDetail(idx){
       ${v.membershipFee>0?`<div class="bd-row"><span>Phí Membership</span><b>${fmt(v.membershipFee)}</b></div>`:""}
       <div class="bd-row" style="font-size:15px;padding:8px 0;"><span style="font-weight:800;">TỔNG BILL</span><b style="font-size:17px;color:var(--brand-dark);">${fmt(v.total||0)}</b></div>
     </div>
-    ${v.skins?.length?`<div class="bd-section"><div class="bd-section-title">Tình trạng da</div><div style="font-size:13px;">${v.skins.join(", ")}</div></div>`:""}
+    ${v.skins?.length?`<div class="bd-section"><div class="bd-section-title">Tình trạng da</div><div style="font-size:13px;">${Array.isArray(v.skins)?v.skins.join(", "):String(v.skins).replace(/\s*\|\s*/g,", ")}</div></div>`:""}
     ${v.note?`<div class="bd-section"><div class="bd-section-title">Ghi chú KTV</div><div style="font-size:13px;">${v.note}</div></div>`:""}
     ${v.ktv?`<div class="bd-section"><div class="bd-row"><span>KTV thực hiện</span><b>${v.ktv}</b></div></div>`:""}
   `;
 
   modal.classList.add("show");
   window._detailVisit=v;
+  }catch(e){console.error("showBillDetail ERROR:",e.message,e.stack);alert("Lỗi mở chi tiết: "+e.message);}
 }
 
 function closeBillDetail(){
