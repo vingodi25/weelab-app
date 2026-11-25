@@ -475,11 +475,14 @@ function fmtShort(n){
 
 function parseDate(str){
   if(!str) return null;
-  // Apps Script trả về "HH:MM:SS D/M/YYYY" — phải tìm D/M/YYYY ở bất kỳ vị trí nào
-  // Bỏ ^ để không bị lỗi khi chuỗi bắt đầu bằng giờ
-  const m=String(str).trim().match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-  if(m) return new Date(+m[3],+m[2]-1,+m[1]);
-  const d=new Date(str);
+  const s=String(str).trim();
+  // Format Apps Script: "HH:MM:SS D/M/YYYY" — giữ cả giờ:phút để sort đúng
+  const m=s.match(/(\d{1,2}):(\d{2}):\d{2}\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m) return new Date(+m[5],+m[4]-1,+m[3],+m[1],+m[2]);
+  // Format "D/M/YYYY" hoặc "DD/MM/YYYY"
+  const m2=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m2) return new Date(+m2[3],+m2[2]-1,+m2[1]);
+  const d=new Date(s);
   return isNaN(d)?null:d;
 }
 function isSameDay(a,b){return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
@@ -1737,76 +1740,109 @@ function renderDoanhSo(){
 //  BILL DETAIL MODAL
 // ═══════════════════════════════════════════════════════
 function showBillDetail(idx){
-  try{
-  const v=(window._currentVisits||[])[idx];
-  if(!v){console.warn("showBillDetail: v undefined, idx="+idx+", visits="+(window._currentVisits||[]).length);return;}
-  const modal=document.getElementById("billDetailModal");
-  const bd=document.getElementById("bdContent");
-  if(!modal||!bd){console.error("showBillDetail: modal or bd not found");return;}
-
-  // Parse items — ưu tiên arrays (saved bills), fallback sang itemsStr (sheet bills)
-  const hasArrayData=(v.items&&v.items.length>0)||(v.productItems&&v.productItems.length>0)
-                    ||(v.tlItems&&v.tlItems.length>0)||(v.peelItems&&v.peelItems.length>0)
-                    ||(v.lieutrinhItems&&v.lieutrinhItems.length>0)||(v.comboItems&&v.comboItems.length>0)
-                    ||v.comboUse||(v.mode==="buf"&&v.buffetName);
-  window._detailHasData=hasArrayData;
-  // Dùng cho cả detail panel và print (đánh dấu để printBillFromReport dùng lại)
-  const itemsHtml=(()=>{
-    if(hasArrayData){
-      // Bill từ localStorage — dùng arrays trực tiếp
-      let h="";
-      const fv=n=>Number(n||0).toLocaleString("vi-VN")+"đ";
-      (v.productItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.qty>1?" ×"+x.qty:""}</span><b>${fv(x.subtotal||x.price)}</b></div>`; });
-      if(v.mode==="buf"&&v.buffetName){ h+=`<div class="bd-row"><span>${v.buffetName}</span><b>${fv(v.total)}</b></div>`; }
-      else{ (v.items||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}</span><b>${fv(x.price)}</b></div>`; }); }
-      (v.tlItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.typeLabel?" ("+x.typeLabel+")":""}</span><b>${x.priceStr||fv(x.price)}</b></div>`; });
-      (v.peelItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.typeLabel?" ("+x.typeLabel+")":""}</span><b>${x.priceStr||fv(x.price)}</b></div>`; });
-      (v.lieutrinhItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.typeLabel?" ("+x.typeLabel+")":""}</span><b>${x.priceStr||fv(x.price)}</b></div>`; });
-      (v.comboItems||[]).forEach(x=>{ h+=`<div class="bd-row"><span>${x.name}${x.pkgLabel?" ("+x.pkgLabel+")":""}</span><b>${fv(x.price)}</b></div>`; });
-      if(v.comboUse){ h+=`<div class="bd-row"><span>${v.comboUse.comboType} (Buổi ${(v.comboUse.usedBefore||0)+1}/${v.comboUse.totalSessions})</span><b>0đ</b></div>`; }
-      return h;
-    } else {
-      // Bill từ sheet — parse itemsStr
-      return (v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•")).map(line=>{
-        const clean=line.replace(/^•\s*/,"").replace(/\[(SP|Combo|LT|Triệt|Peel|Buffet|Dùng buổi)\]\s*/,"").trim();
-        const m=clean.match(/^(.*?)\s*—\s*([\d.,]+)đ?\s*$/);
-        if(m) return `<div class="bd-row"><span>${m[1].trim()}</span><b>${m[2]}đ</b></div>`;
-        return `<div class="bd-row"><span>${clean}</span></div>`;
-      }).join("");
-    }
-  })();
-  const items=hasArrayData?[1]:(v.itemsStr||"").split("\n").filter(l=>l.trim().startsWith("•")); // truthy check only
-
-  bd.innerHTML=`
-    <div class="bd-section">
-      <div class="bd-section-title">Thông tin khách</div>
-      <div class="bd-row"><span>Tên</span><b>${v.name||"—"}</b></div>
-      <div class="bd-row"><span>SĐT</span><b>${v.phone||"—"}</b></div>
-      ${v.customerType?`<div class="bd-row"><span>Loại KH</span><b>${v.customerType}</b></div>`:""}
-      ${v.vipTier?`<div class="bd-row"><span>Hạng VIP</span><b>${v.vipTier}</b></div>`:""}
-    </div>
-    <div class="bd-section">
-      <div class="bd-section-title">Hoá đơn</div>
-      <div class="bd-row"><span>Số HĐ</span><b>${v.invNum||"—"}</b></div>
-      <div class="bd-row"><span>Ngày giờ</span><b>${v.date||"—"}</b></div>
-      <div class="bd-row"><span>Hình thức</span><b>${(v.mode||"").includes("buf")?"Buffet — "+(v.buffetName||""):"Gọi lẻ"}</b></div>
-    </div>
-    ${items.length?`<div class="bd-section"><div class="bd-section-title">Dịch vụ / Sản phẩm</div>${itemsHtml}</div>`:""}
-    <div class="bd-section">
-      <div class="bd-section-title">Thanh toán</div>
-      ${v.totalLabor>0?`<div class="bd-row"><span>Công KTV</span><b>${fmt(v.totalLabor)}</b></div>`:""}
-      ${v.vipTopup>0?`<div class="bd-row"><span>Nạp thẻ VIP</span><b>${fmt(v.vipTopup)}</b></div>`:""}
-      ${v.membershipFee>0?`<div class="bd-row"><span>Phí Membership</span><b>${fmt(v.membershipFee)}</b></div>`:""}
-      <div class="bd-row" style="font-size:15px;padding:8px 0;"><span style="font-weight:800;">TỔNG BILL</span><b style="font-size:17px;color:var(--brand-dark);">${fmt(v.total||0)}</b></div>
-    </div>
-    ${v.skins?.length?`<div class="bd-section"><div class="bd-section-title">Tình trạng da</div><div style="font-size:13px;">${Array.isArray(v.skins)?v.skins.join(", "):String(v.skins).replace(/\s*\|\s*/g,", ")}</div></div>`:""}
-    ${v.note?`<div class="bd-section"><div class="bd-section-title">Ghi chú KTV</div><div style="font-size:13px;">${v.note}</div></div>`:""}
-    ${v.ktv?`<div class="bd-section"><div class="bd-row"><span>KTV thực hiện</span><b>${v.ktv}</b></div></div>`:""}
-  `;
-
-  modal.classList.add("show");
+  var v=(window._currentVisits||[])[idx];
+  if(!v) return;
+  var modal=document.getElementById("billDetailModal");
+  var bd=document.getElementById("bdContent");
+  if(!modal||!bd) return;
   window._detailVisit=v;
-  }catch(e){console.error("showBillDetail ERROR:",e.message,e.stack);alert("Lỗi mở chi tiết: "+e.message);}
+
+  // ── Build items HTML ─────────────────────────────────────
+  var fv=function(n){return Number(n||0).toLocaleString("vi-VN")+"đ";};
+  var itemsHtml="";
+  var hasArrays=(Array.isArray(v.items)&&v.items.length>0)
+               ||(Array.isArray(v.productItems)&&v.productItems.length>0)
+               ||(Array.isArray(v.tlItems)&&v.tlItems.length>0)
+               ||(Array.isArray(v.peelItems)&&v.peelItems.length>0)
+               ||(Array.isArray(v.lieutrinhItems)&&v.lieutrinhItems.length>0)
+               ||(Array.isArray(v.comboItems)&&v.comboItems.length>0)
+               ||v.comboUse||(v.mode==="buf"&&v.buffetName);
+
+  if(hasArrays){
+    if(v.mode==="buf"&&v.buffetName){
+      itemsHtml+="<div class='bd-row'><span>"+v.buffetName+"</span><b>"+fv(v.total)+"</b></div>";
+    } else {
+      (Array.isArray(v.productItems)?v.productItems:[]).forEach(function(x){
+        itemsHtml+="<div class='bd-row'><span>"+x.name+(x.qty>1?" ×"+x.qty:"")+"</span><b>"+fv(x.subtotal||x.price)+"</b></div>";
+      });
+      (Array.isArray(v.items)?v.items:[]).forEach(function(x){
+        itemsHtml+="<div class='bd-row'><span>"+x.name+"</span><b>"+fv(x.price)+"</b></div>";
+      });
+    }
+    (Array.isArray(v.tlItems)?v.tlItems:[]).forEach(function(x){
+      itemsHtml+="<div class='bd-row'><span>"+x.name+(x.typeLabel?" ("+x.typeLabel+")":"")+"</span><b>"+(x.priceStr||fv(x.price))+"</b></div>";
+    });
+    (Array.isArray(v.peelItems)?v.peelItems:[]).forEach(function(x){
+      itemsHtml+="<div class='bd-row'><span>"+x.name+(x.typeLabel?" ("+x.typeLabel+")":"")+"</span><b>"+(x.priceStr||fv(x.price))+"</b></div>";
+    });
+    (Array.isArray(v.lieutrinhItems)?v.lieutrinhItems:[]).forEach(function(x){
+      itemsHtml+="<div class='bd-row'><span>"+x.name+(x.typeLabel?" ("+x.typeLabel+")":"")+"</span><b>"+(x.priceStr||fv(x.price))+"</b></div>";
+    });
+    (Array.isArray(v.comboItems)?v.comboItems:[]).forEach(function(x){
+      itemsHtml+="<div class='bd-row'><span>"+x.name+(x.pkgLabel?" ("+x.pkgLabel+")":"")+"</span><b>"+fv(x.price)+"</b></div>";
+    });
+    if(v.comboUse){
+      var cu=v.comboUse;
+      itemsHtml+="<div class='bd-row'><span>"+(cu.comboType||"Combo")+" — Buổi "+((cu.usedBefore||0)+1)+"/"+(cu.totalSessions||"?")+"</span><b>0đ</b></div>";
+    }
+  } else {
+    // Bill từ sheet — parse itemsStr bằng lastIndexOf để tránh vấn đề ký tự em dash
+    var lines=(v.itemsStr||"").split("\n").filter(function(l){return l.trim().startsWith("•");});
+    lines.forEach(function(line){
+      var clean=line.replace(/^•\s*/,"").replace(/\[(SP|Combo|LT|Triệt|Peel|Buffet|Dùng buổi)\]\s*/,"").trim();
+      // Tìm em dash (—) hoặc en dash (–) ở bất kỳ dạng nào
+      var di=clean.search(/[–—]/);
+      if(di>0){
+        var name=clean.substring(0,di).trim();
+        var rest=clean.substring(di+1).trim();
+        itemsHtml+="<div class='bd-row'><span>"+name+"</span><b>"+rest+"</b></div>";
+      } else {
+        itemsHtml+="<div class='bd-row'><span>"+clean+"</span></div>";
+      }
+    });
+  }
+
+  // ── Build HTML bằng string concat (tránh nested template literal) ───
+  var h="";
+  h+="<div class='bd-section'>";
+  h+="<div class='bd-section-title'>Thông tin khách</div>";
+  h+="<div class='bd-row'><span>Tên</span><b>"+(v.name||"—")+"</b></div>";
+  h+="<div class='bd-row'><span>SĐT</span><b>"+(v.phone||"—")+"</b></div>";
+  if(v.customerType) h+="<div class='bd-row'><span>Loại KH</span><b>"+v.customerType+"</b></div>";
+  if(v.vipTier) h+="<div class='bd-row'><span>Hạng VIP</span><b>"+v.vipTier+"</b></div>";
+  h+="</div>";
+
+  h+="<div class='bd-section'>";
+  h+="<div class='bd-section-title'>Hoá đơn</div>";
+  h+="<div class='bd-row'><span>Số HĐ</span><b>"+(v.invNum||"—")+"</b></div>";
+  h+="<div class='bd-row'><span>Ngày giờ</span><b>"+(v.date||"—")+"</b></div>";
+  h+="<div class='bd-row'><span>Hình thức</span><b>"+((v.mode||"").includes("buf")?"Buffet — "+(v.buffetName||""):"Gọi lẻ")+"</b></div>";
+  h+="</div>";
+
+  if(itemsHtml){
+    h+="<div class='bd-section'>";
+    h+="<div class='bd-section-title'>Dịch vụ / Sản phẩm</div>";
+    h+=itemsHtml;
+    h+="</div>";
+  }
+
+  h+="<div class='bd-section'>";
+  h+="<div class='bd-section-title'>Thanh toán</div>";
+  if(v.totalLabor>0) h+="<div class='bd-row'><span>Công KTV</span><b>"+fmt(v.totalLabor)+"</b></div>";
+  if(v.vipTopup>0) h+="<div class='bd-row'><span>Nạp thẻ VIP</span><b>"+fmt(v.vipTopup)+"</b></div>";
+  if(v.membershipFee>0) h+="<div class='bd-row'><span>Phí Membership</span><b>"+fmt(v.membershipFee)+"</b></div>";
+  h+="<div class='bd-row' style='font-size:15px;padding:8px 0;'><span style='font-weight:800;'>TỔNG BILL</span><b style='font-size:17px;color:var(--brand-dark);'>"+fmt(v.total||0)+"</b></div>";
+  h+="</div>";
+
+  if(v.skins&&(Array.isArray(v.skins)?v.skins.length>0:String(v.skins||"").trim())){
+    var skinsStr=Array.isArray(v.skins)?v.skins.join(", "):String(v.skins).replace(/\s*\|\s*/g,", ");
+    h+="<div class='bd-section'><div class='bd-section-title'>Tình trạng da</div><div style='font-size:13px;'>"+skinsStr+"</div></div>";
+  }
+  if(v.note) h+="<div class='bd-section'><div class='bd-section-title'>Ghi chú KTV</div><div style='font-size:13px;'>"+v.note+"</div></div>";
+  if(v.ktv) h+="<div class='bd-section'><div class='bd-row'><span>KTV thực hiện</span><b>"+v.ktv+"</b></div></div>";
+
+  bd.innerHTML=h;
+  modal.classList.add("show");
 }
 
 function closeBillDetail(){
