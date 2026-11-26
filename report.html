@@ -1364,6 +1364,8 @@ const VIP_CARD_CACHE_KEY="weelab_vip_kh_cache";
 
 let facialCardData=[];  // từ THẺ DV FACIAL
 let memberCardData=[];  // từ VIP_KH
+let ledgerCardData=null; // từ SỔ THẺ (nguồn chuẩn) — null nếu Apps Script chưa có sổ
+let _vipFilter="all";
 
 function _parseCardMoney(str){
   if(!str) return 0;
@@ -1405,9 +1407,12 @@ function loadVipCards(){
     if(data&&data.ok){
       facialCardData=(data.facial||[]).filter(c=>c.name);
       memberCardData=(data.vip||[]).filter(c=>c.name);
-      localStorage.setItem(VIP_CARD_CACHE_KEY,JSON.stringify({ts:Date.now(),facial:facialCardData,vip:memberCardData}));
+      ledgerCardData=Array.isArray(data.ledger)?data.ledger:null;
+      try{localStorage.setItem(VIP_CARD_CACHE_KEY,JSON.stringify({ts:Date.now(),facial:facialCardData,vip:memberCardData,ledger:ledgerCardData}));}catch(e){}
       const total=facialCardData.length+memberCardData.length;
-      if(statusEl) statusEl.textContent="✓ "+facialCardData.length+" thẻ DV · "+memberCardData.length+" thẻ Member";
+      if(statusEl) statusEl.textContent = ledgerCardData
+        ? "✓ Sổ thẻ: "+ledgerCardData.length+" khách · cập nhật "+new Date().toLocaleTimeString("vi-VN")
+        : "✓ "+facialCardData.length+" thẻ DV · "+memberCardData.length+" thẻ Member (chưa có Sổ thẻ)";
       if(currentTab==="vip") renderVip();
     } else {
       _loadVipFromCache(statusEl);
@@ -1434,6 +1439,7 @@ function _loadVipFromCache(statusEl){
       if((c.facial||c.vip)){
         facialCardData=c.facial||[];
         memberCardData=c.vip||[];
+        ledgerCardData=Array.isArray(c.ledger)?c.ledger:null;
         const age=Math.round((Date.now()-c.ts)/60000);
         if(statusEl) statusEl.textContent="Cache · "+(facialCardData.length+memberCardData.length)+" thẻ ("+age+" phút trước)";
         if(currentTab==="vip") renderVip(); return;
@@ -1449,8 +1455,55 @@ let vipData=[];  // legacy alias
 
 // (placeholder removed — loadVipCards now uses JSONP via Apps Script)
 
+// ═══════════════════════════════════════════════════════
+//  THẺ TRẢ TRƯỚC — đọc từ SỔ THẺ (nguồn chuẩn, app tự ghi mỗi bill)
+// ═══════════════════════════════════════════════════════
+function _esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function _vnd(n){n=Number(n)||0;return (n<0?"-":"")+Math.abs(n).toLocaleString("vi-VN")+"đ";}
+function setVipFilter(f){_vipFilter=f;renderVip();}
+function toggleVipHist(i){const el=document.getElementById("vipHist"+i);if(el)el.style.display=el.style.display==="none"?"table-row":"none";}
+function renderVipLedger(q){
+  const all=ledgerCardData||[];
+  let list=all;
+  if(q) list=list.filter(c=>String(c.name||"").toLowerCase().includes(q)||String(c.phone||"").includes(q));
+  const pos=list.filter(c=>c.balance>0), zero=list.filter(c=>c.balance===0), neg=list.filter(c=>c.balance<0);
+  const sum=a=>a.reduce((s,c)=>s+(Number(c.balance)||0),0);
+  const byTier={"5M":[],"10M":[],"20M":[]};
+  pos.forEach(c=>{(byTier[c.tier]||(byTier[c.tier]=[])).push(c);});
+  document.getElementById("vipCustCount").textContent=list.length;
+  document.getElementById("vipSummaryCards").innerHTML=`
+    <div class="scard green"><div class="sc-label">Thẻ còn tiền</div><div class="sc-val">${pos.length}</div><div class="sc-sub">Tổng số dư phải phục vụ: <b>${_vnd(sum(pos))}</b></div></div>
+    <div class="scard"><div class="sc-label">Thẻ 5M</div><div class="sc-val">${byTier["5M"].length}</div><div class="sc-sub">${_vnd(sum(byTier["5M"]))} còn</div></div>
+    <div class="scard"><div class="sc-label">Thẻ 10M</div><div class="sc-val">${byTier["10M"].length}</div><div class="sc-sub">${_vnd(sum(byTier["10M"]))} còn</div></div>
+    <div class="scard gold"><div class="sc-label">Thẻ 20M</div><div class="sc-val">${byTier["20M"].length}</div><div class="sc-sub">${_vnd(sum(byTier["20M"]))} còn</div></div>
+    <div class="scard"><div class="sc-label">Hết thẻ</div><div class="sc-val" style="color:var(--muted)">${zero.length}</div><div class="sc-sub">Mời nạp thêm</div></div>
+    <div class="scard red"><div class="sc-label">Thẻ âm – khách nợ</div><div class="sc-val" style="color:var(--danger)">${neg.length}</div><div class="sc-sub">${_vnd(sum(neg))}</div></div>`;
+  if(_vipFilter==="pos") list=pos; else if(_vipFilter==="zero") list=zero; else if(_vipFilter==="neg") list=neg;
+  list=list.slice().sort((a,b)=>b.balance-a.balance);
+  const fb=(k,l)=>`<button onclick="setVipFilter('${k}')" class="period-btn${_vipFilter===k?" on":""}">${l}</button>`;
+  let h=`<div style="padding:8px 14px;display:flex;gap:6px;flex-wrap:wrap;">${fb("all","Tất cả")}${fb("pos","Còn tiền")}${fb("zero","Hết thẻ")}${fb("neg","Thẻ âm")}</div>`;
+  h+=`<div class="tbl-scroll"><table><thead><tr><th>SĐT</th><th>Tên khách</th><th>Thẻ</th><th style="text-align:right">Số dư</th><th>Trạng thái</th><th>GD gần nhất</th><th style="text-align:center">Số GD</th><th></th></tr></thead><tbody>`;
+  if(!list.length) h+=`<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:18px">Không có thẻ phù hợp</td></tr>`;
+  list.forEach((c,i)=>{
+    const col=c.balance>0?"var(--brand-dark)":(c.balance<0?"var(--danger)":"var(--muted)");
+    const tag=c.balance>0?`<span class="tag green">Còn tiền</span>`:(c.balance<0?`<span class="tag" style="background:var(--danger-soft);color:var(--danger)">Âm – khách nợ</span>`:`<span class="tag muted">Hết thẻ</span>`);
+    h+=`<tr><td>${_esc(c.phone)}</td><td><b>${_esc(c.name)}</b></td><td>${_esc(c.tier||"—")}</td>
+      <td style="text-align:right;font-weight:800;color:${col}">${_vnd(c.balance)}</td><td>${tag}</td>
+      <td style="font-size:12px;color:var(--muted)">${_esc(c.lastDate||"")}</td><td style="text-align:center">${c.count||0}</td>
+      <td><button onclick="toggleVipHist(${i})" style="background:var(--brand-soft);border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:11px;color:var(--brand-dark);font-weight:700;font-family:inherit;">Lịch sử</button></td></tr>`;
+    const tx=(c.txns||[]).slice().reverse();
+    h+=`<tr id="vipHist${i}" style="display:none"><td colspan="8" style="background:#faf8f5;padding:8px 12px">
+      <table style="font-size:12px"><thead><tr><th>Thời gian</th><th>Loại GD</th><th style="text-align:right">Số tiền</th><th style="text-align:right">Số dư sau</th><th>Số HĐ</th><th>Nội dung</th><th>Ghi chú</th></tr></thead><tbody>
+      ${tx.map(t=>`<tr><td>${_esc(t.date)}</td><td>${_esc(t.type)}</td><td style="text-align:right;color:${t.amount<0?"var(--danger)":"var(--green)"}">${t.amount>0?"+":""}${_vnd(t.amount)}</td><td style="text-align:right">${_vnd(t.after)}</td><td>${_esc(t.inv)}</td><td>${_esc(t.content)}</td><td>${_esc(t.note)}</td></tr>`).join("")}
+      </tbody></table>${(c.count||0)>tx.length?`<div style="font-size:11px;color:var(--muted);margin-top:4px">Hiển thị ${tx.length}/${c.count} giao dịch gần nhất – xem đầy đủ ở sheet SỔ THẺ</div>`:""}</td></tr>`;
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById("vipBody").innerHTML=h;
+}
+
 function renderVip(){
   const q=(document.getElementById("vipSearch")?.value||"").toLowerCase();
+  if(ledgerCardData){ renderVipLedger(q); return; }
 
   // ── Lọc THẺ DV FACIAL ───────────────────────────────────────
   let fCards=facialCardData;
